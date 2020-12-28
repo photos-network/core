@@ -1,0 +1,19 @@
+{
+  "internal_url": "192.168.0.1",
+  "external_url": "external.url.com",
+  "data_dir": "data",
+  "addons": [
+    {
+      "name": "api",
+      "config": {
+        "cors": false
+      }
+    },
+    {
+      "name": "metadata"
+    },
+    {
+      "name": "nextcloud"
+    }
+  ]
+}

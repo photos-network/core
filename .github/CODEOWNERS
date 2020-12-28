@@ -1,0 +1,9 @@
+# This file helps to identify who should be responsible for reviewing specific files of a project.
+# 
+# https://github.blog/2017-07-06-introducing-code-owners/
+
+# Add a fallback to default owners
+*       @thebino
+
+# setup can be reviewed by the core team
+setup.py @photos.network/core

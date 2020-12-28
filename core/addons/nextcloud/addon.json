@@ -1,0 +1,6 @@
+{
+  "domain": "nextcloud",
+  "name": "Next cloud sync",
+  "requirements": [],
+  "core": "0.1.0"
+}

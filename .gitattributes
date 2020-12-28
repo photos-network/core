@@ -1,0 +1,18 @@
+# normalize line endings.
+* text=auto
+
+# use CRLF line endings for batch scripts eg.: when accessed in Windows via file share from Linux
+*.{cmd,[cC][mM][dD]} text eol=crlf
+*.{bat,[bB][aA][tT]} text eol=crlf
+
+# use LF line endings for batch scripts eg.: when accessed in Unix via file share from Windows
+*.sh text eol=lf
+
+# set diff style and whitspace settings
+*.py    text diff=python whitespace=trailing-space,space-before-tab,tab-in-indent
+
+# mark specific files as binary
+*.jpg   binary
+*.png   binary
+*.gif   binary
+*.tiff  binary

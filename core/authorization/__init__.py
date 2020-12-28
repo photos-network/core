@@ -1,0 +1,1 @@
+"""authorization handles permissions / rights"""

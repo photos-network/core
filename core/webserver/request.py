@@ -2,7 +2,7 @@
 import asyncio
 import json
 import logging
-from typing import Any, Optional, List, Callable
+from typing import Any, Optional, List, Callable, cast, TYPE_CHECKING
 
 import voluptuous
 from aiohttp import web
@@ -12,23 +12,32 @@ from aiohttp.web_exceptions import (
 )
 
 from core.context import Context
-from core.core import is_callback
-from core.webserver import exceptions, KEY_AUTHENTICATED
-from core.webserver.status import HTTP_OK
+if TYPE_CHECKING:
+    from core.core import ApplicationCore
+from core.webserver import exceptions
+from core.webserver.status import HTTP_OK, HTTP_SERVICE_UNAVAILABLE
 from core.webserver.type import APPLICATION_JSON
 _LOGGER = logging.getLogger(__name__)
+KEY_AUTHENTICATED = "authenticated"
 
 
-class Request:
-    url: Optional[str] = None
-    extra_urls: List[str] = []
+def is_callback(func: Callable[..., Any]) -> bool:
+    """Check if function is safe to be called in the event loop."""
+    return getattr(func, "_callback", False) is True
+
+
+class RequestView:
+    """Base request."""
 
     requires_auth = True
+    url: Optional[str] = None
+
+    extra_urls: List[str] = []
 
     @staticmethod
     def context(request: web.Request) -> Context:
         """Generate a context from a request."""
-        user = request.get("core_user")
+        user = request.get("hass_user")
         if user is None:
             return Context()
 
@@ -42,7 +51,7 @@ class Request:
     ) -> web.Response:
         """Return a JSON response."""
         try:
-            msg = json.dumps(result, cls=JSONEncoder, allow_nan=False).encode("UTF-8")
+            msg = json.dumps(result, cls=ComplexEncoder, allow_nan=False).encode("UTF-8")
         except (ValueError, TypeError) as err:
             _LOGGER.error(f"Unable to serialize to JSON: {err}\n{result}")
             raise HTTPInternalServerError from err
@@ -55,8 +64,8 @@ class Request:
         response.enable_compression()
         return response
 
-    @staticmethod
     def json_message(
+        self,
         message: str,
         status_code: int = HTTP_OK,
         message_code: Optional[str] = None,
@@ -66,9 +75,9 @@ class Request:
         data = {"message": message}
         if message_code is not None:
             data["code"] = message_code
-        return Request.json(data, status_code, headers=headers)
+        return self.json(data, status_code, headers=headers)
 
-    def register(self, app: web.Application, router: web.UrlDispatcher) -> None:
+    def register(self, core: "ApplicationCore", router: web.UrlDispatcher) -> None:
         """Register the view with a router."""
         assert self.url is not None, "No url set for view"
         urls = [self.url] + self.extra_urls
@@ -80,13 +89,21 @@ class Request:
             if not handler:
                 continue
 
-            handler = request_handler_factory(self, handler)
+            handler = request_handler_factory(self, core, handler)
 
             for url in urls:
                 routes.append(router.add_route(method, url, handler))
 
 
-def request_handler_factory(view: Request, handler: Callable) -> Callable:
+class ComplexEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, complex):
+            return [obj.real, obj.imag]
+        # Let the base class default method raise the TypeError
+        return json.JSONEncoder.default(self, obj)
+
+
+def request_handler_factory(view: RequestView, core: "ApplicationCore", handler: Callable) -> Callable:
     """Wrap the handler classes."""
     assert asyncio.iscoroutinefunction(handler) or is_callback(
         handler
@@ -94,6 +111,9 @@ def request_handler_factory(view: Request, handler: Callable) -> Callable:
 
     async def handle(request: web.Request) -> web.StreamResponse:
         """Handle incoming request."""
+        if core.is_stopping:
+            return web.Response(status=HTTP_SERVICE_UNAVAILABLE)
+
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
         if view.requires_auth and not authenticated:
@@ -102,7 +122,7 @@ def request_handler_factory(view: Request, handler: Callable) -> Callable:
         _LOGGER.debug(f"Serving {request.path} to {request.remote} (auth: {authenticated})")
 
         try:
-            result = handler(request, **request.match_info)
+            result = handler(view, request, **request.match_info)
 
             if asyncio.iscoroutine(result):
                 result = await result

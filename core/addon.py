@@ -5,6 +5,8 @@ import json
 import logging
 import os
 import pathlib
+from enum import Enum
+
 import time
 from subprocess import Popen, PIPE
 from typing import Optional, cast, Dict, Any, List, TYPE_CHECKING
@@ -19,6 +21,12 @@ SLOW_SETUP_MAX_WAIT = 300
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
+
+
+class AddonType(Enum):
+    """Describe"""
+    IMAGE = "image"
+    STORAGE = "storage"
 
 
 class Addon:
@@ -94,6 +102,10 @@ class Addon:
         return cast(List[str], self.manifest.get("requirements", []))
 
     @property
+    def type(self) -> AddonType:
+        return cast(AddonType, AddonType(self.manifest.get("type", AddonType.IMAGE)))
+
+    @property
     def config_flow(self) -> bool:
         """Return config_flow."""
         return cast(bool, self.manifest.get("config_flow", False))
@@ -105,7 +117,7 @@ class Addon:
 
     def __repr__(self) -> str:
         """Text representation of class."""
-        return f"<Integration {self.domain}: {self.pkg_path}>"
+        return f"<Addon {self.domain}: {self.pkg_path}>"
 
     def install_requirements(self) -> bool:
         """install requirements for addon. return True if all requrements fulfilled"""

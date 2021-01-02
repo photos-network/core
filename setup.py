@@ -37,6 +37,7 @@ setup(
         "core.addons",
         "core.authentication",
         "core.authorization",
+        "core.persistency",
         "core.utils",
         "core.webserver",
     ],

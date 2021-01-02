@@ -10,6 +10,12 @@
       }
     },
     {
+      "name": "sqlite",
+      "config": {
+        "database_file": "test.sqlite"
+      }
+    },
+    {
       "name": "metadata"
     },
     {

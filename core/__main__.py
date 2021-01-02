@@ -3,7 +3,7 @@
 import asyncio
 import logging
 import os
-from typing import Optional, TYPE_CHECKING
+from typing import Optional
 
 import sys
 
@@ -33,6 +33,7 @@ async def async_setup(
     _LOGGER.debug("main::async_setup()")
     application.config.config_dir = runtime_config.config_dir
     application.config.data_dir = runtime_config.data_dir
+    application.async_enable_logging(verbose=True)
 
     _LOGGER.info(f"Config directory: {runtime_config.config_dir}", )
 
@@ -79,7 +80,12 @@ def main() -> int:
         verbose=True
     )
 
-    exit_code = asyncio.run(setup_and_run(runtime_conf))
+    try:
+        exit_code = asyncio.run(setup_and_run(runtime_conf))
+    except KeyboardInterrupt:
+        # TODO: handle running threads
+        print("### Interrupt application without taking care of running threads ###")
+        exit_code = 0
 
     return exit_code
 

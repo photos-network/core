@@ -60,3 +60,6 @@ share/*
 
 # Built docs
 docs/build
+
+# data directory
+data/

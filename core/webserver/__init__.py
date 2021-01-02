@@ -1,21 +1,20 @@
 """HTTP server implementation."""
+import logging
 from ipaddress import ip_address
-from typing import TYPE_CHECKING, TypeVar, Type
+from typing import TYPE_CHECKING
 
 from aiohttp import web, hdrs
-import logging
-
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
 
+from .request import RequestView, KEY_AUTHENTICATED  # noqa: F401
+
 if TYPE_CHECKING:
-    from core.webserver.request import Request
     from core.core import ApplicationCore
 
 _LOGGER = logging.getLogger(__name__)
 MAX_CLIENT_SIZE: int = 1024 ** 2 * 16
 LOGIN_ATTEMPT_THRESHOLD = 3
-KEY_AUTHENTICATED = "authenticated"
 
 
 class Webserver:
@@ -33,8 +32,16 @@ class Webserver:
         # TODO: add cors middleware
         # self.app.middlewares.append(self.cors_middleware)
 
-    def register_request(self, view: Type["Request"]):
-        """Register a request, wich must inherit from Request"""
+    def register_request(self, view):
+        """The view argument must be a class that inherits from Request
+        It is optional to instantiate it before registering; this method will
+        handle it either way.
+        """
+
+        # if isinstance(view, type):
+        #     # Instantiate the view, if needed
+        #     view = view()
+
         if not hasattr(view, "url"):
             class_name = view.__class__.__name__
             raise AttributeError(f'{class_name} missing required attribute "url"')
@@ -43,7 +50,7 @@ class Webserver:
             class_name = view.__class__.__name__
             raise AttributeError(f'{class_name} missing required attribute "name"')
 
-        view.register(view, self.app, self.app.router)
+        view.register(self.core, self.app.router)
 
     async def start(self):
         await self.runner.setup()

@@ -4,15 +4,17 @@ import enum
 import json
 import logging
 import os
-from typing import Optional, Iterable, Awaitable, Any, Set, TypeVar, Callable
-from time import monotonic
+from logging.handlers import TimedRotatingFileHandler
+from typing import Optional, Iterable, Awaitable, Any, TypeVar, Callable, List, Dict
 
 import sys
 from colorlog import ColoredFormatter
+from time import monotonic
 
 from core import loader
-from core.addon import Addon
+from core.addon import Addon, AddonType
 from core.configs import Config
+from core.persistency.persistency import PersistencyManager
 from core.utils.timeout import TimeoutManager
 from core.webserver import Webserver
 
@@ -36,11 +38,6 @@ def callback(func: CALLABLE_T) -> CALLABLE_T:
     return func
 
 
-def is_callback(func: Callable[..., Any]) -> bool:
-    """Check if function is safe to be called in the event loop."""
-    return getattr(func, "_callback", False) is True
-
-
 class ApplicationCore:
     """ApplicationCore root object."""
     http: "Webserver" = None  # type: ignore
@@ -51,15 +48,16 @@ class ApplicationCore:
         _LOGGER.debug("ApplicationCore::init...")
 
         self.loop = asyncio.get_running_loop()
-        self._pending_tasks: list = []
+        self._pending_tasks: List = []
         self._track_task = True
-        self.banned_ips: list = []
-        self.failed_logins: dict = {}
+        self.banned_ips: List = []
+        self.failed_logins: Dict = {}
         self.config = Config(self)
         self.addons = loader.Components(self)
+        self.loaded_addons: Dict = {}
 
         # This is a dictionary that any addon can store any data on.
-        self.data: dict = {}
+        self.storage: PersistencyManager = PersistencyManager(self.config)
         self.state: CoreState = CoreState.not_running
         self.exit_code: int = 0
 
@@ -115,18 +113,20 @@ class ApplicationCore:
         err_path_exists = os.path.isfile(err_log_path)
         err_dir = os.path.dirname(err_log_path)
         if not err_dir or not err_path_exists:
-            os.mkdir(err_log_path)
+            os.mkdir(err_dir)
         err_handler: logging.FileHandler = (
-            logging.handlers.TimedRotatingFileHandler(
-                err_log_path, when="midnight", backupCount=log_rotate_days
+            TimedRotatingFileHandler(
+                err_log_path,
+                when="midnight",
+                backupCount=log_rotate_days
             )
         )
-        err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
+        err_handler.setLevel(logging.DEBUG if verbose else logging.WARNING)
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
 
         logger = logging.getLogger("")
         logger.addHandler(err_handler)
-        logger.setLevel(logging.INFO if verbose else logging.WARNING)
+        logger.setLevel(logging.DEBUG if verbose else logging.WARNING)
 
     def start(self) -> int:
         """Start Photos Core.
@@ -181,6 +181,15 @@ class ApplicationCore:
 
         self.state = CoreState.running
 
+    async def async_stop(self) -> None:
+        self.state = CoreState.stopping
+        self.state = CoreState.final_write
+        self.state = CoreState.not_running
+        self.state = CoreState.stopped
+
+        if self._stopped is not None:
+            self._stopped.set()
+
     async def async_set_up_addons(self) -> None:
         """setup addons by checking and installing their dependencies and
         run their 'async_setup' method."""
@@ -195,7 +204,9 @@ class ApplicationCore:
                 _LOGGER.error(f"setup addon '{addon.domain}' failed. Not all requirements installed!")
 
             if all_requirements_fulfilled:
-                await addon.async_setup_addon()
+                addon_setup_successful = await addon.async_setup_addon()
+                if addon_setup_successful:
+                    self.loaded_addons[addon.domain] = addon
 
     async def _load_addons(self, conf_dict) -> dict[Addon]:
         """load addons from files"""
@@ -236,6 +247,11 @@ class ApplicationCore:
 
         await self.http.start()
         _LOGGER.info("Webserver should be up and running...")
+
+        for addon in self.loaded_addons.values():
+            _LOGGER.info(f"  Addon: {addon.type}")
+            if addon.type == AddonType.STORAGE:
+                _LOGGER.info(f"+ Addon: {addon.domain}")
 
         while self._pending_tasks:
             pending = [task for task in self._pending_tasks if not task.done()]

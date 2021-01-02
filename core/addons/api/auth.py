@@ -5,11 +5,11 @@ from json import JSONEncoder
 from aiohttp import web
 from core.webserver import status
 
-from core.webserver.request import Request
+from core.webserver.request import RequestView
 from core.webserver.type import APPLICATION_JSON
 
 
-class APIAuthView(Request):
+class APIAuthView(RequestView):
     """View to handle auth requests."""
 
     requires_auth = False

@@ -31,9 +31,17 @@ class APIStatusView(RequestView):
     url = "/"
     name = "api:status"
 
-    @callback
-    def get(self, core, request):
+    async def get(self, core, request):
         """Retrieve if API is running."""
+
+        # TODO: remove staff
+        images = [
+            "IMG_20191003_095353_1.jpg",
+            "DSC_2340-HDR_4096.jpg"
+        ]
+
+        await core.async_trigger_addons(images)
+
         return self.json_message("API running.")
 
 

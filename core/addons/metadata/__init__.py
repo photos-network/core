@@ -1,5 +1,7 @@
 """Metadata integration to parse image metadata like exif informations"""
 import logging
+import os
+from typing import Dict
 
 from exif import Image
 from core.core import ApplicationCore
@@ -16,10 +18,30 @@ async def async_setup(core: ApplicationCore, config: dict) -> bool:
     return True
 
 
-async def async_update(core: ApplicationCore, config: dict):
-    # TODO: iterate through images for authenticated user
-    # TODO: read exif data
-    with open('grand_canyon.jpg', 'rb') as image_file:
-        my_image = Image(image_file)
-        has_exif = my_image.has_exif
-        _LOGGER.error(f"metadata::async_update() has_exif: {has_exif}")
+async def async_process_images(core: ApplicationCore, config: dict, images: Dict) -> bool:
+    for image_file in images:
+        file_path = os.path.join(core.config.data_dir, image_file)
+        with open(file_path, 'rb') as file:
+            image = Image(file)
+
+            msg = f"{file_path}: "
+
+            if "datetime" in dir(image):
+                datetime = image.get('datetime')
+                msg += f"{datetime}"
+
+            if "make" in dir(image) or "model" in dir(image):
+                make = image.get('make')
+                model = image.get('model')
+                msg += f", {make} - {model}"
+
+            if "gps_latitude" in dir(image) and "gps_longitude" in dir(image):
+                latitude = image.get('gps_latitude')
+                longitude = image.get('gps_longitude')
+
+                msg += f", {latitude} - {longitude}"
+
+            # TODO: persist metadata as tags?
+            core.storage.create_key("metadata")
+
+    return True

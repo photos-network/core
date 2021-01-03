@@ -1,4 +1,4 @@
-# PlacesCNN to predict the scene category, attribute, and class activation map in a single pass
+# PlacesCNN to predict the scene by category, attribute, and class activation map in a single pass
 # by Bolei Zhou, sep 2, 2017
 # last modified date: Dec. 27, 2017, migrating everything to python36 and latest pytorch and torchvision
 import logging
@@ -6,11 +6,12 @@ import os
 
 import numpy as np
 import torch
-import wideresnet
 from PIL import Image
 from torch.autograd import Variable as V
 from torch.nn import functional as F
 from torchvision import transforms as trn
+
+from .wideresnet import resnet18
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
@@ -21,7 +22,8 @@ dir_places365_model = os.path.join(os.path.dirname(__file__), 'model')
 
 
 def load_labels():
-    # prepare all the labels
+    """prepare all labels read from 'categories_places365.txt'"""
+
     # scene category relevant
     file_path_category = os.path.join(dir_places365_model, 'categories_places365.txt')
     classes = list()
@@ -85,7 +87,7 @@ def inference_places365(img_path) -> dict:
         # model_file = os.path.join(dir_places365_model,'whole_wideresnet18_places365_python36.pth.tar')
         model_file = os.path.join(dir_places365_model, 'wideresnet18_places365.pth.tar')
 
-        model = wideresnet.resnet18(num_classes=365)
+        model = resnet18(num_classes=365)
         checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
         state_dict = {str.replace(k, 'module.', ''): v for k, v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)

@@ -57,7 +57,8 @@ class ApplicationCore:
         self.loaded_addons: Dict = {}
 
         # This is a dictionary that any addon can store any data on.
-        self.storage: PersistencyManager = PersistencyManager(self.config)
+        self.data: dict = {}
+        self.storage: PersistencyManager = PersistencyManager(self.config, self)
         self.state: CoreState = CoreState.not_running
         self.exit_code: int = 0
 
@@ -208,6 +209,13 @@ class ApplicationCore:
                 if addon_setup_successful:
                     self.loaded_addons[addon.domain] = addon
 
+    async def async_trigger_addons(self, images: dict[str]) -> None:
+        conf_dict = await self._load_config()
+        addon_dict = await self._load_addons(conf_dict)
+
+        for addon in addon_dict.values():
+            await addon.async_process_images_in_addons(images)
+
     async def _load_addons(self, conf_dict) -> dict[Addon]:
         """load addons from files"""
         addons = {}
@@ -247,11 +255,6 @@ class ApplicationCore:
 
         await self.http.start()
         _LOGGER.info("Webserver should be up and running...")
-
-        for addon in self.loaded_addons.values():
-            _LOGGER.info(f"  Addon: {addon.type}")
-            if addon.type == AddonType.STORAGE:
-                _LOGGER.info(f"+ Addon: {addon.domain}")
 
         while self._pending_tasks:
             pending = [task for task in self._pending_tasks if not task.done()]

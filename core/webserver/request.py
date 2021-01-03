@@ -122,7 +122,7 @@ def request_handler_factory(view: RequestView, core: "ApplicationCore", handler:
         _LOGGER.debug(f"Serving {request.path} to {request.remote} (auth: {authenticated})")
 
         try:
-            result = handler(view, request, **request.match_info)
+            result = handler(core, request, **request.match_info)
 
             if asyncio.iscoroutine(result):
                 result = await result

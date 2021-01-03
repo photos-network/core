@@ -6,6 +6,7 @@ import logging
 import os
 import pathlib
 from enum import Enum
+from types import ModuleType
 
 import time
 from subprocess import Popen, PIPE
@@ -237,6 +238,48 @@ class Addon:
         self.core.config.addons.add(self.domain)
 
         return True
+
+    async def async_process_images_in_addons(self, images: dict[str]) -> bool:
+        """Trigger image addons with images to process"""
+
+        if self.type == AddonType.IMAGE:
+            start = time.perf_counter()
+            _LOGGER.info(f"Start processing images with addon '{self.domain}'")
+
+            try:
+                component = importlib.import_module(f"core.addons.{self.domain}")
+            except ImportError as err:
+                _LOGGER.error(f"Processing images with addon '{self.domain}' failed: {err}")
+                return False
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(f"Processing images with addon '{self.domain}' failed: unknown error")
+                return False
+
+            try:
+                if hasattr(component, "async_process_images"):
+                    task = component.async_process_images(self.core, self.core.config, images)  # type: ignore
+
+                    async with self.core.timeout.async_timeout(30, self.domain):
+                        result = await task
+                        if result is None or not result:
+                            _LOGGER.warning(f"could not finish successful")
+            finally:
+                end = time.perf_counter()
+            _LOGGER.info(f"Processing {len(images)} images with addon '{self.domain}' took {end - start:#.2f} seconds.")
+
+        elif self.type == AddonType.STORAGE:
+            _LOGGER.debug(f"Skipping non image addon '{self.domain}'")
+
+            return False
+
+        return False
+
+    def get_component(self) -> ModuleType:
+        """Return the component."""
+        cache = self.core.data.setdefault("addons", {})
+        if self.domain not in cache:
+            cache[self.domain] = importlib.import_module(self.pkg_path)
+        return cache[self.domain]  # type: ignore
 
 
 class AddonSetupFlow:

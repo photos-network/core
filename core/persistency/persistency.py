@@ -1,9 +1,10 @@
 """Persistency manager"""
 import logging
 import os
-from typing import List, TYPE_CHECKING, Set
+from typing import TYPE_CHECKING, Set
 
 # Typing imports that create a circular dependency
+from core.addon import AddonType
 from core.configs import Config
 
 if TYPE_CHECKING:
@@ -17,9 +18,10 @@ _LOGGER.setLevel(logging.DEBUG)
 class PersistencyManager:
     """Class to manage persistency tasks and trigger storage addons."""
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Config, core: "ApplicationCore") -> None:
         """Initialize Persistency Manager."""
         self._config = config
+        self._core = core
         self._addons: Set[str] = config.addons
         self._default_path = self._config.data_dir
 
@@ -41,3 +43,9 @@ class PersistencyManager:
 
         file_object = open(os.path.join(file_name, default_path), "x")
         file_object.close()
+
+    def create_key(self, key):
+        for addon in self._core.loaded_addons.values():
+            if addon.type == AddonType.STORAGE:
+                # TODO: write key to persistency
+                _LOGGER.warning(f"  Addon: {addon} {key}")

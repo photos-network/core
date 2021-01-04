@@ -19,7 +19,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: create environment
-        run: python -m venv venv
+        run: |
+          python -m venv venv
+          . venv/bin/activate
 
       - name: Install dependencies
         run: |
@@ -36,7 +38,6 @@ jobs:
 
       - name: Test with pytest
         run: |
-          . venv/bin/activate
           pytest \
             --quiet \
             --timeout=9 \

@@ -1,7 +1,10 @@
 # Photos.network
 
 [![License](https://img.shields.io/github/license/photos-network/core)](./LICENSE.md)
-[![GitHub contributors](https://img.shields.io/github/contributors/photos-network/core)](https://github.com/photos.network/core/graphs/contributors)
+[![GitHub contributors](https://img.shields.io/github/contributors/photos-network/core?color=success)](https://github.com/photos.network/core/graphs/contributors)
+[![Discord](https://img.shields.io/discord/793235453871390720)](https://discord.gg/dGFDpmWp46)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/photos-network/core/check%20code%20quality)
+
 
 [Photos.network](https://photos.network) is an open source project for self hosted photo management.
 Its core features are:

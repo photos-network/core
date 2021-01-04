@@ -1,16 +1,15 @@
 """The methods for loading integrations."""
-import asyncio
-import functools as ft
-import importlib
-import json
 import logging
-import pathlib
-from typing import Optional, List
+from typing import Optional, TYPE_CHECKING
 
-import sys
+# Typing imports that create a circular dependency
+if TYPE_CHECKING:
+    from core.core import ApplicationCore
+
 from types import ModuleType
 
 from core.addon import Addon
+
 _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 

@@ -494,14 +494,3 @@ class TimeoutManager:
             self.zones[zone_name] = zone = _ZoneTimeoutManager(self, zone_name)
 
         return _ZoneFreezeContext(zone)
-
-    def freeze(
-            self, zone_name: str = ZONE_GLOBAL
-    ) -> Union[_ZoneFreezeContext, _GlobalFreezeContext]:
-        """Freeze all timer until job is done.
-
-        For using as Context Manager.
-        """
-        return run_callback_threadsafe(
-            self._loop, self.async_freeze, zone_name
-        ).result()

@@ -2,11 +2,11 @@
 import asyncio
 import json
 import logging
-from typing import Any, Optional, List, Callable, cast, TYPE_CHECKING
+from typing import Any, Optional, List, Callable, TYPE_CHECKING
 
 import voluptuous
 from aiohttp import web
-from aiohttp.typedefs import LooseHeaders, JSONEncoder
+from aiohttp.typedefs import LooseHeaders
 from aiohttp.web_exceptions import (
     HTTPInternalServerError, HTTPBadRequest, HTTPUnauthorized,
 )
@@ -142,17 +142,23 @@ def request_handler_factory(view: RequestView, core: "ApplicationCore", handler:
         if isinstance(result, tuple):
             result, status_code = result
 
-        if isinstance(result, bytes):
-            bresult = result
-        elif isinstance(result, str):
-            bresult = result.encode("utf-8")
-        elif result is None:
-            bresult = b""
-        else:
-            assert (
-                False
-            ), f"Result should be None, string, bytes or Response. Got: {result}"
+        bresult = convert_to_bytes(result)
 
         return web.Response(body=bresult, status=status_code)
 
     return handle
+
+
+def convert_to_bytes(input: Any) -> bytes:
+    if isinstance(input, bytes):
+        bresult = input
+    elif isinstance(input, str):
+        bresult = input.encode("utf-8")
+    elif input is None:
+        bresult = b""
+    else:
+        assert (
+            False
+        ), f"Result should be None, string, bytes or Response. Got: {input}"
+
+    return bresult

@@ -1,7 +1,6 @@
 """REST API implementation."""
 import logging
 import os
-from pathlib import Path
 
 from core.core import ApplicationCore
 
@@ -24,7 +23,7 @@ async def async_setup(core: ApplicationCore, config: dict) -> bool:
     file_path = os.path.join(core.config.data_dir, database_name)
 
     if os.path.exists(os.path.abspath(file_path)):
-        _LOGGER.info(f"database file already exists.")
+        _LOGGER.info("database file already exists.")
     else:
         _LOGGER.info(f"create database {database_name}")
         file_object = open(file_path, "w")

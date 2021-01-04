@@ -4,7 +4,6 @@ import os
 import shutil
 import urllib
 from typing import Dict
-from urllib.request import urlretrieve
 
 from core.addons.places365.main import generate_captions
 
@@ -41,7 +40,7 @@ async def async_setup(core: ApplicationCore, config: dict) -> bool:
         check_or_download(filename=filename_wideresnet, download_url=synset_url_wideresnet)
         check_or_download(filename=filename_weights, download_url=synset_url_weights)
     except:
-        _LOGGER.warning(f"Could not find or download all required files!")
+        _LOGGER.warning("Could not find or download all required files!")
         return False
 
     # Return boolean to indicate that initialization was successful.
@@ -77,8 +76,5 @@ def check_or_download(filename: str, download_url: str) -> bool:
         _LOGGER.info(f"{file_path} not found, try to download from \n{download_url}")
         with urllib.request.urlopen(download_url) as response, open(file_path, 'wb') as out_file:
             shutil.copyfileobj(response, out_file)
-        # urlretrieve(download_url, file_path)
 
     return True
-
-

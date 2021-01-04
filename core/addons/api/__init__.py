@@ -2,7 +2,7 @@
 import logging
 
 from core.addons.api.auth import APIAuthView
-from core.core import ApplicationCore, callback
+from core.core import ApplicationCore
 from core.webserver.request import RequestView
 from core.webserver.status import HTTP_CREATED, HTTP_OK
 
@@ -71,7 +71,7 @@ class PhotosView(RequestView):
 
     async def get(self, request):
         """d"""
-        return self.json_message(f"return Photos")
+        return self.json_message("return Photos")
 
 
 class PhotoView(RequestView):
@@ -94,7 +94,7 @@ class AlbumsView(RequestView):
 
     async def get(self, request):
         """Retrieve if API is running."""
-        return self.json_message(f"return Albums")
+        return self.json_message("return Albums")
 
 
 class AlbumView(RequestView):

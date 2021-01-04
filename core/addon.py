@@ -262,7 +262,7 @@ class Addon:
                     async with self.core.timeout.async_timeout(30, self.domain):
                         result = await task
                         if result is None or not result:
-                            _LOGGER.warning(f"could not finish successful")
+                            _LOGGER.warning("could not finish successful")
             finally:
                 end = time.perf_counter()
             _LOGGER.info(f"Processing {len(images)} images with addon '{self.domain}' took {end - start:#.2f} seconds.")

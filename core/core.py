@@ -12,7 +12,7 @@ from colorlog import ColoredFormatter
 from time import monotonic
 
 from core import loader
-from core.addon import Addon, AddonType
+from core.addon import Addon
 from core.configs import Config
 from core.persistency.persistency import PersistencyManager
 from core.utils.timeout import TimeoutManager

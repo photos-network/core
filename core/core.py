@@ -129,13 +129,14 @@ class ApplicationCore:
         logger.addHandler(err_handler)
         logger.setLevel(logging.DEBUG if verbose else logging.WARNING)
 
-    def start(self) -> int:
+    async def start(self) -> int:
         """Start Photos Core.
         Note: This function is only used for testing.
         For regular use, use "await photos.run()".
         """
         _LOGGER.debug("start core loop")
-        self.loop.run_forever()
+        await self.async_block_till_done()
+
         return self.exit_code
 
     async def async_run(self, *, attach_signals: bool = True) -> int:

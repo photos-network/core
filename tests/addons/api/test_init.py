@@ -1,30 +1,25 @@
 """Test the default api implementation."""
-import asyncio
 import os
+from pathlib import Path
 
 import pytest
 
+from core.addons.api import APIStatusView
 from core.core import ApplicationCore, CoreState
 from core.webserver import status
 
 
-@pytest.fixture
-def mock_api_client():
-    """Start the HTTP component and return admin API client."""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
+@pytest.mark.asyncio
+async def test_api_get_non_existing_state(aiohttp_client, loop):
+    """Test if the debug interface allows us to get a state."""
     core = ApplicationCore()
     core.config.internal_url = ""
     core.config.external_url = ""
-    core.config.data_dir = os.path.join(os.path.dirname(__file__), "resources", "data")
+    core.config.data_dir = os.path.join(Path.cwd(), "tests/resources", "data")
+    core.config.config_dir = os.path.join(Path.cwd(), "tests/resources", "config")
     core.state = CoreState.running
-    core.start()
+    await core.start()
 
-    return loop.run_until_complete(core)
-
-
-async def test_api_get_non_existing_state(mock_api_client):
-    """Test if the debug interface allows us to get a state."""
-    resp = await mock_api_client.get("/api/states/does_not_exist")
-    assert resp.status == status.HTTP_NOT_FOUND
+    # client = await aiohttp_client(core.http.app)
+    # resp = await client.get('/')
+    # assert resp.status == status.HTTP_NOT_FOUND

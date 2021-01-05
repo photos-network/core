@@ -1,4 +1,4 @@
-"""Metadata integration to parse image metadata like exif informations"""
+"""Metadata integration to read and parse image metadata like exif."""
 import logging
 import os
 from typing import Dict

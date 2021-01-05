@@ -1,4 +1,4 @@
-"""REST API implementation."""
+"""sqlite implementation to store meta data in a database."""
 import logging
 import os
 

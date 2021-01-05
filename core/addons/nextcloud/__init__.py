@@ -1,4 +1,4 @@
-"""Next cloud integration to sync photos in a directory"""
+"""Next cloud integration to sync photos in a directory."""
 import logging
 
 from core.core import ApplicationCore

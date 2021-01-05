@@ -1,4 +1,4 @@
-"""Next cloud integration to sync photos in a directory"""
+"""places365 CNN integration to tag various places in images."""
 import logging
 import os
 import shutil

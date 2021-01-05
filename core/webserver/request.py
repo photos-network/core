@@ -11,7 +11,6 @@ from aiohttp.web_exceptions import (
     HTTPInternalServerError, HTTPBadRequest, HTTPUnauthorized,
 )
 
-from core.context import Context
 if TYPE_CHECKING:
     from core.core import ApplicationCore
 from core.webserver import exceptions
@@ -33,15 +32,6 @@ class RequestView:
     url: Optional[str] = None
 
     extra_urls: List[str] = []
-
-    @staticmethod
-    def context(request: web.Request) -> Context:
-        """Generate a context from a request."""
-        user = request.get("hass_user")
-        if user is None:
-            return Context()
-
-        return Context(user_id=user.id)
 
     @staticmethod
     def json(

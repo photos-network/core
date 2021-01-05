@@ -1,6 +1,8 @@
 """REST API implementation."""
 import logging
 
+from aiohttp import web
+
 from core.addons.api.auth import APIAuthView
 from core.core import ApplicationCore
 from core.webserver.request import RequestView
@@ -51,7 +53,7 @@ class PhotoUploadView(RequestView):
     url = "/api/photo/"
     name = "api:photo:upload"
 
-    async def post(self, request, entity_id):
+    async def post(self, request, entity_id) -> web.Response:
         # TODO: check if entity has been created
         new_entity_created = False
 
@@ -69,7 +71,7 @@ class PhotosView(RequestView):
     url = "/api/photo"
     name = "api:photos"
 
-    async def get(self, request):
+    async def get(self, request) -> web.Response:
         """d"""
         return self.json_message("return Photos")
 
@@ -80,7 +82,7 @@ class PhotoView(RequestView):
     url = "/api/photo/{entity_id}"
     name = "api:photo"
 
-    async def get(self, request, entity_id):
+    async def get(self, request, entity_id) -> web.Response:
         """d"""
         return self.json_message(f"return Photo {entity_id}")
 
@@ -92,7 +94,7 @@ class AlbumsView(RequestView):
     url = "/api/album"
     name = "api:albums"
 
-    async def get(self, request):
+    async def get(self, request) -> web.Response:
         """Retrieve if API is running."""
         return self.json_message("return Albums")
 
@@ -104,6 +106,6 @@ class AlbumView(RequestView):
     url = "/api/album/{entity_id}"
     name = "api:album"
 
-    async def get(self, request, entity_id):
+    async def get(self, request, entity_id) -> web.Response:
         """Retrieve if API is running."""
         return self.json_message(f"return Album {entity_id}")

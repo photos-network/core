@@ -55,10 +55,15 @@ class Webserver:
     async def start(self):
         await self.runner.setup()
 
+        host = self.core.config.external_url
+        port = self.core.config.port
+
+        # use host=None to listen on all interfaces.
         site = web.TCPSite(
             runner=self.runner,
-            host='localhost',
-            port=8080)
+            host=None,
+            port=port)
+        _LOGGER.info(f"Webserver is listening on {site._host}:{site._port}")
         await site.start()
 
     async def stop(self):

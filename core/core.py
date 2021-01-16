@@ -5,7 +5,7 @@ import json
 import logging
 import os
 from logging.handlers import TimedRotatingFileHandler
-from typing import Optional, Iterable, Awaitable, Any, TypeVar, Callable, List, Dict
+from typing import Optional, Iterable, Awaitable, Any, TypeVar, Callable, List, Dict, Sequence
 
 import sys
 from colorlog import ColoredFormatter
@@ -113,7 +113,7 @@ class ApplicationCore:
         err_log_path = self.config.path(ERROR_LOG_FILENAME)
         err_path_exists = os.path.isfile(err_log_path)
         err_dir = os.path.dirname(err_log_path)
-        if not err_dir or not err_path_exists:
+        if not err_dir:
             os.mkdir(err_dir)
         err_handler: logging.FileHandler = (
             TimedRotatingFileHandler(
@@ -210,14 +210,14 @@ class ApplicationCore:
                 if addon_setup_successful:
                     self.loaded_addons[addon.domain] = addon
 
-    async def async_trigger_addons(self, images: dict[str]) -> None:
+    async def async_trigger_addons(self, images: Sequence[str]) -> None:
         conf_dict = await self._load_config()
         addon_dict = await self._load_addons(conf_dict)
 
         for addon in addon_dict.values():
             await addon.async_process_images_in_addons(images)
 
-    async def _load_addons(self, conf_dict) -> dict[Addon]:
+    async def _load_addons(self, conf_dict) -> Dict[str, Addon]:
         """load addons from files"""
         addons = {}
         for item in conf_dict.get("addons"):

@@ -239,7 +239,7 @@ class Addon:
 
         return True
 
-    async def async_process_images_in_addons(self, images: dict[str]) -> bool:
+    async def async_process_images_in_addons(self, images) -> bool:
         """Trigger image addons with images to process"""
 
         if self.type == AddonType.IMAGE:

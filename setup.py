@@ -14,9 +14,9 @@ setup(
     version=const.CORE_VERSION,
     description="The core system for photos.network",
     long_description="The core system for photos.network to manage components.",
-    author="The Photos Network Authors",
+    author="The Photos.network Authors",
     author_email="devs@photos.network",
-    url="https://dev.photos.network/core",
+    url="https://developers.photos.network/core/",
     license="Apache License 2.0",
     classifiers=[
         "Intended Audience :: End Users/Desktop",

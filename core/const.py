@@ -1,4 +1,4 @@
-"""Constants used by Photos.network."""
+"""Constants used by Photos.network core."""
 MAJOR_VERSION = 0
 MINOR_VERSION = 1
 PATCH_VERSION = 0

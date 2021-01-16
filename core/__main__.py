@@ -1,4 +1,4 @@
-"""Entry point of Photos.network"""
+"""Entry point of Photos.network core."""
 
 import asyncio
 import logging

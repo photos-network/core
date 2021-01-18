@@ -18,6 +18,7 @@ from core.webserver.status import HTTP_OK, HTTP_SERVICE_UNAVAILABLE
 from core.webserver.type import APPLICATION_JSON
 _LOGGER = logging.getLogger(__name__)
 KEY_AUTHENTICATED = "authenticated"
+KEY_USER_ID = "user_id"
 
 
 def is_callback(func: Callable[..., Any]) -> bool:
@@ -110,9 +111,10 @@ def request_handler_factory(view: RequestView, core: "ApplicationCore", handler:
             raise HTTPUnauthorized()
 
         _LOGGER.debug(f"Serving {request.path} to {request.remote} (auth: {authenticated})")
+        _LOGGER.debug(f"match_info {request.match_info}")
 
         try:
-            result = handler(core, request, **request.match_info)
+            result = await handler(core, request, **request.match_info)
 
             if asyncio.iscoroutine(result):
                 result = await result

@@ -44,6 +44,7 @@ class Addon:
         addon_path = pathlib.Path(core.config.addon_dir) / addon_name / "addon.json"
 
         if not addon_path.is_file():
+            _LOGGER.error(f"Error manifest.json file at {addon_path} does not exist!")
             return None
 
         try:

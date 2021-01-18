@@ -6,8 +6,10 @@ from typing import TYPE_CHECKING
 from aiohttp import web, hdrs
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
+import base64
 
-from .request import RequestView, KEY_AUTHENTICATED  # noqa: F401
+from .request import RequestView, KEY_AUTHENTICATED, KEY_USER_ID  # noqa: F401
+from .. import const
 
 if TYPE_CHECKING:
     from core.core import ApplicationCore
@@ -29,6 +31,7 @@ class Webserver:
 
         self.app.middlewares.append(self.ban_middleware)
         self.app.middlewares.append(self.auth_middleware)
+        self.app.middlewares.append(self.headers_middleware)
         # TODO: add cors middleware
         # self.app.middlewares.append(self.cors_middleware)
 
@@ -122,13 +125,25 @@ class Webserver:
             if auth_type != "Bearer":
                 return False
 
-            _LOGGER.error(f"validate auth_val: {auth_val}")
+            # TODO: validate authorization credentials
+            _LOGGER.error(f"validate authorization credentials: {auth_val}")
 
             authenticated = True
             auth_type = "bearer token"
+            base64_bytes = auth_val.encode('ascii')
+            message_bytes = base64.b64decode(base64_bytes)
+            token = message_bytes.decode('ascii')
+            user_id = token.split(":", 1)[0]
 
-        if authenticated:
-            _LOGGER.debug(f"Authenticated {request.remote} for {request.path} using {auth_type}")
-            request[KEY_AUTHENTICATED] = authenticated
+            if authenticated:
+                _LOGGER.debug(f"Authenticated {request.remote} for {request.path} using {auth_type}")
+                request[KEY_AUTHENTICATED] = authenticated
+                request[KEY_USER_ID] = user_id
 
         return await handler(request)
+
+    @middleware
+    async def headers_middleware(self, request: web.Request, handler):
+        response = await handler(request)
+        response.headers['Server'] = f"Photos.network/{const.CORE_VERSION}"
+        return response

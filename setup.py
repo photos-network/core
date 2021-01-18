@@ -44,6 +44,6 @@ setup(
     entry_points={"console_scripts": ["core = core.__main__:main"]},
     include_package_data=True,
     package_data={
-        "core": ["addons/**/*.py", "addons/**/model/**"],
+        "core": ["addons/**/*.py", "addons/**/model/**", "addons/**/dto/**"],
     }
 )

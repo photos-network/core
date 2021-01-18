@@ -223,7 +223,9 @@ class ApplicationCore:
         for item in conf_dict.get("addons"):
             addon_name = item.get("name")
             addon_config = item.get("config")
-            addons[addon_name] = Addon.resolve_from_root(self, addon_name, addon_config)
+            addon = Addon.resolve_from_root(self, addon_name, addon_config)
+            if addon is not None:
+                addons[addon_name] = addon
 
         return addons
 

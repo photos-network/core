@@ -1,9 +1,9 @@
 """Photos.network setup script"""
+import sys
+
 from setuptools import setup
 
 from core import const
-
-import sys
 
 if sys.version_info < (3, 0):
     print("{PROJECT_NAME} requires python version >= 3.0")
@@ -14,9 +14,9 @@ setup(
     version=const.CORE_VERSION,
     description="The core system for photos.network",
     long_description="The core system for photos.network to manage components.",
-    author="The Photos Network Authors",
+    author="The Photos.network Authors",
     author_email="devs@photos.network",
-    url="https://dev.photos.network/core",
+    url="https://developers.photos.network/core/",
     license="Apache License 2.0",
     classifiers=[
         "Intended Audience :: End Users/Desktop",
@@ -44,6 +44,6 @@ setup(
     entry_points={"console_scripts": ["core = core.__main__:main"]},
     include_package_data=True,
     package_data={
-        "core": ["addons/**/*.py", "addons/**/model/**"],
-    }
+        "core": ["addons/**/*.py", "addons/**/model/**", "addons/**/dto/**"],
+    },
 )

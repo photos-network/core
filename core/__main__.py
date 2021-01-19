@@ -1,11 +1,10 @@
-"""Entry point of Photos.network"""
+"""Entry point of Photos.network core."""
 
 import asyncio
 import logging
 import os
-from typing import Optional
-
 import sys
+from typing import Optional
 
 from core.configs import RuntimeConfig
 from core.const import REQUIRED_PYTHON_VER
@@ -26,7 +25,7 @@ def validate_python() -> None:
 
 
 async def async_setup(
-        runtime_config: RuntimeConfig,
+    runtime_config: RuntimeConfig,
 ) -> Optional[ApplicationCore]:
     """Set up Photos."""
     application = ApplicationCore()
@@ -35,7 +34,9 @@ async def async_setup(
     application.config.data_dir = runtime_config.data_dir
     application.async_enable_logging(verbose=True)
 
-    _LOGGER.info(f"Config directory: {runtime_config.config_dir}", )
+    _LOGGER.info(
+        f"Config directory: {runtime_config.config_dir}",
+    )
 
     return application
 
@@ -51,6 +52,7 @@ async def setup_and_run(runtime_config: RuntimeConfig) -> int:
 
 
 def get_or_create_directory(directory: str, is_relative: bool = True) -> str:
+    """Return absolute path of given directory. Create if it does not exist."""
     if is_relative:
         directory_path = os.path.abspath(os.path.join(os.getcwd(), directory))
     else:
@@ -64,20 +66,20 @@ def get_or_create_directory(directory: str, is_relative: bool = True) -> str:
 
 
 def main() -> int:
-    """Start Photos.network"""
+    """Start Photos.network application."""
     validate_python()
 
     _LOGGER.debug("Now run the core system...")
 
-    config_dir = get_or_create_directory(directory='config')
-    data_dir = get_or_create_directory(directory='data', is_relative=False)
+    config_dir = get_or_create_directory(directory="config")
+    data_dir = get_or_create_directory(directory="data", is_relative=False)
 
     runtime_conf = RuntimeConfig(
         config_dir=config_dir,
         data_dir=data_dir,
         safe_mode=False,
         debug=True,
-        verbose=True
+        verbose=True,
     )
 
     try:

@@ -12,6 +12,7 @@ Its core features are:
  - Filter / Search photos by attributes like location or date
  - Group photos by objects like people of objects
 
+
 ## Core
 This repository contains the core system of the project.
 It is responsible for main tasks e.g.:
@@ -21,45 +22,34 @@ It is responsible for main tasks e.g.:
  - **Persistency**  (read / write data)
  - **Task Processing**  (keep track of running tasks)
 
-### Add-ons
-The core system can be extended by add-ons to attune user needs.
 
-Each addon is encapsulated in a separate directory wich have to contain at least:
-- `addon.json` with detailed informations and requirements
-- `__init__.py` with an async setup function
-
-```json
-{
-  "domain": "api",
-  "name": "REST api",
-  "requirements": [],
-  "core": "0.1.0"
-}
+## Installation
+Install core dependencies:
+```shell
+$ pip3 install -r requirements.txt 
 ```
 
-```python
-async def async_setup(core: ApplicationCore, config: dict) -> bool:
-    return True
+Install the core system from the wheel
+```shell
+$ pip3 install --upgrade --force-reinstall core-0.1.0-py3-none-any.whl
 ```
-
-
- - Sync photos (reading & writing)
-   - server <=> server
-     - nextcloud, gdrive, icloud
-   - client <=> server
-     - browser, native app
- - File processing
-   - Metadata parsing
- - Image processing
-   - Object detection
-   - Face detection
-
 
 
 ## Development
 Always use [PEP 484: Type Hints](https://www.python.org/dev/peps/pep-0484/) in your syntax.
 
-#### Prepare setup
+
+### Visual Studio Code
+The fastest start into development can be archived by using [Visual Studio Code](https://code.visualstudio.com/) and [Docker](https://www.docker.com/get-started).
+
+1. Install [Docker](https://www.docker.com/get-started)
+2. Install [Visual Studio Code](https://code.visualstudio.com/)
+3. Install [Visual Studio Code Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+4. Clone and Open this repository in Visual Studio Code
+5. Click the "Reopen in Container" Dialog
+
+
+### Manual Environment
 Prepare an environment by running:
 ```shell
 python3 -m venv venv
@@ -72,7 +62,8 @@ After the environment is build, install the core:
 python3 setup.py install
 ```
 
-#### Run
+
+## Run
 ```shell
 python3 ./venv/bin/core
 ```

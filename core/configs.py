@@ -3,7 +3,7 @@ import dataclasses
 import datetime
 import logging
 import os
-from typing import Dict, Optional, Set, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Optional, Set
 
 import pytz
 
@@ -22,8 +22,9 @@ class Config:
         """Initialize a new config object."""
         self.core = core
 
-        self.internal_url: Optional[str] = None
-        self.external_url: Optional[str] = None
+        self.internal_url: Optional[str] = "127.0.0.1"
+        self.external_url: Optional[str] = "127.0.0.1"
+        self.port: Optional[int] = 9090
 
         self.time_zone: datetime.tzinfo = pytz.utc.zone
 
@@ -31,7 +32,7 @@ class Config:
         self.addons: Set[str] = set()
 
         # Directory that holds addons
-        self.addon_dir: Optional[str] = 'core/addons'
+        self.addon_dir: Optional[str] = "core/addons"
 
         # Directory that holds configuration data
         self.config_dir: Optional[str] = None
@@ -60,6 +61,7 @@ class Config:
         return {
             "internal_url": self.internal_url,
             "external_url": self.external_url,
+            "port": self.port,
             "time_zone": time_zone,
             "addons": self.addons,
             "config_dir": self.config_dir,

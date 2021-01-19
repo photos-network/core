@@ -5,14 +5,12 @@ import json
 import logging
 import os
 import pathlib
-from enum import Enum
-from types import ModuleType
-
-import time
-from subprocess import Popen, PIPE
-from typing import Optional, cast, Dict, Any, List, TYPE_CHECKING
-
 import sys
+import time
+from enum import Enum
+from subprocess import PIPE, Popen
+from types import ModuleType
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -25,7 +23,8 @@ _LOGGER.setLevel(logging.DEBUG)
 
 
 class AddonType(Enum):
-    """Describe"""
+    """Separate addons by type."""
+
     IMAGE = "image"
     STORAGE = "storage"
 
@@ -35,15 +34,13 @@ class Addon:
 
     @classmethod
     def resolve_from_root(
-            cls,
-            core: "ApplicationCore",
-            addon_name: str,
-            addon_config: dict = None
+        cls, core: "ApplicationCore", addon_name: str, addon_config: dict = None
     ) -> "Optional[Addon]":
         """Resolve an addon from a root module."""
         addon_path = pathlib.Path(core.config.addon_dir) / addon_name / "addon.json"
 
         if not addon_path.is_file():
+            _LOGGER.error(f"Error manifest.json file at {addon_path} does not exist!")
             return None
 
         try:
@@ -52,21 +49,15 @@ class Addon:
             _LOGGER.error(f"Error parsing manifest.json file at {addon_path}: {err}")
             return None
 
-        return cls(
-            core,
-            f"{addon_path}",
-            addon_path.parent,
-            manifest,
-            addon_config
-        )
+        return cls(core, f"{addon_path}", addon_path.parent, manifest, addon_config)
 
     def __init__(
-            self,
-            core: "ApplicationCore",
-            pkg_path: str,
-            file_path: pathlib.Path,
-            manifest: Dict[str, Any],
-            addon_config: Dict[str, Any] = None
+        self,
+        core: "ApplicationCore",
+        pkg_path: str,
+        file_path: pathlib.Path,
+        manifest: Dict[str, Any],
+        addon_config: Dict[str, Any] = None,
     ):
         """Initialize an integration."""
         self.core = core
@@ -104,6 +95,7 @@ class Addon:
 
     @property
     def type(self) -> AddonType:
+        """Return the type of the addon."""
         return cast(AddonType, AddonType(self.manifest.get("type", AddonType.IMAGE)))
 
     @property
@@ -121,7 +113,7 @@ class Addon:
         return f"<Addon {self.domain}: {self.pkg_path}>"
 
     def install_requirements(self) -> bool:
-        """install requirements for addon. return True if all requrements fulfilled"""
+        """Install requirements for addon. return True if all requrements fulfilled."""
         all_requirements_resolved = True
         for requirement in self.requirements:
             _LOGGER.info(f"Install requirement {requirement} for {self.domain}")
@@ -136,13 +128,13 @@ class Addon:
         return all_requirements_resolved
 
     def install_package(
-            self,
-            package: str,
-            upgrade: bool = True,
-            target: Optional[str] = None,
-            constraints: Optional[str] = None,
-            find_links: Optional[str] = None,
-            no_cache_dir: Optional[bool] = False,
+        self,
+        package: str,
+        upgrade: bool = True,
+        target: Optional[str] = None,
+        constraints: Optional[str] = None,
+        find_links: Optional[str] = None,
+        no_cache_dir: Optional[bool] = False,
     ) -> bool:
         """Install a package on PyPi. Accepts pip compatible package strings.
 
@@ -173,9 +165,9 @@ class Addon:
         return True
 
     async def async_setup_addon(
-            self,
+        self,
     ) -> bool:
-        """run custom setup for addon."""
+        """Run custom setup for addon."""
         processed_config = self.addon_config
 
         start = time.perf_counter()
@@ -205,7 +197,9 @@ class Addon:
                 _LOGGER.error("!! ==> No setup function defined.")
                 return False
 
-            async with self.core.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, self.domain):
+            async with self.core.timeout.async_timeout(
+                SLOW_SETUP_MAX_WAIT, self.domain
+            ):
                 result = await task
         except asyncio.TimeoutError:
             _LOGGER.error(
@@ -239,9 +233,8 @@ class Addon:
 
         return True
 
-    async def async_process_images_in_addons(self, images: dict[str]) -> bool:
-        """Trigger image addons with images to process"""
-
+    async def async_process_images_in_addons(self, images) -> bool:
+        """Trigger image addons with images to process."""
         if self.type == AddonType.IMAGE:
             start = time.perf_counter()
             _LOGGER.info(f"Start processing images with addon '{self.domain}'")
@@ -249,10 +242,14 @@ class Addon:
             try:
                 component = importlib.import_module(f"core.addons.{self.domain}")
             except ImportError as err:
-                _LOGGER.error(f"Processing images with addon '{self.domain}' failed: {err}")
+                _LOGGER.error(
+                    f"Processing images with addon '{self.domain}' failed: {err}"
+                )
                 return False
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception(f"Processing images with addon '{self.domain}' failed: unknown error")
+                _LOGGER.exception(
+                    f"Processing images with addon '{self.domain}' failed: unknown error"
+                )
                 return False
 
             try:
@@ -265,7 +262,9 @@ class Addon:
                             _LOGGER.warning("could not finish successful")
             finally:
                 end = time.perf_counter()
-            _LOGGER.info(f"Processing {len(images)} images with addon '{self.domain}' took {end - start:#.2f} seconds.")
+            _LOGGER.info(
+                f"Processing {len(images)} images with addon '{self.domain}' took {end - start:#.2f} seconds."
+            )
 
         elif self.type == AddonType.STORAGE:
             _LOGGER.debug(f"Skipping non image addon '{self.domain}'")
@@ -283,23 +282,29 @@ class Addon:
 
 
 class AddonSetupFlow:
-    """Base class for the setup flow. See PEP 487 for details"""
+    """Base class for the setup flow. See PEP 487 for details."""
+
     # _core: Optional[ApplicationCore] = None
     _registry = []
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
+        """Initialize subclass."""
         super().__init_subclass__(**kwargs)
         cls._registry.append(cls)
 
     def get_registry(cls):
+        """Return the addon registry."""
         return cls._registry
 
-    async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def async_step_user(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Handle a flow initiated by the user."""
         return self.async_abort(reason="not_implemented")
 
-    def async_abort(self, *, reason: str, description_placeholders: Optional[Dict] = None) -> Dict[str, Any]:
+    def async_abort(
+        self, *, reason: str, description_placeholders: Optional[Dict] = None
+    ) -> Dict[str, Any]:
         """Abort the config flow."""
-
         return dict()

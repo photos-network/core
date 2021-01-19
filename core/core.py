@@ -4,12 +4,22 @@ import enum
 import json
 import logging
 import os
-from logging.handlers import TimedRotatingFileHandler
-from typing import Optional, Iterable, Awaitable, Any, TypeVar, Callable, List, Dict
-
 import sys
-from colorlog import ColoredFormatter
+from logging.handlers import TimedRotatingFileHandler
 from time import monotonic
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    TypeVar,
+)
+
+from colorlog import ColoredFormatter
 
 from core import loader
 from core.addon import Addon
@@ -40,11 +50,11 @@ def callback(func: CALLABLE_T) -> CALLABLE_T:
 
 class ApplicationCore:
     """ApplicationCore root object."""
+
     http: "Webserver" = None  # type: ignore
 
     def __init__(self) -> None:
         """Initialize new ApplicationCore."""
-
         _LOGGER.debug("ApplicationCore::init...")
 
         self.loop = asyncio.get_running_loop()
@@ -79,7 +89,7 @@ class ApplicationCore:
         return self.state in (CoreState.stopping, CoreState.final_write)
 
     def async_enable_logging(self, verbose: bool = False) -> None:
-        """Setup logging for application core"""
+        """Set up logging for application core."""
         fmt = "%(asctime)s %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
         datefmt = "%Y-%m-%d %H:%M:%S"
         logging.basicConfig(level=logging.INFO)
@@ -111,16 +121,11 @@ class ApplicationCore:
         )
         log_rotate_days = 14
         err_log_path = self.config.path(ERROR_LOG_FILENAME)
-        err_path_exists = os.path.isfile(err_log_path)
         err_dir = os.path.dirname(err_log_path)
-        if not err_dir or not err_path_exists:
+        if not err_dir:
             os.mkdir(err_dir)
-        err_handler: logging.FileHandler = (
-            TimedRotatingFileHandler(
-                err_log_path,
-                when="midnight",
-                backupCount=log_rotate_days
-            )
+        err_handler: logging.FileHandler = TimedRotatingFileHandler(
+            err_log_path, when="midnight", backupCount=log_rotate_days
         )
         err_handler.setLevel(logging.DEBUG if verbose else logging.WARNING)
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
@@ -130,7 +135,8 @@ class ApplicationCore:
         logger.setLevel(logging.DEBUG if verbose else logging.WARNING)
 
     async def start(self) -> int:
-        """Start Photos Core.
+        """Start Photos.network application core.
+
         Note: This function is only used for testing.
         For regular use, use "await photos.run()".
         """
@@ -140,7 +146,10 @@ class ApplicationCore:
         return self.exit_code
 
     async def async_run(self, *, attach_signals: bool = True) -> int:
-        """Main entry point."""
+        """Run the application.
+
+        Main entry point of the core application.
+        """
         _LOGGER.debug("ApplicationCore::async_run")
 
         if self.state != CoreState.not_running:
@@ -155,11 +164,8 @@ class ApplicationCore:
         return self.exit_code
 
     async def async_start(self) -> None:
-        """Finalize startup from inside the event loop.
-        This method is a coroutine.
-        """
+        """Finalize startup from inside the event loop."""
         _LOGGER.debug("ApplicationCore::async_start()")
-        #         setattr(self.loop, "_thread_ident", threading.get_ident())
 
         self.state = CoreState.starting
 
@@ -184,6 +190,7 @@ class ApplicationCore:
         self.state = CoreState.running
 
     async def async_stop(self) -> None:
+        """Stop Photos.network core application."""
         self.state = CoreState.stopping
         self.state = CoreState.final_write
         self.state = CoreState.not_running
@@ -193,8 +200,7 @@ class ApplicationCore:
             self._stopped.set()
 
     async def async_set_up_addons(self) -> None:
-        """setup addons by checking and installing their dependencies and
-        run their 'async_setup' method."""
+        """Set up addons by checking and installing their dependencies and run their 'async_setup' method."""
         conf_dict = await self._load_config()
         addon_dict = await self._load_addons(conf_dict)
 
@@ -203,33 +209,38 @@ class ApplicationCore:
 
             all_requirements_fulfilled = addon.install_requirements()
             if not all_requirements_fulfilled:
-                _LOGGER.error(f"setup addon '{addon.domain}' failed. Not all requirements installed!")
+                _LOGGER.error(
+                    f"setup addon '{addon.domain}' failed. Not all requirements installed!"
+                )
 
             if all_requirements_fulfilled:
                 addon_setup_successful = await addon.async_setup_addon()
                 if addon_setup_successful:
                     self.loaded_addons[addon.domain] = addon
 
-    async def async_trigger_addons(self, images: dict[str]) -> None:
+    async def async_trigger_addons(self, images: Sequence[str]) -> None:
+        """Trigger processing of all image addons."""
         conf_dict = await self._load_config()
         addon_dict = await self._load_addons(conf_dict)
 
         for addon in addon_dict.values():
             await addon.async_process_images_in_addons(images)
 
-    async def _load_addons(self, conf_dict) -> dict[Addon]:
-        """load addons from files"""
+    async def _load_addons(self, conf_dict) -> Dict[str, Addon]:
+        """Load addons from files."""
         addons = {}
         for item in conf_dict.get("addons"):
             addon_name = item.get("name")
             addon_config = item.get("config")
-            addons[addon_name] = Addon.resolve_from_root(self, addon_name, addon_config)
+            addon = Addon.resolve_from_root(self, addon_name, addon_config)
+            if addon is not None:
+                addons[addon_name] = addon
 
         return addons
 
     async def _load_config(self) -> dict:
-        """load configuration from file and return as dict"""
-        config_file = os.path.join(self.config.config_dir, 'configuration.json')
+        """Load configuration from file and return as dict."""
+        config_file = os.path.join(self.config.config_dir, "configuration.json")
         _LOGGER.info(f"config_file {config_file}")
         with open(config_file, encoding="utf-8") as file:
             conf_dict = json.load(file)
@@ -292,7 +303,7 @@ class ApplicationCore:
 
 
 class CoreState(enum.Enum):
-    """Represent the current state of Photos.network"""
+    """Represent the current state of Photos.network."""
 
     not_running = "NOT_RUNNING"
     starting = "STARTING"

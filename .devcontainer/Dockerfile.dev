@@ -27,9 +27,7 @@ COPY . .
 
 RUN python3 setup.py install
 
+EXPOSE 9090
+
+# Run the core system
 RUN core
-
-# Set the default shell to bash instead of sh
-# ENV SHELL /bin/bash
-
-# ENTRYPOINT ./entrypoint.sh

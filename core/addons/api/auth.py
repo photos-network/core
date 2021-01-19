@@ -3,8 +3,8 @@ import json
 from json import JSONEncoder
 
 from aiohttp import web
-from core.webserver import status
 
+from core.webserver import status
 from core.webserver.request import RequestView
 from core.webserver.type import APPLICATION_JSON
 
@@ -17,8 +17,11 @@ class APIAuthView(RequestView):
     name = "api:auth"
 
     async def post(self):
+        """Handle authentication requests."""
         # TODO: handle data for authentication
-        msg = json.dumps("Authentication not implemented yet!", cls=JSONEncoder, allow_nan=False).encode("UTF-8")
+        msg = json.dumps(
+            "Authentication not implemented yet!", cls=JSONEncoder, allow_nan=False
+        ).encode("UTF-8")
 
         response = web.Response(
             body=msg,

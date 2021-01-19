@@ -1,6 +1,6 @@
 {
   "domain": "metadata",
-  "name": "File metadata parsing",
+  "name": "Read file metadata like exif",
   "requirements": [
     "exif==1.0.4"
   ],

@@ -1,6 +1,6 @@
 """The methods for loading integrations."""
 import logging
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -19,10 +19,7 @@ DATA_ADDONS = "addons"
 class ModuleWrapper:
     """Class to wrap a Python module and auto fill in application core as argument."""
 
-    def __init__(self,
-                 core: "ApplicationCore",
-                 module: ModuleType
-                 ) -> None:
+    def __init__(self, core: "ApplicationCore", module: ModuleType) -> None:
         """Initialize the module wrapper."""
         self._core = core
         self._module = module
@@ -32,10 +29,7 @@ class ModuleWrapper:
 class Components:
     """Helper to load components."""
 
-    def __init__(
-            self,
-            core: "ApplicationCore"
-    ) -> None:
+    def __init__(self, core: "ApplicationCore") -> None:
         """Initialize the Components class."""
         self._core = core
 

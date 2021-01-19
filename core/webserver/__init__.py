@@ -1,5 +1,6 @@
 """HTTP server implementation."""
 import base64
+import binascii
 import logging
 from ipaddress import ip_address
 from typing import TYPE_CHECKING
@@ -133,16 +134,22 @@ class Webserver:
             # TODO: validate authorization credentials
             _LOGGER.error(f"validate authorization credentials: {auth_val}")
 
-            authenticated = True
-            auth_type = "bearer token"
-            base64_bytes = auth_val.encode("ascii")
-            message_bytes = base64.b64decode(base64_bytes)
-            token = message_bytes.decode("ascii")
-            user_id = token.split(":", 1)[0]
+            try:
+                authenticated = True
+                auth_type = "bearer token"
+                base64_bytes = auth_val.encode("ascii")
+                message_bytes = base64.b64decode(base64_bytes)
+                token = message_bytes.decode("ascii")
+                user_id = token.split(":", 1)[0]
+                assert len(user_id) > 1
+            except (binascii.Error, AssertionError):
+                _LOGGER.error("Failed to extract user from token!")
+                user_id = None
+                authenticated = False
 
             if authenticated:
                 _LOGGER.debug(
-                    f"Authenticated {request.remote} for {request.path} using {auth_type}"
+                    f"Authenticated {request.remote} for {request.path} using {auth_type}. User = {user_id}"
                 )
                 request[KEY_AUTHENTICATED] = authenticated
                 request[KEY_USER_ID] = user_id

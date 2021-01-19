@@ -3,7 +3,7 @@ import dataclasses
 import datetime
 import logging
 import os
-from typing import Dict, Optional, Set, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Optional, Set
 
 import pytz
 
@@ -32,7 +32,7 @@ class Config:
         self.addons: Set[str] = set()
 
         # Directory that holds addons
-        self.addon_dir: Optional[str] = 'core/addons'
+        self.addon_dir: Optional[str] = "core/addons"
 
         # Directory that holds configuration data
         self.config_dir: Optional[str] = None

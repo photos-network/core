@@ -4,9 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from core.addons.api import APIStatusView
 from core.core import ApplicationCore, CoreState
-from core.webserver import status
 
 
 @pytest.mark.asyncio

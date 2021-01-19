@@ -1,9 +1,9 @@
 """Photos.network setup script"""
+import sys
+
 from setuptools import setup
 
 from core import const
-
-import sys
 
 if sys.version_info < (3, 0):
     print("{PROJECT_NAME} requires python version >= 3.0")
@@ -45,5 +45,5 @@ setup(
     include_package_data=True,
     package_data={
         "core": ["addons/**/*.py", "addons/**/model/**", "addons/**/dto/**"],
-    }
+    },
 )

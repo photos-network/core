@@ -1,15 +1,15 @@
 """HTTP server implementation."""
+import base64
 import logging
 from ipaddress import ip_address
 from typing import TYPE_CHECKING
 
-from aiohttp import web, hdrs
+from aiohttp import hdrs, web
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
-import base64
 
-from .request import RequestView, KEY_AUTHENTICATED, KEY_USER_ID  # noqa: F401
 from .. import const
+from .request import KEY_AUTHENTICATED, KEY_USER_ID, RequestView  # noqa: F401
 
 if TYPE_CHECKING:
     from core.core import ApplicationCore
@@ -20,13 +20,12 @@ LOGIN_ATTEMPT_THRESHOLD = 3
 
 
 class Webserver:
-    """Webserver implementation"""
+    """Webserver implementation."""
 
     def __init__(self, core: "ApplicationCore"):
+        """Initialize webserver."""
         self.core = core
-        self.app = web.Application(
-            middlewares=[],
-            client_max_size=MAX_CLIENT_SIZE)
+        self.app = web.Application(middlewares=[], client_max_size=MAX_CLIENT_SIZE)
         self.runner = web.AppRunner(self.app)
 
         self.app.middlewares.append(self.ban_middleware)
@@ -36,11 +35,13 @@ class Webserver:
         # self.app.middlewares.append(self.cors_middleware)
 
     def register_request(self, view):
-        """The view argument must be a class that inherits from Request
+        """
+        Register a request.
+
+        The view argument must be a class that inherits from Request.
         It is optional to instantiate it before registering; this method will
         handle it either way.
         """
-
         # if isinstance(view, type):
         #     # Instantiate the view, if needed
         #     view = view()
@@ -56,20 +57,20 @@ class Webserver:
         view.register(self.core, self.app.router)
 
     async def start(self):
+        """Start webserver."""
         await self.runner.setup()
 
         host = self.core.config.external_url
         port = self.core.config.port
+        _LOGGER.debug(f"ignore host from config {host}")
 
         # use host=None to listen on all interfaces.
-        site = web.TCPSite(
-            runner=self.runner,
-            host=None,
-            port=port)
+        site = web.TCPSite(runner=self.runner, host=None, port=port)
         _LOGGER.info(f"Webserver is listening on {site._host}:{site._port}")
         await site.start()
 
     async def stop(self):
+        """Stop webserver."""
         await self.runner.cleanup()
 
     @middleware
@@ -100,7 +101,9 @@ class Webserver:
             if remote_addr in self.core.failed_logins:
                 # check login attempt count
                 if self.core.failed_logins[remote_addr] >= LOGIN_ATTEMPT_THRESHOLD:
-                    _LOGGER.warning(f"Banned IP {remote_addr} for too many login attempts")
+                    _LOGGER.warning(
+                        f"Banned IP {remote_addr} for too many login attempts"
+                    )
                     self.core.banned_ips.append(remote_addr)
                 else:
                     old_count = self.core.banned_ips[remote_addr]
@@ -117,7 +120,9 @@ class Webserver:
 
         if hdrs.AUTHORIZATION in request.headers:
             try:
-                auth_type, auth_val = request.headers.get(hdrs.AUTHORIZATION).split(" ", 1)
+                auth_type, auth_val = request.headers.get(hdrs.AUTHORIZATION).split(
+                    " ", 1
+                )
             except ValueError:
                 # If no space in authorization header
                 return False
@@ -130,13 +135,15 @@ class Webserver:
 
             authenticated = True
             auth_type = "bearer token"
-            base64_bytes = auth_val.encode('ascii')
+            base64_bytes = auth_val.encode("ascii")
             message_bytes = base64.b64decode(base64_bytes)
-            token = message_bytes.decode('ascii')
+            token = message_bytes.decode("ascii")
             user_id = token.split(":", 1)[0]
 
             if authenticated:
-                _LOGGER.debug(f"Authenticated {request.remote} for {request.path} using {auth_type}")
+                _LOGGER.debug(
+                    f"Authenticated {request.remote} for {request.path} using {auth_type}"
+                )
                 request[KEY_AUTHENTICATED] = authenticated
                 request[KEY_USER_ID] = user_id
 
@@ -144,6 +151,7 @@ class Webserver:
 
     @middleware
     async def headers_middleware(self, request: web.Request, handler):
+        """Add a server header to all responses."""
         response = await handler(request)
-        response.headers['Server'] = f"Photos.network/{const.CORE_VERSION}"
+        response.headers["Server"] = f"Photos.network/{const.CORE_VERSION}"
         return response

@@ -4,18 +4,21 @@ from typing import Optional
 
 
 class User:
+    """User representation for authentication."""
+
     def __init__(
-            self,
-            user_id: str,
-            username: str,
-            name: Optional[str],
-            email: Optional[str],
-            password_hash: str,
-            is_admin: bool = False,
-            is_active: bool = True,
-            last_login: datetime = datetime.datetime,
-            date_joined: datetime = datetime.datetime
+        self,
+        user_id: str,
+        username: str,
+        name: Optional[str],
+        email: Optional[str],
+        password_hash: str,
+        is_admin: bool = False,
+        is_active: bool = True,
+        last_login: datetime = datetime.datetime,
+        date_joined: datetime = datetime.datetime,
     ):
+        """Initialize the user representation."""
         self.username = username
         self.name = name
         self.email = email

@@ -1,14 +1,22 @@
-"""photo"""
+"""Photo."""
 from json.encoder import JSONEncoder
 
 
 class PhotoEncoder(JSONEncoder):
+    """Encode photo to json."""
+
     def default(self, o):
+        """Encode all properties."""
         return o.__dict__
 
 
 class Photo:
-    def __init__(self, name, description, author, created_at, details, tags, location, image_urls):
+    """Photo response object."""
+
+    def __init__(
+        self, name, description, author, created_at, details, tags, location, image_urls
+    ):
+        """Initialize photo response object."""
         self.name = name
         self.description = description
         self.author = author

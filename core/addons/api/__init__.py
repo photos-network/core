@@ -12,7 +12,7 @@ from core.addons.api.dto.photo import Photo, PhotoEncoder
 from core.addons.api.dto.photo_response import PhotoResponse
 from core.addons.api.dto.photo_url import PhotoUrl
 from core.core import ApplicationCore
-from core.webserver.request import RequestView, KEY_USER_ID
+from core.webserver.request import KEY_USER_ID, RequestView
 from core.webserver.status import HTTP_CREATED, HTTP_OK
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 async def async_setup(core: ApplicationCore, config: dict) -> bool:
-    """setup addon to core application."""
+    """Set up addon to core application."""
     is_cors_enabled = config["cors"]
     _LOGGER.info(f"enable cors: {is_cors_enabled}")
 
@@ -42,7 +42,6 @@ class APIStatusView(RequestView):
 
     async def get(self, core: ApplicationCore, request: web.Request):
         """Retrieve if API is running."""
-
         return self.json_message("API running.")
 
 
@@ -53,18 +52,20 @@ class PhotosView(RequestView):
     name = "api:photo:upload"
 
     async def get(self, core: ApplicationCore, request: web.Request) -> web.Response:
-        """get a list of all photo resources."""
+        """Get a list of all photo resources."""
         user = request[KEY_USER_ID]
 
         data = request.query
 
         offset = 0
-        if data['size']:
-            offset = data['size']  # integer  0..N
+        if data["size"]:
+            offset = data["size"]  # integer  0..N
 
         limit = 50
-        if data['size']:  # integer   Number of records per page.
-            limit = data['size']
+        if data["size"]:  # integer   Number of records per page.
+            limit = data["size"]
+
+        _LOGGER.info(f"loading data for user {user}")
 
         response = PhotoResponse(
             offset=offset,
@@ -82,40 +83,36 @@ class PhotosView(RequestView):
                         focal_length="700",
                         iso="400",
                         shutter_speed="1/2000",
-                        aperture="6.3"
+                        aperture="6.3",
                     ),
                     tags=[
                         "landscape",
                         "sky",
                         "night",
                     ],
-                    location=Location(
-                        latitude="0.0",
-                        longitude="0.0",
-                        altitude="0.0"
-                    ),
+                    location=Location(latitude="0.0", longitude="0.0", altitude="0.0"),
                     image_urls=[
                         PhotoUrl(size="1080", url="/data/cache/DSC_2340-HDR_1080.jpg"),
                         PhotoUrl(size="1600", url="/data/cache/DSC_2340-HDR_1600.jpg"),
                         PhotoUrl(size="2048", url="/data/cache/DSC_2340-HDR_2048.jpg"),
-                        PhotoUrl(size="full", url="/data/cache/DSC_2340-HDR.jpg")
-                    ]
+                        PhotoUrl(size="full", url="/data/cache/DSC_2340-HDR.jpg"),
+                    ],
                 )
-            ]
+            ],
         )
 
         return web.Response(
-            text=json.dumps(response, cls=PhotoEncoder),
-            content_type="application/json")
+            text=json.dumps(response, cls=PhotoEncoder), content_type="application/json"
+        )
 
     async def post(self, core: ApplicationCore, request: web.Request) -> web.Response:
-        """upload new photo resource."""
+        """Upload new photo resource."""
         user = request[KEY_USER_ID]
 
         reader = await request.multipart()
 
         field = await reader.next()
-        assert field.name == 'data'
+        assert field.name == "data"
         original_filename = field.filename
 
         _LOGGER.warning(f"request: {original_filename}")
@@ -127,7 +124,7 @@ class PhotosView(RequestView):
         filename = original_filename
 
         size = 0
-        with open(os.path.join(f"./data/users/{user}/", filename), 'wb') as f:
+        with open(os.path.join(f"./data/users/{user}/", filename), "wb") as f:
             while True:
                 chunk = await field.read_chunk()  # 8192 bytes by default.
                 if not chunk:
@@ -145,7 +142,9 @@ class PhotosView(RequestView):
 
         status_code = HTTP_CREATED if new_entity_created else HTTP_OK
 
-        resp = self.json_message(f"File successfully added with ID: {new_entity_id}", status_code)
+        resp = self.json_message(
+            f"File successfully added with ID: {new_entity_id}", status_code
+        )
         resp.headers.add("Location", f"/api/photo/{new_entity_id}")
 
         return resp
@@ -158,14 +157,15 @@ class PhotoView(RequestView):
     name = "api:photo"
 
     async def get(self, request, entity_id) -> web.Response:
-        """d"""
+        """Return an entity."""
         return self.json_message(f"return GET {entity_id}")
 
     async def post(self, request, entity_id):
-        """create an entity"""
+        """Create an entity."""
         return self.json_message(f"return POST {entity_id}")
 
     async def delete(self, request, entity_id):
+        """Delete an entity."""
         return self.json_message(f"return DELETE {entity_id}")
 
 

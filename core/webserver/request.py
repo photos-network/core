@@ -1,21 +1,25 @@
-#!/usr/bin/env python3
+"""Base class for webserver requests."""
 import asyncio
 import json
 import logging
-from typing import Any, Optional, List, Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, List, Optional
 
 import voluptuous
 from aiohttp import web
 from aiohttp.typedefs import LooseHeaders
 from aiohttp.web_exceptions import (
-    HTTPInternalServerError, HTTPBadRequest, HTTPUnauthorized,
+    HTTPBadRequest,
+    HTTPInternalServerError,
+    HTTPUnauthorized,
 )
 
 if TYPE_CHECKING:
     from core.core import ApplicationCore
+
 from core.webserver import exceptions
 from core.webserver.status import HTTP_OK, HTTP_SERVICE_UNAVAILABLE
 from core.webserver.type import APPLICATION_JSON
+
 _LOGGER = logging.getLogger(__name__)
 KEY_AUTHENTICATED = "authenticated"
 KEY_USER_ID = "user_id"
@@ -42,7 +46,9 @@ class RequestView:
     ) -> web.Response:
         """Return a JSON response."""
         try:
-            msg = json.dumps(result, cls=ComplexEncoder, allow_nan=False).encode("UTF-8")
+            msg = json.dumps(result, cls=ComplexEncoder, allow_nan=False).encode(
+                "UTF-8"
+            )
         except (ValueError, TypeError) as err:
             _LOGGER.error(f"Unable to serialize to JSON: {err}\n{result}")
             raise HTTPInternalServerError from err
@@ -87,14 +93,19 @@ class RequestView:
 
 
 class ComplexEncoder(json.JSONEncoder):
+    """Encoder for complex classes."""
+
     def default(self, obj):
+        """Encode all properties."""
         if isinstance(obj, complex):
             return [obj.real, obj.imag]
-        # Let the base class default method raise the TypeError
+        # Let the base class default method raise the TypeError.
         return json.JSONEncoder.default(self, obj)
 
 
-def request_handler_factory(view: RequestView, core: "ApplicationCore", handler: Callable) -> Callable:
+def request_handler_factory(
+    view: RequestView, core: "ApplicationCore", handler: Callable
+) -> Callable:
     """Wrap the handler classes."""
     assert asyncio.iscoroutinefunction(handler) or is_callback(
         handler
@@ -110,7 +121,9 @@ def request_handler_factory(view: RequestView, core: "ApplicationCore", handler:
         if view.requires_auth and not authenticated:
             raise HTTPUnauthorized()
 
-        _LOGGER.debug(f"Serving {request.path} to {request.remote} (auth: {authenticated})")
+        _LOGGER.debug(
+            f"Serving {request.path} to {request.remote} (auth: {authenticated})"
+        )
         _LOGGER.debug(f"match_info {request.match_info}")
 
         try:
@@ -142,6 +155,7 @@ def request_handler_factory(view: RequestView, core: "ApplicationCore", handler:
 
 
 def convert_to_bytes(input: Any) -> bytes:
+    """Convert given input into bytes."""
     if isinstance(input, bytes):
         bresult = input
     elif isinstance(input, str):
@@ -149,8 +163,6 @@ def convert_to_bytes(input: Any) -> bytes:
     elif input is None:
         bresult = b""
     else:
-        assert (
-            False
-        ), f"Result should be None, string, bytes or Response. Got: {input}"
+        assert False, f"Result should be None, string, bytes or Response. Got: {input}"
 
     return bresult

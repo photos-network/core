@@ -5,11 +5,14 @@ import logging
 from ipaddress import ip_address
 from typing import TYPE_CHECKING
 
+import aiohttp_jinja2
+import jinja2
 from aiohttp import hdrs, web
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
 
 from .. import const
+from ..authentication import Auth
 from .request import KEY_AUTHENTICATED, KEY_USER_ID, RequestView  # noqa: F401
 
 if TYPE_CHECKING:
@@ -28,6 +31,14 @@ class Webserver:
         self.core = core
         self.app = web.Application(middlewares=[], client_max_size=MAX_CLIENT_SIZE)
         self.runner = web.AppRunner(self.app)
+
+        # init jinja2 template engine
+        aiohttp_jinja2.setup(
+            self.app, loader=jinja2.FileSystemLoader("core/webserver/templates")
+        )
+
+        # init auth
+        self.auth = Auth(self.app)
 
         self.app.middlewares.append(self.ban_middleware)
         self.app.middlewares.append(self.auth_middleware)
@@ -160,5 +171,6 @@ class Webserver:
     async def headers_middleware(self, request: web.Request, handler):
         """Add a server header to all responses."""
         response = await handler(request)
-        response.headers["Server"] = f"Photos.network/{const.CORE_VERSION}"
+        if response is not None:
+            response.headers["Server"] = f"Photos.network/{const.CORE_VERSION}"
         return response

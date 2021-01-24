@@ -8,6 +8,10 @@ db = conn.get_database("users")
 col = db.get_collection("user")
 
 class Main(object):    
+    async def user_exists(user:str) -> bool:
+        return user in col.find_one({"username":user})['username']
+        
+
 
     async def hashPass(self, passwd) -> bytes:
         return hashpw(str(passwd).encode('utf8'), gensalt())
@@ -18,7 +22,7 @@ class Main(object):
         return checkpw(str(passwd).encode('utf8'), psw)
 
 
-    async def create_user(self, email ,user, pasw):
+    async def create_user(self, email ,user, pasw) -> None:
         col.insert_one({
             "email":email,
             "username":user,

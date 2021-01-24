@@ -1,27 +1,31 @@
-"""User representation."""
-import datetime
-from typing import Optional
+import pymongo
+from asyncio import run as r
+from bcrypt import hashpw, checkpw, gensalt
+from datetime import datetime
+
+conn = pymongo.MongoClient("localhost", 27017)
+db = conn.get_database("users")
+col = db.get_collection("user")
+
+class Main(object):
+    async def create_user(self, email ,user, pasw):
+        col.insert_one({
+            "email":email,
+            "username":user,
+            "passwd":pasw,
+            #this might not work as intended but if not i will fix it
+            "created_at":datetime.now(),
+            "last_login":datetime.now()
+        }) 
+    
+
+    async def hashPass(self, passwd) -> bytes:
+        return hashpw(str(passwd).encode('utf8'), gensalt())
 
 
-class User:
-    """User representation for authentication."""
+    async def checkPass(self, user ,passwd) -> bool:
+        psw = col.find_one({'username':user})['passwd']
+        return checkpw(str(passwd).encode('utf8'), psw)
 
-    def __init__(
-        self,
-        user_id: str,
-        username: str,
-        name: Optional[str],
-        email: Optional[str],
-        password_hash: str,
-        is_admin: bool = False,
-        is_active: bool = True,
-        last_login: datetime = datetime.datetime,
-        date_joined: datetime = datetime.datetime,
-    ):
-        """Initialize the user representation."""
-        self.username = username
-        self.name = name
-        self.email = email
-        self.password_hash = password_hash
-        self.is_admin = is_admin
-        self.is_active = is_active
+    
+

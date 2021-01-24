@@ -8,7 +8,7 @@ db = conn.get_database("users")
 col = db.get_collection("user")
 
 class Main(object):    
-    async def user_exists(user:str) -> bool:
+    async def user_exists(self, user:str) -> bool:
         return user in col.find_one({"username":user})['username']
         
 

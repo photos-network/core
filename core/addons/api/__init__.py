@@ -117,6 +117,7 @@ class PhotosView(RequestView):
 
         _LOGGER.warning(f"request: {original_filename}")
 
+        # TODO: get storage directory for user
         path = os.path.join(f"./data/users/{user}/", original_filename)
         if os.path.exists(path):
             # TODO: handle filename already exists

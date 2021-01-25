@@ -37,6 +37,6 @@ class Grant(object):
         })
     
 
-    async def revoke_access(self, user_id):
+    async def revoke_access(self, user_id) -> str:
         col.delete_one({"userId":user_id})
         return "access was revoked"

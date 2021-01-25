@@ -3,8 +3,6 @@
 
 from pymongo import MongoClient
 from asyncio import run as r 
-from flask_oauthlib.provider import  OAuth1Provider
-from flask import *
 import secrets as sec
 
 conn = MongoClient('localhost', 27017)

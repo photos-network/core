@@ -1,3 +1,6 @@
+#i guess the ground work is here 
+
+
 from pymongo import MongoClient
 from asyncio import run as r 
 from flask_oauthlib.provider import  OAuth1Provider

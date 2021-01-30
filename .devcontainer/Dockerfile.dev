@@ -2,32 +2,27 @@ FROM mcr.microsoft.com/vscode/devcontainers/python:0-3.8
 
 RUN \
     apt-get update && apt-get install -y --no-install-recommends \
-        libudev-dev \
-        libavformat-dev \
-        libavcodec-dev \
-        libavdevice-dev \
-        libavutil-dev \
-        libswscale-dev \
-        libswresample-dev \
-        libavfilter-dev \
-        git \
+    libudev-dev \
+    libavformat-dev \
+    libavcodec-dev \
+    libavdevice-dev \
+    libavutil-dev \
+    libswscale-dev \
+    libswresample-dev \
+    libavfilter-dev \
+    git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /photosnetwork
-
-COPY requirements*.txt ./
-
-RUN pip3 install --upgrade pip
-
-# Install Python dependencies from requirements
-RUN pip3 install -r requirements_test.txt
+WORKDIR /workspaces
 
 COPY . .
 
+# Install core
 RUN python3 setup.py install
 
-EXPOSE 9090
+# Install Python dependencies from requirements
+# Requirements are installed as 'postCreateCommand'
+# RUN pip3 install -r requirements_test.txt
 
-# Run the core system
-RUN core
+EXPOSE 9090

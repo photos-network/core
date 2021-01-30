@@ -10,37 +10,23 @@
   // ],
   // Listen on all interfaces
   "appPort": 9090,
-  "postCreateCommand": "mkdir -p config && pip3 install -e .",
-  "runArgs": [
-    "-e",
-    "GIT_EDITOR=code --wait"
-  ],
-  "extensions": [
-    "ms-python.vscode-pylance",
-    "visualstudioexptteam.vscodeintellicode",
-    "ms-azure-devops.azure-pipelines",
-    "redhat.vscode-yaml",
-    "esbenp.prettier-vscode"
-  ],
+  "postCreateCommand": "mkdir -p config && pip3 install -r requirements_test.txt",
+  "runArgs": ["-e", "GIT_EDITOR=code --wait"],
+  "extensions": ["ms-python.python"],
   "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash",
     "python.pythonPath": "/usr/local/bin/python",
     "python.linting.pylintEnabled": true,
     "python.linting.flake8Enabled": true,
     "python.linting.flake8Path": "/usr/local/bin/flake8",
     "python.linting.enabled": true,
     "python.formatting.provider": "black",
-    "python.testing.pytestArgs": [
-      "--no-cov"
-    ],
+    "python.testing.pytestArgs": ["--no-cov"],
     "python.testing.pytestEnabled": true,
-    "python.formatting.blackArgs": [
-      "--line-length",
-      "120"
-    ],
+    "python.formatting.blackArgs": ["--line-length", "120"],
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
-    "files.trimTrailingWhitespace": true,
-    "terminal.integrated.shell.linux": "/bin/bash",
+    "files.trimTrailingWhitespace": true
   }
 }

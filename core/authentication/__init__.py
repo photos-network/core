@@ -5,7 +5,6 @@ import secrets
 
 import aiohttp_jinja2
 from aiohttp import web
-from authlib.oauth2 import AuthorizationServer, ClientAuthentication, OAuth2Request
 
 from core.webserver.request import ComplexEncoder
 from core.webserver.status import HTTP_OK
@@ -15,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 
-class Auth(AuthorizationServer):
+class Auth:
     def __init__(self, application):
         self.app = application
 
@@ -76,6 +75,7 @@ class Auth(AuthorizationServer):
     async def authorization_handler2(self, request):
         _LOGGER.warning("POST /oauth/access_token")
         data = await request.post()
+        _LOGGER.warning(f"data: {data}")
         return web.Response()
 
     async def access_handler(self, request):

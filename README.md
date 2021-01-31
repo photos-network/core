@@ -58,9 +58,9 @@ The fastest start into development can be archived by using [Visual Studio Code]
 Prepare an environment by running:
 
 ```shell
-python3 -m venv venv
-source ./venv/bin/activate
-pip3 install -r requirements_dev.txt
+python3 -m venv .venv
+source .venv/bin/activate
+pip3 install -r requirements_test.txt
 ```
 
 After the environment is build, install the core:

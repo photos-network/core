@@ -56,7 +56,7 @@ share/*
 !.vscode/cSpell.json
 !.vscode/extensions.json
 !.vscode/launch.json
-!.vscode/settings.default.json
+!.vscode/settings.json
 !.vscode/tasks.json
 .env
 

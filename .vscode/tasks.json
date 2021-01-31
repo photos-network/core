@@ -52,7 +52,7 @@
     {
       "label": "Install all Requirements",
       "type": "shell",
-      "command": "pip3 install -r requirements_all.txt",
+      "command": "pip3 install -r requirements.txt",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -66,7 +66,7 @@
     {
       "label": "Install all Test Requirements",
       "type": "shell",
-      "command": "pip3 install -r requirements_test_all.txt",
+      "command": "pip3 install -r requirements_test.txt",
       "group": {
         "kind": "build",
         "isDefault": true

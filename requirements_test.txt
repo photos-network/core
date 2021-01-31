@@ -1,10 +1,11 @@
 -r requirements.txt
 
 pytest-asyncio>=0.14.0
-pytest-aiohttp==0.3.0
-pytest-cov==2.10.1
-pytest-test-groups==1.0.3
-pytest-sugar==0.9.4
-pytest-timeout==1.4.2
-pytest-xdist==2.1.0
-pytest==6.1.2
+pytest-aiohttp>=0.3.0
+pytest-cov>=2.10.1
+pytest-test-groups>=1.0.3
+pytest-sugar>=0.9.4
+pytest-timeout>=1.4.2
+pytest-xdist>=2.1.0
+pytest>=6.1.2
+tox>=1.4.0

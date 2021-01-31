@@ -46,4 +46,20 @@ setup(
     package_data={
         "core": ["addons/**/*.py", "addons/**/model/**", "addons/**/dto/**"],
     },
+    install_requires=[
+        "async_timeout>=3.0.1,<4.0",
+        "aiohttp>=3.7.0,<4.0",
+        "aiohttp_cors>=0.7.0",
+        "aiohttp-jinja2>=1.4.2",
+        "aiohttp_security>=0.4.0",
+        "colorlog>=4.0.0",
+        "jinja2>=2.11.2",
+        "pip>=8.0.3",
+        "pytz>=2020.1",
+        "pyyaml>=5.3.1",
+        "sqlalchemy>=1.3.20,<1.4",
+        "voluptuous>=0.12.0",
+        "voluptuous-serialize>=2.4.0",
+        "wheel>=0.36.2",
+    ],
 )

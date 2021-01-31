@@ -5,7 +5,6 @@ import os
 
 from aiohttp import web
 
-from core.addons.api.auth import APIAuthView
 from core.addons.api.dto.details import Details
 from core.addons.api.dto.location import Location
 from core.addons.api.dto.photo import Photo, PhotoEncoder
@@ -28,7 +27,6 @@ async def async_setup(core: ApplicationCore, config: dict) -> bool:
     core.http.register_request(PhotosView())
     core.http.register_request(PhotoView())
     core.http.register_request(AlbumView())
-    core.http.register_request(APIAuthView())
 
     return True
 

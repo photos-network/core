@@ -1,28 +1,13 @@
-FROM mcr.microsoft.com/vscode/devcontainers/python:0-3.8
-
-RUN \
-    apt-get update && apt-get install -y --no-install-recommends \
-    libudev-dev \
-    libavformat-dev \
-    libavcodec-dev \
-    libavdevice-dev \
-    libavutil-dev \
-    libswscale-dev \
-    libswresample-dev \
-    libavfilter-dev \
-    git \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+FROM python:3.8
 
 WORKDIR /workspaces
 
 COPY . .
 
+# Install Python dependencies
+RUN pip install --upgrade pip && pip3 install -r requirements_test.txt
+
 # Install core
 RUN python3 setup.py install
-
-# Install Python dependencies from requirements
-# Requirements are installed as 'postCreateCommand'
-# RUN pip3 install -r requirements_test.txt
 
 EXPOSE 9090

@@ -51,7 +51,7 @@ setup(
         "aiohttp>=3.7.0,<4.0",
         "aiohttp_cors>=0.7.0",
         "aiohttp-jinja2>=1.4.2",
-        "aiohttp_security>=0.4.0",
+        "oauth2-stateless>=1.1.0",
         "colorlog>=4.0.0",
         "jinja2>=2.11.2",
         "pip>=8.0.3",

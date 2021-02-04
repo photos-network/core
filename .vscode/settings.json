@@ -11,27 +11,22 @@
         "source.organizeImports": true
     },
     "breadcrumbs.enabled": true,
-    "python.formatting.provider": "black",
-    "python.formatting.blackArgs": [
-        "--line-length",
-        "120"
-    ],
+    "python.pythonPath": "/usr/local/bin/python",
     "python.linting.lintOnSave": true,
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
-    "python.linting.flake8Path": ".venv/bin/flake8",
+    "python.linting.flake8Path": "/usr/local/bin/flake8",
     "python.linting.flake8Args": [
         "--max-line-length=130"
     ],
     "python.testing.pytestEnabled": true,
-    "python.testing.pytestPath": ".venv/bin/pytest",
-    "python.testing.pytestArgs": [
-
-    ],
+    "python.testing.pytestPath": "/usr/local/bin/pytest",
+    "python.testing.pytestArgs": ["--no-cov"],
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": ["--line-length", "120"],
     "[python]": {
         "editor.tabSize": 4
     },
-    "python.pythonPath": ".venv/bin/python",
     "python.terminal.activateEnvInCurrentTerminal": true
 }

@@ -1,7 +1,7 @@
 {
   "internal_url": "192.168.0.1",
   "external_url": "external.url.com",
-  "port": 9090,
+  "port": 7777,
   "data_dir": "data",
   "addons": [
     {

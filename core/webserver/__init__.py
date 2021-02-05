@@ -3,6 +3,7 @@ import base64
 import binascii
 import logging
 from ipaddress import ip_address
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import aiohttp_jinja2
@@ -10,15 +11,15 @@ import jinja2
 from aiohttp import hdrs, web
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
-from oauth2 import Provider
-from oauth2.error import UserNotAuthenticated
-from oauth2.grant import AuthorizationCodeGrant
-from oauth2.store.memory import ClientStore, TokenStore
-from oauth2.tokengenerator import Uuid4TokenGenerator
-from oauth2.web import AuthorizationCodeGrantSiteAdapter
-from oauth2.web.aiohttp import OAuth2Handler
+from aiohttp_security import SessionIdentityPolicy
+from aiohttp_security import setup as setup_security
+from aiohttp_session import SimpleCookieStorage
+from aiohttp_session import setup as setup_session
+from sqlalchemy import create_engine
 
 from .. import const
+from ..authentication import Auth, AuthClient
+from ..authorization.authorization_policy import AuthorizationPolicy
 from .request import KEY_AUTHENTICATED, KEY_USER_ID, RequestView  # noqa: F401
 
 if TYPE_CHECKING:
@@ -43,76 +44,10 @@ class Webserver:
             self.app, loader=jinja2.FileSystemLoader("core/webserver/templates")
         )
 
-        # initialize oauth-stateless
-        class TestSiteAdapter(AuthorizationCodeGrantSiteAdapter):
-
-            CONFIRMATION_TEMPLATE = """
-            <html>
-                <body>
-                    <p>
-                        <a href="{url}&confirm=1">confirm</a>
-                    </p>
-                    <p>
-                        <a href="{url}&confirm=0">deny</a>
-                    </p>
-                </body>
-            </html>
-                """
-
-            def render_auth_page(self, request, response, environ, scopes, client):
-                _LOGGER.debug("render_auth_page()")
-                page_url = request.path + "?" + request.query_string
-                response.body = self.CONFIRMATION_TEMPLATE.format(url=page_url)
-
-                return response
-
-            def authenticate(self, request, environ, scopes, client):
-                _LOGGER.debug("authenticate()")
-                example_user_id = 123
-                example_ext_data = {}
-                if request.method == "GET":
-                    if request.get_param("confirm") == "1":
-                        return example_ext_data, example_user_id
-                raise UserNotAuthenticated
-
-            def user_has_denied_access(self, request):
-                _LOGGER.debug("user_has_denied_access()")
-                if request.method == "GET":
-                    if request.get_param("confirm") == "0":
-                        return True
-                return False
-
-        client_store = ClientStore()
-        client_store.add_client(
-            client_id="abc",
-            client_secret="xyz",
-            redirect_uris=[
-                "http://127.0.0.1:8000/callback",
-                "https://oauthdebugger.com/debug",
-            ],
-        )
-        token_store = TokenStore()
-
-        provider = Provider(
-            access_token_store=token_store,
-            auth_code_store=token_store,
-            client_store=client_store,
-            token_generator=Uuid4TokenGenerator(),
-        )
-        provider.add_grant(AuthorizationCodeGrant(site_adapter=TestSiteAdapter()))
-        oauth_handler = OAuth2Handler(provider)
-        self.app.router.add_get(provider.authorize_path, oauth_handler.dispatch_request)
-        self.app.router.add_post(
-            provider.authorize_path, oauth_handler.post_dispatch_request
-        )
-        self.app.router.add_post(
-            provider.token_path, oauth_handler.post_dispatch_request
-        )
-
         self.app.middlewares.append(self.ban_middleware)
         self.app.middlewares.append(self.auth_middleware)
         self.app.middlewares.append(self.headers_middleware)
-        # TODO: add cors middleware
+        # # TODO: add cors middleware
         # self.app.middlewares.append(self.cors_middleware)
 
     def register_request(self, view):
@@ -139,6 +74,8 @@ class Webserver:
 
     async def start(self):
         """Start webserver."""
+        await self.init_auth()
+
         await self.runner.setup()
 
         host = self.core.config.external_url
@@ -147,8 +84,39 @@ class Webserver:
 
         # use host=None to listen on all interfaces.
         site = web.TCPSite(runner=self.runner, host=None, port=port)
-        _LOGGER.info(f"Webserver is listening on {site._host}:{site._port}")
         await site.start()
+        _LOGGER.info(f"Webserver is listening on {site._host}:{site._port}")
+
+    async def init_auth(self):
+        # create system database if necessary
+        database_file = f"{self.core.config.data_dir}/system.sqlite3"
+        if not Path(database_file).is_file():
+            _LOGGER.info(f"Create system data file at {database_file}.")
+            open(database_file, encoding="utf-8", mode="a")
+
+        # setup session & security
+        db_engine = create_engine(f"sqlite://{database_file}")
+        setup_session(self.app, SimpleCookieStorage())
+        setup_security(
+            self.app, SessionIdentityPolicy(), AuthorizationPolicy(db_engine)
+        )
+
+        auth = Auth(self.app)
+
+        # TODO: read client config from configuration
+        auth.add_client(
+            AuthClient(
+                client_name="Frontend",
+                client_id="abc",
+                client_secret="xyz",
+                redirect_uris=[
+                    "http://127.0.0.1:3000",
+                    "https://oauthdebugger.com/debug",
+                ],
+            )
+        )
+
+        _LOGGER.info("init_auth done")
 
     async def stop(self):
         """Stop webserver."""

@@ -24,7 +24,7 @@ class Config:
 
         self.internal_url: Optional[str] = "127.0.0.1"
         self.external_url: Optional[str] = "127.0.0.1"
-        self.port: Optional[int] = 9090
+        self.port: Optional[int] = 7777
 
         self.time_zone: datetime.tzinfo = pytz.utc.zone
 

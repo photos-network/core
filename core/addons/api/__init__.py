@@ -155,15 +155,15 @@ class PhotoView(RequestView):
     url = "/api/photo/{entity_id}"
     name = "api:photo"
 
-    async def get(self, request, entity_id) -> web.Response:
+    async def get(self, request: web.Request, entity_id) -> web.Response:
         """Return an entity."""
         return self.json_message(f"return GET {entity_id}")
 
-    async def post(self, request, entity_id):
+    async def post(self, request: web.Request, entity_id):
         """Create an entity."""
         return self.json_message(f"return POST {entity_id}")
 
-    async def delete(self, request, entity_id):
+    async def delete(self, request: web.Request, entity_id):
         """Delete an entity."""
         return self.json_message(f"return DELETE {entity_id}")
 
@@ -175,7 +175,7 @@ class AlbumsView(RequestView):
     url = "/api/album/"
     name = "api:albums"
 
-    async def get(self, request) -> web.Response:
+    async def get(self, request: web.Request) -> web.Response:
         """Retrieve if API is running."""
         return self.json_message("return Albums")
 
@@ -187,10 +187,10 @@ class AlbumView(RequestView):
     url = "/api/album/{entity_id}"
     name = "api:album"
 
-    async def get(self, request, entity_id) -> web.Response:
+    async def get(self, request: web.Request, entity_id) -> web.Response:
         """Retrieve if API is running."""
         return self.json_message(f"return Album {entity_id}")
 
-    async def post(self, request) -> web.Response:
+    async def post(self, request: web.Request) -> web.Response:
         """Create a new album."""
         return self.json_message("create a new Album")

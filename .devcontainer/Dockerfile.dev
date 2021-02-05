@@ -5,9 +5,9 @@ WORKDIR /workspaces
 COPY . .
 
 # Install Python dependencies
-RUN pip install --upgrade pip && pip3 install -r requirements_test.txt
+RUN pip3 install --upgrade pip && pip3 install -r requirements_test.txt
 
 # Install core
 RUN python3 setup.py install
 
-EXPOSE 9090
+EXPOSE 7777

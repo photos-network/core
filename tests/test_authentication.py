@@ -4,45 +4,58 @@ import jinja2
 import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
+from aiohttp_session import SimpleCookieStorage
+from aiohttp_session import setup as setup_session
 
-from core.authentication import Auth
+from core.authentication import Auth, AuthClient
+from core.authentication.auth_database import AuthDatabase
 
 
 @pytest.mark.asyncio
-async def test_authorization_grant():
+async def test_authorization_grant(tmp_path):
     """test oauth authorization grant."""
 
-    async def hello(request):
-        return web.Response(text="Hello, world")
+    # Frontend as client_server
+    async def handler(request):
+        return web.Response(text="Frontend is running")
 
-    client_server = web.Application()
-    client_server.router.add_get("/", hello)
-    client_server2 = TestServer(client_server)
+    client_app = web.Application()
+    client_app.router.add_get("/", handler)
+    client_server = TestServer(client_app)
+    await client_server.start_server()
+    redirect = f"http://{client_server.host}:{client_server.port}"
 
-    authorization_server = web.Application()
+    # Core as authorization_server
+    application = web.Application()
     aiohttp_jinja2.setup(
-        authorization_server, loader=jinja2.FileSystemLoader("core/webserver/templates")
+        application, loader=jinja2.FileSystemLoader("core/webserver/templates")
     )
-    Auth(authorization_server)
+    database_file = tmp_path / "system.sqlite3"
+    auth_database = AuthDatabase(database_file)
+    setup_session(application, SimpleCookieStorage())
+    auth = Auth(application, auth_database)
+    auth.add_client(
+        AuthClient(
+            client_name="Frontend",
+            client_id="a12b345c",
+            client_secret="ABcD1E2F",
+            redirect_uris=[redirect],
+        )
+    )
+    authorization_server = TestServer(application)
 
-    test_server = TestServer(authorization_server)
-
-    async with TestClient(test_server) as auth_client:
+    async with TestClient(authorization_server) as auth_client:
         await auth_client.start_server()
 
-        async with TestClient(client_server2) as app_client:
-            await app_client.start_server()
+        get_resp = await auth_client.get(
+            f"/oauth/authorize?client_id=a12b345c&response_type=code&redirect_uri={redirect}&scope=openid+profile+email+phone"
+        )
+        assert get_resp.status == 200
+        text = await get_resp.text()
+        assert "access the users public profile" in text
 
-            redirect = f"http://{app_client.host}:{str(app_client.port)}"
-            get_resp = await auth_client.get(
-                f"/oauth/authorize?client_id=Client_ID&redirect_uri={redirect}&scope=openid+profile+email+phone"
-            )
-            assert get_resp.status == 200
-            text = await get_resp.text()
-            assert "access the users public profile" in text
-
-            resp = await auth_client.post(
-                "/oauth/authorize",
-                data={"uname": "testuser", "password": "testpass"},
-            )
-            assert resp.status == 200
+        resp = await auth_client.post(
+            "/oauth/authorize",
+            data={"uname": "admin", "password": "admin"},
+        )
+        assert resp.status == 200

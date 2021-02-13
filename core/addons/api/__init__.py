@@ -42,6 +42,10 @@ class APIStatusView(RequestView):
         """Retrieve if API is running."""
         return self.json_message("API running.")
 
+    async def head(self, core: ApplicationCore, request: web.Request):
+        """Retrieve if API is running."""
+        return self.json_message("API running.")
+
 
 class PhotosView(RequestView):
     """View to handle photos requests."""

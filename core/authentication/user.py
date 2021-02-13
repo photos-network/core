@@ -1,27 +1,30 @@
 """User representation."""
 import datetime
-from typing import Optional
+
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
+
+from .base import Base
 
 
-class User:
+class User(Base):
     """User representation for authentication."""
 
-    def __init__(
-        self,
-        user_id: str,
-        username: str,
-        name: Optional[str],
-        email: Optional[str],
-        password_hash: str,
-        is_admin: bool = False,
-        is_active: bool = True,
-        last_login: datetime = datetime.datetime,
-        date_joined: datetime = datetime.datetime,
-    ):
-        """Initialize the user representation."""
-        self.username = username
-        self.name = name
-        self.email = email
-        self.password_hash = password_hash
-        self.is_admin = is_admin
-        self.is_active = is_active
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True)
+    login = Column(String)
+    passwd = Column(String)
+    is_superuser = Column(Boolean)
+    disabled = Column(Boolean)
+    create_date = Column(DateTime, default=datetime.datetime.utcnow)
+    last_login = Column(DateTime)
+    last_ip = Column(String)
+
+    def __init__(self, login, passwd, is_superuser=False, disabled=False):
+        self.login = login
+        self.passwd = passwd
+        self.is_superuser = is_superuser
+        self.disabled = disabled
+
+    def __repr__(self):
+        return f"User(id={self.id!r}, login={self.login!r}, disabled={self.disabled!r})"

@@ -17,7 +17,3 @@ async def test_api_get_non_existing_state(aiohttp_client, loop):
     core.config.config_dir = os.path.join(Path.cwd(), "tests/resources", "config")
     core.state = CoreState.running
     await core.start()
-
-    # client = await aiohttp_client(core.http.app)
-    # resp = await client.get('/')
-    # assert resp.status == status.HTTP_NOT_FOUND

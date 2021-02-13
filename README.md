@@ -24,23 +24,11 @@ It is responsible for main tasks e.g.:
 - **Persistency** (read / write data)
 - **Task Processing** (keep track of running tasks)
 
-## Installation
-
-Install core dependencies:
-
-```shell
-$ pip3 install -r requirements.txt
-```
-
-Install the core system from the wheel
-
-```shell
-$ pip3 install --upgrade --force-reinstall core-0.1.0-py3-none-any.whl
-```
-
 ## Development
 
 Always use [PEP 484: Type Hints](https://www.python.org/dev/peps/pep-0484/) in your syntax.
+
+---
 
 ### Visual Studio Code
 
@@ -52,6 +40,10 @@ The fastest start into development can be archived by using [Visual Studio Code]
 4. Clone and Open this repository in Visual Studio Code
 5. Click the "Reopen in Container" Dialog
 6. Launch **Photos.network** from the `RUN` window.
+
+![VS Code with devcontainers](vscode.gif)
+
+---
 
 ### Manual Environment
 
@@ -68,6 +60,8 @@ After the environment is build, install the core:
 ```shell
 python3 setup.py install
 ```
+
+---
 
 ## Run
 

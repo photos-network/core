@@ -4,7 +4,6 @@
     "dockerfile": "Dockerfile.dev",
     "context": ".."
   },
-  "appPort": 9090,
   "postCreateCommand": "mkdir -p config && pip3 install -r requirements_test.txt",
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],
   "extensions": ["ms-python.python"],

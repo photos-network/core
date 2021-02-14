@@ -1,5 +1,6 @@
 """Test the default api implementation."""
 import os
+from pathlib import Path
 
 import pytest
 
@@ -13,6 +14,6 @@ async def test_api_get_non_existing_state(aiohttp_client, loop, tmp_path):
     core.config.internal_url = ""
     core.config.external_url = ""
     core.config.data_dir = os.path.join(tmp_path, "data")
-    core.config.config_dir = os.path.join(tmp_path, "config")
+    core.config.config_dir = os.path.join(Path.cwd(), "tests/resources", "config")
     core.state = CoreState.running
     await core.start()

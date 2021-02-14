@@ -16,6 +16,7 @@ from typing import (
     List,
     Optional,
     Sequence,
+    Set,
     TypeVar,
 )
 
@@ -61,7 +62,7 @@ class ApplicationCore:
         self._pending_tasks: List = []
         self._track_task = True
         self.banned_ips: List = []
-        self.failed_logins: Dict = {}
+        self.failed_logins: Set = {}
         self.config = Config(self)
         self.addons = loader.Components(self)
         self.loaded_addons: Dict = {}

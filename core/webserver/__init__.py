@@ -1,18 +1,20 @@
 """HTTP server implementation."""
-import base64
-import binascii
 import logging
 from ipaddress import ip_address
 from typing import TYPE_CHECKING
 
 import aiohttp_jinja2
 import jinja2
+import jwt
 from aiohttp import hdrs, web
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
+from aiohttp_session import SimpleCookieStorage
+from aiohttp_session import setup as setup_session
 
 from .. import const
-from ..authentication import Auth
+from ..authentication import Auth, AuthClient
+from ..authentication.auth_database import AuthDatabase
 from .request import KEY_AUTHENTICATED, KEY_USER_ID, RequestView  # noqa: F401
 
 if TYPE_CHECKING:
@@ -37,14 +39,9 @@ class Webserver:
             self.app, loader=jinja2.FileSystemLoader("core/webserver/templates")
         )
 
-        # init auth
-        self.auth = Auth(self.app)
-
         self.app.middlewares.append(self.ban_middleware)
         self.app.middlewares.append(self.auth_middleware)
         self.app.middlewares.append(self.headers_middleware)
-        # TODO: add cors middleware
-        # self.app.middlewares.append(self.cors_middleware)
 
     def register_request(self, view):
         """
@@ -70,6 +67,8 @@ class Webserver:
 
     async def start(self):
         """Start webserver."""
+        await self.init_auth()
+
         await self.runner.setup()
 
         host = self.core.config.external_url
@@ -78,8 +77,41 @@ class Webserver:
 
         # use host=None to listen on all interfaces.
         site = web.TCPSite(runner=self.runner, host=None, port=port)
-        _LOGGER.info(f"Webserver is listening on {site._host}:{site._port}")
         await site.start()
+        _LOGGER.info(f"Webserver is listening on {site._host}:{site._port}")
+
+    async def init_auth(self):
+        database_file = f"{self.core.config.data_dir}/system.sqlite3"
+        auth_database = AuthDatabase(database_file)
+
+        # setup session
+        setup_session(self.app, SimpleCookieStorage())
+
+        # setup auth
+        auth = Auth(self.app, auth_database)
+
+        # TODO: read client config from configuration
+        auth.add_client(
+            AuthClient(
+                client_name="Frontend",
+                client_id="d37c098d-ac25-4a96-b462-c1ca05f45952",
+                client_secret="AYgD5Y2DV7bbWupYW7WmYQ",
+                redirect_uris=[
+                    "http://127.0.0.1:3000/callback",
+                    "https://oauthdebugger.com/debug",
+                ],
+            )
+        )
+        auth.add_client(
+            AuthClient(
+                client_name="Android App",
+                client_id="1803463f-c10f-4a65-aa15-b2e39be9f14d",
+                client_secret="1TmlFYywRd7MwlbRNiePjQ",
+                redirect_uris=["photosapp://authenticate"],
+            )
+        )
+
+        _LOGGER.info("init_auth done")
 
     async def stop(self):
         """Stop webserver."""
@@ -105,23 +137,28 @@ class Webserver:
 
             user_agent = request.headers.get("user-agent")
             if user_agent:
-                msg = f"{msg} ({user_agent})"
+                msg = f"{msg} [{user_agent}]"
 
             _LOGGER.warning(msg)
 
             # track failed login attempt
-            if remote_addr in self.core.failed_logins:
+            if str(remote_addr) in self.core.failed_logins:
+                count = self.core.failed_logins[str(remote_addr)]
+
                 # check login attempt count
-                if self.core.failed_logins[remote_addr] >= LOGIN_ATTEMPT_THRESHOLD:
-                    _LOGGER.warning(
+                if count >= LOGIN_ATTEMPT_THRESHOLD:
+                    _LOGGER.error(
                         f"Banned IP {remote_addr} for too many login attempts"
                     )
-                    self.core.banned_ips.append(remote_addr)
+                    self.core.banned_ips.append(str(remote_addr))
                 else:
-                    old_count = self.core.banned_ips[remote_addr]
-                    self.core.banned_ips[remote_addr] = old_count + 1
+                    _LOGGER.warning(
+                        f"{count + 1}. failed login attempts for IP {remote_addr}"
+                    )
+                    self.core.failed_logins[str(remote_addr)] = count + 1
             else:
-                self.core.failed_logins[remote_addr] = 1
+                _LOGGER.warning(f"1. failed login attempts for IP {remote_addr}")
+                self.core.failed_logins[str(remote_addr)] = 1
 
             raise
 
@@ -142,28 +179,17 @@ class Webserver:
             if auth_type != "Bearer":
                 return False
 
-            # TODO: validate authorization credentials
-            _LOGGER.error(f"validate authorization credentials: {auth_val}")
-
             try:
+                jwt.decode(auth_val, "secret", algorithms="HS256")
                 authenticated = True
-                auth_type = "bearer token"
-                base64_bytes = auth_val.encode("ascii")
-                message_bytes = base64.b64decode(base64_bytes)
-                token = message_bytes.decode("ascii")
-                user_id = token.split(":", 1)[0]
-                assert len(user_id) > 1
-            except (binascii.Error, AssertionError):
-                _LOGGER.error("Failed to extract user from token!")
-                user_id = None
+
+            except jwt.ExpiredSignatureError as e:
                 authenticated = False
+                _LOGGER.error(f"Could not verify token! {e}")
 
             if authenticated:
-                _LOGGER.debug(
-                    f"Authenticated {request.remote} for {request.path} using {auth_type}. User = {user_id}"
-                )
+                _LOGGER.debug(f"Authenticated {request.remote} for {request.path}.")
                 request[KEY_AUTHENTICATED] = authenticated
-                request[KEY_USER_ID] = user_id
 
         return await handler(request)
 

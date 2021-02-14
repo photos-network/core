@@ -34,6 +34,9 @@ async def async_setup(
     application.config.data_dir = runtime_config.data_dir
     application.async_enable_logging(verbose=True)
 
+    # create date directory
+    get_or_create_directory(directory=application.config.data_dir, is_relative=False)
+
     _LOGGER.info(
         f"Config directory: {runtime_config.config_dir}",
     )

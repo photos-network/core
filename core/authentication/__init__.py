@@ -2,103 +2,483 @@
 import json
 import logging
 import secrets
+import uuid
+from typing import List, Optional
 
 import aiohttp_jinja2
-from aiohttp import web
+import aiohttp_session
+from aiohttp import hdrs, web
 
-from core.webserver.request import ComplexEncoder
-from core.webserver.status import HTTP_OK
-from core.webserver.type import APPLICATION_JSON
+from .auth_client import AuthClient
+from .auth_database import AuthDatabase
 
 _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 
 class Auth:
-    def __init__(self, application):
+    # list of registered auth clients
+    auth_clients: List[AuthClient] = []
+
+    def __init__(self, application: web.Application, auth_database: AuthDatabase):
         self.app = application
+        self.auth_database = auth_database
 
-        self.app.router.add_post(
-            path="/login", handler=self.login_handler2, name="auth:login2"
-        )
+        # Authorization Endpoint: obtain an authorization grant
         self.app.router.add_get(
-            path="/oauth/authorize",
-            handler=self.authorization_handler,
-            name="auth:authorize",
+            path="/oauth/authorize", handler=self.authorization_endpoint_get
         )
         self.app.router.add_post(
-            path="/oauth/authorize",
-            handler=self.authorization_handler2,
-            name="auth:authorize2",
+            path="/oauth/authorize", handler=self.authorization_endpoint_post
         )
+
+        # Token Endpoint: obtain an access token by authorization grant or refresh token
         self.app.router.add_post(
-            path="/oauth/access_token",
-            handler=self.access_handler,
-            name="auth:access_token",
+            path="/oauth/token", handler=self.token_endpoint_handler
         )
 
-    async def login_handler2(self, request):
-        _LOGGER.warning("POST /login")
-        response_type = "code"
-        client_id = "ABCDEF123"
-        redirect_uri = request.host
-        scope = "user public_photos"
-        state = secrets.token_hex(16)
+        self.app.router.add_post("/revoke", self.revoke_token_handler, name="revoke")
+        # self.app.router.add_get("/public", self.internal_handler, name="public")
+        self.app.router.add_get("/protected", self.protected_handler, name="protected")
 
-        raise web.HTTPFound(
-            location=f"http://127.0.0.1:9090/oauth/authorize?response_type={response_type}&client_id={client_id}&redirect_uri={redirect_uri}&scope={scope}&state={state}"
-        )
+    def add_client(self, auth_client: AuthClient):
+        self.auth_clients.append(auth_client)
 
-    @aiohttp_jinja2.template("tmpl.jinja2")
-    async def authorization_handler(self, request):
-        """Endpoint where the user get its authorization."""
-        _LOGGER.warning("GET /oauth/access_token")
-        _LOGGER.warning(f"request: {request.host}")
+    async def revoke_token_handler(self, request: web.Request) -> web.StreamResponse:
+        _LOGGER.info("POST /revoke")
 
-        response_type = request.query.get("response_type")
-        client_id = request.query.get("client_id")
-        redirect_uri = request.query.get("redirect_uri")
-        scope = request.query.get("scope")
-        state = request.query.get("state")
+        await self.check_authorized(request)
 
-        _LOGGER.warning(f"a: {response_type}")
-        _LOGGER.warning(f"b: {client_id}")
-        _LOGGER.warning(f"c: {redirect_uri}")
-        _LOGGER.warning(f"d: {scope}")
-        _LOGGER.warning(f"e: {state}")
-
-        _LOGGER.warning(f"request: {request.query_string}")
-        # _LOGGER.warning(f"request: {request.__dict__}")
-
-        return {"redirect_uri": redirect_uri}
-
-    async def authorization_handler2(self, request):
-        _LOGGER.warning("POST /oauth/access_token")
         data = await request.post()
-        _LOGGER.warning(f"data: {data}")
-        return web.Response()
+        token_to_revoke = data["token"]
 
-    async def access_handler(self, request):
-        """Endpoint to request an access token."""
-        _LOGGER.warning("GET /oauth/access_token")
+        await self.auth_database.revoke_token(token_to_revoke)
 
-        success = True
-        if success:
-            msg = {
-                "access_token": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
-                "token_type": "bearer",
-                "expires_in": 3600,
-                "refresh_token": "IwOGYzYTlmM2YxOTQ5MGE3YmNmMDFkNTVk",
-                "scope": "create",
-            }
-            response = web.Response(
-                body=json.dumps(msg, cls=ComplexEncoder, allow_nan=False).encode(
-                    "UTF-8"
-                ),
-                content_type=APPLICATION_JSON,
-                status=HTTP_OK,
+        # TODO: revoked successfully OR the client submitted an invalid token
+        return web.Response(status=200)
+
+    async def protected_handler(self, request: web.Request) -> web.StreamResponse:
+        _LOGGER.warning("GET /protected")
+        await self.check_permission(request, "protected")
+
+        response = web.Response(body=b"You are on protected page")
+        return response
+
+    @aiohttp_jinja2.template("authorize.jinja2")
+    async def authorization_endpoint_get(
+        self, request: web.Request
+    ) -> web.StreamResponse:
+        """
+        Validate the request to ensure that all required parameters are present and valid.
+
+        See Section 4.1.1: https://tools.ietf.org/html/rfc6749#section-4.1.1
+        """
+        try:
+            _LOGGER.debug(f"GET /oauth/authorize  from: {request.host}")
+
+            session = await aiohttp_session.get_session(request)
+            response_type = request.query.get("response_type")
+            client_id = request.query.get("client_id")
+
+            # validate required params
+            if response_type is None or client_id is None:
+                _LOGGER.warning("The response is missing a response_type or client_id.")
+                data = """{
+                    "error": "invalid_request",
+                    "error_description": "The request is missing a required parameter"
+                    }"""
+                return web.json_response(json.loads(data))
+
+            # check if client is known
+            if not any(client.client_id == client_id for client in self.auth_clients):
+                _LOGGER.warning("The client_id is unknown!")
+                data = """{
+                    "error":"unauthorized_client",
+                    "error_description":"The client is not authorized to request an authorization code using this method."
+                    }"""
+                return web.json_response(json.loads(data))
+
+            # validate response_type
+            if response_type != "code":
+                _LOGGER.warning(
+                    f"The request is using an invalid response_type: {response_type}"
+                )
+                data = """{
+                    "error":"unsupported_response_type",
+                    "error_description":"The request is using an invalid response_type"
+                    }"""
+                return web.json_response(json.loads(data))
+
+            redirect_uri = request.query.get("redirect_uri")
+
+            # extract client from registered auth_clients with matching client_id
+            registered_auth_client = next(
+                filter(lambda client: client.client_id == client_id, self.auth_clients),
+                None,
             )
-            response.enable_compression()
-            return response
+            # validate if redirect_uri is in registered_auth_client
+            if not any(
+                uri == redirect_uri for uri in registered_auth_client.redirect_uris
+            ):
+                _LOGGER.error(f"redirect uri not found: {redirect_uri}")
+                data = """{
+                    "error":"unauthorized_client",
+                    "error_description":"The redirect_uri is unknown"
+                    }"""
+                return web.json_response(json.loads(data))
+
+            scope = request.query.get("scope")
+            requested_scopes = scope.split(" ")
+
+            # TODO: validate scopes with regex =>  1*( %x21 / %x23-5B / %x5D-7E ))
+            registered_scopes = [
+                "openid",
+                "profile",
+                "email",
+                "phone",
+                "library:read",
+                "library:append",
+                "library:edit",
+                "library:write",
+                "library:share",
+                "admin.users:read",
+                "admin.users:invite",
+                "admin.users:write",
+            ]
+            _LOGGER.debug(
+                f"found {len(registered_scopes)} registered scopes and {len(requested_scopes)} requested scopes."
+            )
+
+            # check if the requested scope is registered
+            for requested_scope in requested_scopes:
+                if requested_scope not in registered_scopes:
+                    _LOGGER.error(
+                        f"The requested scope '{requested_scope}' is invalid, unknown, or malformed."
+                    )
+                    data = """{
+                        "error":"invalid_scope",
+                        "error_description":"The requested scope is invalid, unknown, or malformed."
+                    }"""
+                    return web.json_response(json.loads(data))
+
+            # persist state to preventing cross-site request forgery [Section 10.12](https://tools.ietf.org/html/rfc6749#section-10.12)
+            state = request.query.get("state")
+            if state is not None:
+                session["state"] = state
+
+            session["client_id"] = client_id
+            session["redirect_uri"] = redirect_uri
+
+            # TODO: add scopes & localized descriptions only for requested scopes
+            return {
+                "requesting_app": registered_auth_client.client_name,
+                "permissions": [
+                    {
+                        "scope": "openid",
+                        "localized": "access the users public profile e.g.: username",
+                    },
+                    {
+                        "scope": "profile",
+                        "localized": "access the users personal profile information e.g.: firstname, lastname",
+                    },
+                    {
+                        "scope": "email",
+                        "localized": "access the users associated email address.",
+                    },
+                    {
+                        "scope": "phone",
+                        "localized": "access the users associated phone number.",
+                    },
+                    # {
+                    #     "scope": "library.read",
+                    #     "localized": "Read only Grant the user to list all photos owned by the user.",
+                    # },
+                    # {
+                    #     "scope": "library.append",
+                    #     "localized": "Limited write access Grant the user to add new photos, create new albums.",
+                    # },
+                    # {
+                    #     "scope": "library.edit",
+                    #     "localized": "Grant the user to edit photos owned by the user.",
+                    # },
+                    {
+                        "scope": "library.write",
+                        "localized": "Grant the user to add and edit photos, albums, tags.",
+                    },
+                    # {
+                    #     "scope": "library.share",
+                    #     "localized": "Grant the user to create new shares (photos/videos/albums).",
+                    # },
+                    # {
+                    #     "scope": "admin.users:read",
+                    #     "localized": "Grant the user to list users on the system.",
+                    # },
+                    # {
+                    #     "scope": "admin.users:invite",
+                    #     "localized": "Grant the user to invite new users to the system.",
+                    # },
+                    # {
+                    #     "scope": "admin.users:write",
+                    #     "localized": "Grant the user to manage users on the system.",
+                    # },
+                ],
+            }
+        except Exception as e:
+            # This error code is needed because a 500 Internal Server
+            # Error HTTP status code cannot be returned to the client via an HTTP redirect.
+            _LOGGER.error(f"an unexpected error happened: {e}")
+            data = """{
+                "error":"server_error",
+                "error_description":"The authorization server encountered an unexpected condition that prevented it from fulfilling the request."
+                }"""
+            return web.json_response(json.loads(data))
+
+    async def authorization_endpoint_post(
+        self, request: web.Request
+    ) -> web.StreamResponse:
+        """
+        Validate the resource owners credentials.
+
+        """
+        _LOGGER.debug("POST /oauth/authorize")
+        data = await request.post()
+
+        session = await aiohttp_session.get_session(request)
+        redirect_uri = session.get("redirect_uri")
+        client_id = session.get("client_id")
+        state = session.get("state")
+
+        # check if client is known
+        if not any(client.client_id == client_id for client in self.auth_clients):
+            _LOGGER.warning(f"unknown client_id {client_id}")
+            if state is not None:
+                raise web.HTTPFound(
+                    f"{redirect_uri}?error=unauthorized_client&state={state}"
+                )
+            else:
+                raise web.HTTPFound(f"{redirect_uri}?error=unauthorized_client")
+
+        # extract client from registered auth_clients with matching client_id
+        registered_auth_client = next(
+            filter(lambda client: client.client_id == client_id, self.auth_clients),
+            None,
+        )
+        # validate if redirect_uri is in registered_auth_client
+        if not any(uri == redirect_uri for uri in registered_auth_client.redirect_uris):
+            _LOGGER.error(f"invalid redirect_uri {redirect_uri}")
+            if state is not None:
+                raise web.HTTPFound(
+                    f"{redirect_uri}?error=unauthorized_client&state={state}"
+                )
+            else:
+                raise web.HTTPFound(f"{redirect_uri}?error=unauthorized_client")
+
+        username = data["uname"]
+        password = data["password"]
+
+        # validate credentials
+        credentials_are_valid = await self.auth_database.check_credentials(
+            username, password
+        )
+
+        if credentials_are_valid:
+            # create an authorization code
+            authorization_code = self.auth_database.create_authorization_code(
+                username, client_id
+            )
+            if authorization_code is None:
+                _LOGGER.warning("could not create auth code for client!")
+                error_reason = "access_denied"
+                if state is not None:
+                    raise web.HTTPFound(
+                        f"{redirect_uri}?error={error_reason}&state={state}"
+                    )
+                else:
+                    raise web.HTTPFound(f"{redirect_uri}?error={error_reason}")
+
+            if state is not None:
+                redirect_response = web.HTTPFound(
+                    f"{redirect_uri}?code={authorization_code}&state={state}"
+                )
+            else:
+                redirect_response = web.HTTPFound(
+                    f"{redirect_uri}?code={authorization_code}"
+                )
+
+            raise redirect_response
         else:
-            return web.Response()
+            error_reason = "access_denied"
+            _LOGGER.warning(f"redirect with error {error_reason}")
+            if state is not None:
+                raise web.HTTPFound(
+                    f"{redirect_uri}?error={error_reason}&state={state}"
+                )
+            else:
+                raise web.HTTPFound(f"{redirect_uri}?error={error_reason}")
+
+    async def token_endpoint_handler(self, request: web.Request) -> web.StreamResponse:
+        """
+        Access Token:   https://tools.ietf.org/html/rfc6749#section-4.1.3
+        Refresh Token:  https://tools.ietf.org/html/rfc6749#section-6
+        """
+        _LOGGER.debug("POST /oauth/token")
+
+        data = await request.post()
+
+        # grant_type is REQUIRED
+        if "grant_type" not in data:
+            _LOGGER.warning("no grant_type specified!")
+            data = '{"error":"invalid_request"}'
+            return web.json_response(json.loads(data))
+        grant_type = data["grant_type"]
+
+        # switch flow based on grant_type
+        if grant_type == "authorization_code":
+            return await self._handle_authorization_code_request(data)
+        elif grant_type == "refresh_token":
+            return await self._handle_refresh_token_request(request, data)
+        else:
+            _LOGGER.warning(f"invalid grant_type! {grant_type}")
+            data = '{"error":"invalid_request"}'
+            return web.json_response(json.loads(data))
+
+    async def _handle_authorization_code_request(self, data) -> web.StreamResponse:
+        """
+        See Section 4.1.3: https://tools.ietf.org/html/rfc6749#section-4.1.3
+        """
+        # grant_type already checked
+
+        # code is REQUIRED
+        if "code" not in data:
+            _LOGGER.warning("code param not provided!")
+            data = {"error": "invalid_request"}
+            return web.json_response(data)
+        code = data["code"]
+
+        # redirect_uri is REQUIRED
+        if "redirect_uri" not in data:
+            _LOGGER.warning("redirect_uri param not provided!")
+            data = {"error": "invalid_request"}
+            return web.json_response(data)
+        redirect_uri = data["redirect_uri"]
+
+        # TODO: compare redirect_uri with previous call
+        _LOGGER.debug(f"TODO: compare redirect_uri {redirect_uri}")
+
+        # client_id is REQUIRED
+        if "client_id" not in data:
+            data = {"error": "invalid_request"}
+            return web.json_response(data)
+        client_id = data["client_id"]
+
+        client_code_valid = await self.auth_database.validate_authorization_code(
+            code, client_id
+        )
+        if not client_code_valid:
+            _LOGGER.error("authorization_code invalid!")
+            payload = {"error": "invalid_grant"}
+            return web.json_response(payload)
+
+        access_token, refresh_token = await self.auth_database.create_tokens(
+            code, client_id
+        )
+
+        payload = {
+            "access_token": access_token,
+            "token_type": "Bearer",
+            "expires_in": 3600,
+            "refresh_token": refresh_token,
+        }
+        return web.json_response(payload)
+
+    async def _handle_refresh_token_request(
+        self, request: web.Request, data
+    ) -> web.StreamResponse:
+        """
+        See Section 6: https://tools.ietf.org/html/rfc6749#section-6
+        """
+        # code is REQUIRED
+        if "refresh_token" not in data:
+            _LOGGER.warning("refresh token not provided!")
+            data = {"error": "invalid_request"}
+            return web.json_response(data)
+
+        refresh_token = data["refresh_token"]
+
+        # check if client_id and client_secret are provided as request parameters or HTTP Basic auth header
+        if "client_id" in data and "client_secret" in data:
+            # handle request parameters
+            client_id = data["client_id"]
+            client_secret = data["client_secret"]
+        elif hdrs.AUTHORIZATION in request.headers:
+            # handle basic headers
+            auth_type, auth_val = request.headers.get(hdrs.AUTHORIZATION).split(" ", 1)
+            if auth_type != "Basic":
+                return False
+
+            # TODO: split auth_val in client_id and client_secret
+            _LOGGER.error(f"split token into client_id and client_secret: {auth_val}")
+            client_id = ""
+            client_secret = ""
+
+        registered_auth_client = next(
+            filter(lambda client: client.client_id == client_id, self.auth_clients),
+            None,
+        )
+
+        _LOGGER.debug(f"client_id: {client_id}, {registered_auth_client}")
+
+        if not registered_auth_client.client_secret == client_secret:
+            _LOGGER.error("client_id does not match with client_secret")
+            data = {"error": "invalid_client"}
+            return web.json_response(data)
+
+        access_token, refresh_token = await self.auth_database.renew_tokens(
+            client_id, refresh_token
+        )
+
+        payload = {
+            "access_token": access_token,
+            "token_type": "Bearer",
+            "expires_in": 3600,
+            "refresh_token": refresh_token,
+        }
+        return web.json_response(payload)
+
+    def create_client(self):
+        """Generate a client_id and client_secret to add new clients."""
+        client_id = uuid.uuid4()
+        client_secret = secrets.token_urlsafe(16)
+
+        _LOGGER.info(f"generated client_id: {client_id}")
+        _LOGGER.info(f"generated client_secret: {client_secret}")
+
+    async def check_authorized(self, request: web.Request) -> Optional[str]:
+        """Check if authorization header and returns username if valid"""
+
+        if hdrs.AUTHORIZATION in request.headers:
+            try:
+                auth_type, auth_val = request.headers.get(hdrs.AUTHORIZATION).split(
+                    " ", 1
+                )
+                if not await self.auth_database.validate_access_token(auth_val):
+                    raise web.HTTPForbidden()
+
+                return auth_val
+
+            except ValueError:
+                # If no space in authorization header
+                _LOGGER.debug("invalid authorization header!")
+
+                raise web.HTTPForbidden()
+        else:
+            _LOGGER.debug("missing authorization header!")
+
+            raise web.HTTPForbidden()
+
+    async def check_permission(self, request: web.Request, permission: str) -> None:
+        """Check if given authorization header is valid and user has granted access to given permission."""
+        await self.check_authorized(request)
+
+        # TODO: check if scope is granted
+        _LOGGER.debug("TODO: check if scope for token is granted")

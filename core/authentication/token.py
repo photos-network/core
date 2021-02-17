@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import Column, DateTime, Integer, String
 
+from ..const import CONF_TOKEN_LIFETIME
 from .base import Base
 
 
@@ -24,7 +25,9 @@ class Token(Base):
         self.user_id = user_id
         self.client_id = client_id
         self.access_token = access_token
-        self.token_expiration = datetime.utcnow() + timedelta(minutes=3)
+        self.token_expiration = datetime.utcnow() + timedelta(
+            seconds=CONF_TOKEN_LIFETIME
+        )
         self.refresh_token_id = refresh_token_id
 
     def __repr__(self):

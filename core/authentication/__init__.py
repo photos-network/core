@@ -8,6 +8,7 @@ from typing import List, Optional
 import aiohttp_jinja2
 from aiohttp import hdrs, web
 
+from ..const import CONF_TOKEN_LIFETIME
 from .auth_client import AuthClient
 from .auth_database import AuthDatabase
 
@@ -386,7 +387,7 @@ class Auth:
         payload = {
             "access_token": access_token,
             "token_type": "Bearer",
-            "expires_in": 3600,
+            "expires_in": CONF_TOKEN_LIFETIME,
             "refresh_token": refresh_token,
         }
         return web.json_response(payload)
@@ -440,7 +441,7 @@ class Auth:
         payload = {
             "access_token": access_token,
             "token_type": "Bearer",
-            "expires_in": 3600,
+            "expires_in": CONF_TOKEN_LIFETIME,
             "refresh_token": refresh_token,
         }
         return web.json_response(payload)
@@ -464,7 +465,7 @@ class Auth:
                 if not await self.auth_database.validate_access_token(auth_val):
                     raise web.HTTPForbidden()
 
-                return auth_val
+                return await self.auth_database.user_id_for_token(auth_val)
 
             except ValueError:
                 # If no space in authorization header

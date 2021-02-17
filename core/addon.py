@@ -121,7 +121,7 @@ class Addon:
                 installed = self.install_package(package=requirement)
                 if not installed:
                     all_requirements_resolved = False
-            except:
+            except:  # noqa: E722
                 _LOGGER.error(f"could not fulfill requirement: {requirement}")
                 all_requirements_resolved = False
 

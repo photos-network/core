@@ -1,7 +1,7 @@
 """HTTP server implementation."""
 import logging
 from ipaddress import ip_address
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import aiohttp_jinja2
 import jinja2
@@ -83,10 +83,10 @@ class Webserver:
         auth_database = AuthDatabase(database_file)
 
         # setup auth
-        auth = Auth(self.app, auth_database)
+        self.auth = Auth(self.app, auth_database)
 
         # TODO: read client config from configuration
-        auth.add_client(
+        self.auth.add_client(
             AuthClient(
                 client_name="Frontend",
                 client_id="d37c098d-ac25-4a96-b462-c1ca05f45952",
@@ -97,7 +97,7 @@ class Webserver:
                 ],
             )
         )
-        auth.add_client(
+        self.auth.add_client(
             AuthClient(
                 client_name="Android App",
                 client_id="1803463f-c10f-4a65-aa15-b2e39be9f14d",
@@ -107,6 +107,9 @@ class Webserver:
         )
 
         _LOGGER.info("init_auth done")
+
+    async def get_user_id(self, request: web.Request) -> Optional[str]:
+        return await self.auth.check_authorized(request)
 
     async def stop(self):
         """Stop webserver."""

@@ -10,6 +10,12 @@
     "editor.codeActionsOnSave": {
         "source.organizeImports": true
     },
+    "files.exclude": {
+        ".gitattributes": true,
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/.mypy_cache": true
+    },
     "breadcrumbs.enabled": true,
     "python.pythonPath": "/usr/local/bin/python3",
     "python.linting.lintOnSave": true,

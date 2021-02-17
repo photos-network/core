@@ -29,6 +29,8 @@ async def test_authorization_grant(tmp_path):
         application, loader=jinja2.FileSystemLoader("core/webserver/templates")
     )
     database_file = tmp_path / "system.sqlite3"
+    file_object = open(database_file, "w")
+    file_object.close()
     auth_database = AuthDatabase(database_file)
     auth = Auth(application, auth_database)
     auth.add_client(

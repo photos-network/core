@@ -237,12 +237,16 @@ class Auth:
         data = await request.post()
 
         redirect_uri = request.query["redirect_uri"]
-        client_id = request.query["client_id"]
-        state = request.query["state"]
 
-        if "redirect_uri" not in request.query or "client_id" not in request.query:
+        if "client_id" not in request.query:
             _LOGGER.warning("invalid form")
             raise web.HTTPFound(f"{redirect_uri}?error=unauthorized_client")
+
+        client_id = request.query["client_id"]
+
+        state = None
+        if "state" in request.query:
+            state = request.query["state"]
 
         # check if client is known
         if not any(client.client_id == client_id for client in self.auth_clients):

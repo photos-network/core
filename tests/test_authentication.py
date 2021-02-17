@@ -4,8 +4,6 @@ import jinja2
 import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
-from aiohttp_session import SimpleCookieStorage
-from aiohttp_session import setup as setup_session
 
 from core.authentication import Auth, AuthClient
 from core.authentication.auth_database import AuthDatabase
@@ -32,7 +30,6 @@ async def test_authorization_grant(tmp_path):
     )
     database_file = tmp_path / "system.sqlite3"
     auth_database = AuthDatabase(database_file)
-    setup_session(application, SimpleCookieStorage())
     auth = Auth(application, auth_database)
     auth.add_client(
         AuthClient(
@@ -55,7 +52,7 @@ async def test_authorization_grant(tmp_path):
         assert "access the users public profile" in text
 
         resp = await auth_client.post(
-            "/oauth/authorize",
+            f"/oauth/authorize?client_id=a12b345c&response_type=code&redirect_uri={redirect}&scope=openid+profile+email+phone",
             data={"uname": "admin", "password": "admin"},
         )
         assert resp.status == 200

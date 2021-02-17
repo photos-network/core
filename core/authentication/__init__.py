@@ -6,7 +6,6 @@ import uuid
 from typing import List, Optional
 
 import aiohttp_jinja2
-import aiohttp_session
 from aiohttp import hdrs, web
 
 from .auth_client import AuthClient
@@ -76,7 +75,6 @@ class Auth:
         try:
             _LOGGER.debug(f"GET /oauth/authorize  from: {request.host}")
 
-            session = await aiohttp_session.get_session(request)
             response_type = request.query.get("response_type")
             client_id = request.query.get("client_id")
 
@@ -162,12 +160,7 @@ class Auth:
                     return web.json_response(json.loads(data))
 
             # persist state to preventing cross-site request forgery [Section 10.12](https://tools.ietf.org/html/rfc6749#section-10.12)
-            state = request.query.get("state")
-            if state is not None:
-                session["state"] = state
-
-            session["client_id"] = client_id
-            session["redirect_uri"] = redirect_uri
+            # state = request.query.get("state")
 
             # TODO: add scopes & localized descriptions only for requested scopes
             return {
@@ -243,10 +236,13 @@ class Auth:
         _LOGGER.debug("POST /oauth/authorize")
         data = await request.post()
 
-        session = await aiohttp_session.get_session(request)
-        redirect_uri = session.get("redirect_uri")
-        client_id = session.get("client_id")
-        state = session.get("state")
+        redirect_uri = request.query["redirect_uri"]
+        client_id = request.query["client_id"]
+        state = request.query["state"]
+
+        if "redirect_uri" not in request.query or "client_id" not in request.query:
+            _LOGGER.warning("invalid form")
+            raise web.HTTPFound(f"{redirect_uri}?error=unauthorized_client")
 
         # check if client is known
         if not any(client.client_id == client_id for client in self.auth_clients):

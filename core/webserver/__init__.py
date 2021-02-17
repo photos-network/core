@@ -9,8 +9,6 @@ import jwt
 from aiohttp import hdrs, web
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
-from aiohttp_session import SimpleCookieStorage
-from aiohttp_session import setup as setup_session
 
 from .. import const
 from ..authentication import Auth, AuthClient
@@ -83,9 +81,6 @@ class Webserver:
     async def init_auth(self):
         database_file = f"{self.core.config.data_dir}/system.sqlite3"
         auth_database = AuthDatabase(database_file)
-
-        # setup session
-        setup_session(self.app, SimpleCookieStorage())
 
         # setup auth
         auth = Auth(self.app, auth_database)

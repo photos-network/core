@@ -26,6 +26,7 @@ async def async_setup(core: ApplicationCore, config: dict) -> bool:
         _LOGGER.info("database file already exists.")
     else:
         _LOGGER.info(f"create database {database_name}")
+        _LOGGER.error(f"database file_path {file_path}")
         file_object = open(file_path, "w")
         file_object.close()
 

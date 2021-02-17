@@ -52,7 +52,6 @@ setup(
         "aiohttp_cors>=0.7.0",
         "aiohttp-jinja2>=1.4.2",
         "aiohttp_security>=0.4.0",
-        "aiohttp_session>=2.9.0",
         "colorlog>=4.0.0",
         "jinja2>=2.11.2",
         "passlib>=1.7",

@@ -13,6 +13,7 @@ DEVICE_DEFAULT_NAME = "Unnamed Device"
 
 URL_API = "/api/"
 
+CONF_TOKEN_LIFETIME = 3600
 CONF_ACCESS_TOKEN = "access_token"
 CONF_ADDRESS = "address"
 CONF_CLIENT_ID = "client_id"

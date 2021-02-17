@@ -9,6 +9,7 @@ import jwt
 from passlib.hash import sha256_crypt
 from sqlalchemy.sql.expression import false
 
+from ..const import CONF_TOKEN_LIFETIME
 from .auth_code import AuthorizationCode
 from .base import Base, Session, engine
 from .token import Token
@@ -120,7 +121,9 @@ class AuthDatabase:
 
         key = "secret"
         access_token = jwt.encode(
-            {"exp": datetime.utcnow() + timedelta(minutes=3)}, key, algorithm="HS256"
+            {"exp": datetime.utcnow() + timedelta(seconds=CONF_TOKEN_LIFETIME)},
+            key,
+            algorithm="HS256",
         )
         refresh_token = jwt.encode({}, key, algorithm="HS256")
 
@@ -139,7 +142,9 @@ class AuthDatabase:
         """Renew the access token."""
         key = "secret"
         new_token = jwt.encode(
-            {"exp": datetime.utcnow() + timedelta(minutes=3)}, key, algorithm="HS256"
+            {"exp": datetime.utcnow() + timedelta(seconds=CONF_TOKEN_LIFETIME)},
+            key,
+            algorithm="HS256",
         )
 
         self.session.query(Token).filter(Token.client_id == client_id).filter(
@@ -147,7 +152,8 @@ class AuthDatabase:
         ).update(
             {
                 Token.access_token: new_token,
-                Token.token_expiration: datetime.utcnow() + timedelta(minutes=3),
+                Token.token_expiration: datetime.utcnow()
+                + timedelta(seconds=CONF_TOKEN_LIFETIME),
             },
             synchronize_session=False,
         )
@@ -176,3 +182,13 @@ class AuthDatabase:
         )
 
         return count > 0
+
+    async def user_id_for_token(self, access_token: str) -> str:
+        row = (
+            self.session.query(Token)
+            .filter(Token.access_token == access_token)
+            .filter(Token.token_expiration > str(datetime.utcnow()))
+            .first()
+        )
+
+        return row.user_id

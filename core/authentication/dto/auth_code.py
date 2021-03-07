@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import Boolean, Column, Integer, String
 
-from .base import Base
+from ...base import Base
 
 
 class AuthorizationCode(Base):

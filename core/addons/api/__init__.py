@@ -4,7 +4,6 @@ import logging
 import os
 
 from aiohttp import web
-
 from core.addons.api.dto.details import Details
 from core.addons.api.dto.location import Location
 from core.addons.api.dto.photo import Photo, PhotoEncoder
@@ -55,25 +54,38 @@ class PhotosView(RequestView):
 
     async def get(self, core: ApplicationCore, request: web.Request) -> web.Response:
         """Get a list of all photo resources."""
-        user = request[KEY_USER_ID]
+        user_id = await core.http.get_user_id(request)
 
-        data = request.query
+        if user_id is None:
+            raise web.HTTPForbidden()
 
-        offset = 0
-        if data["size"]:
-            offset = data["size"]  # integer  0..N
+        _LOGGER.debug(f"read photos for user_id {user_id}")
+        user_photos = await core.storage.read_photos(user_id)
+        _LOGGER.debug(f"iterate through {len(user_photos)} photos.")
 
-        limit = 50
-        if data["size"]:  # integer   Number of records per page.
-            limit = data["size"]
+        results = []
 
-        _LOGGER.info(f"loading data for user {user}")
+        # iterate through photos
+        for photo in user_photos:
+            _LOGGER.debug(f"get additional data for {photo}")
 
-        response = PhotoResponse(
-            offset=offset,
-            limit=limit,
-            size=1,
-            results=[
+            # photo location
+            location = None
+            latitude = await core.storage.read("latitude")
+            longitude = await core.storage.read("longitude")
+            if latitude is not None and longitude is not None:
+                altitude = await core.storage.read("altitude")
+                if altitude is not None:
+                    location = Location(latitude=latitude, longitude=longitude, altitude=altitude)
+                else:
+                    location = Location(latitude=latitude, longitude=longitude, altitude="0.0")
+
+            # photo tags
+            tags = await core.storage.read("tags")
+            tags = ["landscape", "sky", "night"]
+
+            # add photo to results
+            results.add(
                 Photo(
                     name="DSC_2340-HDR.jpg",
                     description="",
@@ -87,12 +99,8 @@ class PhotosView(RequestView):
                         shutter_speed="1/2000",
                         aperture="6.3",
                     ),
-                    tags=[
-                        "landscape",
-                        "sky",
-                        "night",
-                    ],
-                    location=Location(latitude="0.0", longitude="0.0", altitude="0.0"),
+                    tags=tags,
+                    location=location,
                     image_urls=[
                         PhotoUrl(size="1080", url="/data/cache/DSC_2340-HDR_1080.jpg"),
                         PhotoUrl(size="1600", url="/data/cache/DSC_2340-HDR_1600.jpg"),
@@ -100,12 +108,26 @@ class PhotosView(RequestView):
                         PhotoUrl(size="full", url="/data/cache/DSC_2340-HDR.jpg"),
                     ],
                 )
-            ],
-        )
+            )
 
-        return web.Response(
-            text=json.dumps(response, cls=PhotoEncoder), content_type="application/json"
-        )
+        # key = "latitude"
+        # _LOGGER.error(f"key/value: {key}/{value}")
+
+        # data = request.query
+
+        offset = 0
+        # if data["size"]:
+        #     offset = data["size"]  # integer  0..N
+
+        limit = 50
+        # if data["size"]:  # integer   Number of records per page.
+        #     limit = data["size"]
+
+        _LOGGER.info(f"loading data for user {user_id}")
+
+        response = PhotoResponse(offset=offset, limit=limit, size=len(results), results=results)
+
+        return web.Response(text=json.dumps(response, cls=PhotoEncoder), content_type="application/json")
 
     async def post(self, core: ApplicationCore, request: web.Request) -> web.Response:
         """Upload new photo resource."""
@@ -145,9 +167,7 @@ class PhotosView(RequestView):
 
         status_code = HTTP_CREATED if new_entity_created else HTTP_OK
 
-        resp = self.json_message(
-            f"File successfully added with ID: {new_entity_id}", status_code
-        )
+        resp = self.json_message(f"File successfully added with ID: {new_entity_id}", status_code)
         resp.headers.add("Location", f"/api/photo/{new_entity_id}")
 
         return resp

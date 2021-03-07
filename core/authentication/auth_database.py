@@ -9,11 +9,11 @@ import jwt
 from passlib.hash import sha256_crypt
 from sqlalchemy.sql.expression import false
 
+from ..base import Base, Session, engine
 from ..const import CONF_TOKEN_LIFETIME
-from .auth_code import AuthorizationCode
-from .base import Base, Session, engine
-from .token import Token
-from .user import User
+from .dto.auth_code import AuthorizationCode
+from .dto.token import Token
+from .dto.user import User
 
 _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -35,8 +35,7 @@ class AuthDatabase:
                 f"generated an admin user with password: '{generated_password}'"
             )
 
-            # hashed = sha256_crypt.hash(generated_password)
-            hashed = sha256_crypt.hash("admin")
+            hashed = sha256_crypt.hash(generated_password)
             user = User("admin", hashed, True, False)
             self.session.add(user)
             self.session.commit()
@@ -59,6 +58,7 @@ class AuthDatabase:
         self,
         username: str,
         client_id: str,
+        origin: str,
     ) -> Optional[uuid.UUID]:
         """
         Create and persist an authorization_code with a max lifetime of 10 minutes to mitigate the risk of leaks.
@@ -70,6 +70,11 @@ class AuthDatabase:
             .filter(User.login == username)
             .filter(User.disabled == false())
             .first()
+        )
+
+        self.session.query(User).filter(User.login == username).update(
+            {User.last_login: datetime.utcnow(), User.last_ip: origin},
+            synchronize_session=False,
         )
 
         self.session.add(AuthorizationCode(user.id, client_id, str(authorization_code)))
@@ -131,7 +136,7 @@ class AuthDatabase:
             user_id=auth_code.user_id,
             client_id=auth_code.client_id,
             access_token=access_token,
-            refresh_token_id=refresh_token,
+            refresh_token=refresh_token,
         )
         self.session.add(token)
         self.session.commit()
@@ -157,6 +162,7 @@ class AuthDatabase:
             },
             synchronize_session=False,
         )
+        self.session.commit()
 
         return new_token, refresh_token
 
@@ -170,6 +176,7 @@ class AuthDatabase:
                 synchronize_session=False,
             )
         )
+        self.session.commit()
 
         return count > 0
 
@@ -180,6 +187,13 @@ class AuthDatabase:
             .filter(Token.token_expiration > str(datetime.utcnow()))
             .count()
         )
+
+        if count > 0:
+            self.session.query(Token).filter(Token.access_token == access_token).update(
+                {Token.last_used: datetime.utcnow()},
+                synchronize_session=False,
+            )
+            self.session.commit()
 
         return count > 0
 

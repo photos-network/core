@@ -397,6 +397,9 @@ class Auth:
 
         access_token, refresh_token = await self.auth_database.renew_tokens(client_id, refresh_token)
 
+        if access_token is None:
+            raise web.HTTPForbidden()
+
         payload = {
             "access_token": access_token,
             "token_type": "Bearer",

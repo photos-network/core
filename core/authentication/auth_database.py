@@ -28,12 +28,9 @@ class AuthDatabase:
         if len(users) < 1:
             # insert admin user with generated password into database
             generated_password = "".join(
-                random.SystemRandom().choice(string.ascii_letters + string.digits)
-                for _ in range(10)
+                random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(10)
             )
-            _LOGGER.warning(
-                f"generated an admin user with password: '{generated_password}'"
-            )
+            _LOGGER.warning(f"generated an admin user with password: '{generated_password}'")
 
             hashed = sha256_crypt.hash(generated_password)
             user = User("admin", hashed, True, False)
@@ -42,12 +39,7 @@ class AuthDatabase:
 
     async def check_credentials(self, username: str, password: str) -> bool:
         """Check if the given username is found, not disabled and matches with the hashed password."""
-        user = (
-            self.session.query(User)
-            .filter(User.login == username)
-            .filter(User.disabled == false())
-            .first()
-        )
+        user = self.session.query(User).filter(User.login == username).filter(User.disabled == false()).first()
 
         if user is not None:
             return sha256_crypt.verify(password, user.passwd)
@@ -65,12 +57,7 @@ class AuthDatabase:
         """
         authorization_code = uuid.uuid4()
 
-        user = (
-            self.session.query(User)
-            .filter(User.login == username)
-            .filter(User.disabled == false())
-            .first()
-        )
+        user = self.session.query(User).filter(User.login == username).filter(User.disabled == false()).first()
 
         self.session.query(User).filter(User.login == username).update(
             {User.last_login: datetime.utcnow(), User.last_ip: origin},
@@ -143,28 +130,46 @@ class AuthDatabase:
 
         return access_token, refresh_token
 
-    async def renew_tokens(self, client_id: str, refresh_token: str) -> Tuple[str, str]:
+    async def renew_tokens(self, client_id: str, refresh_token: str) -> Tuple[Optional[str], Optional[str]]:
         """Renew the access token."""
+
+        # validate refresh token
+        count = (
+            self.session.query(Token)
+            .filter(Token.client_id == client_id)
+            .filter(Token.refresh_token == refresh_token)
+            .count()
+        )
+
+        if count < 1:
+            return None, None
+
         key = "secret"
-        new_token = jwt.encode(
+        new_access_token = jwt.encode(
             {"exp": datetime.utcnow() + timedelta(seconds=CONF_TOKEN_LIFETIME)},
             key,
             algorithm="HS256",
         )
+        new_refresh_token = jwt.encode(
+            {"some": str(datetime.utcnow())},
+            key,
+            algorithm="HS256",
+        )
 
+        # update tokens in database
         self.session.query(Token).filter(Token.client_id == client_id).filter(
             Token.token_expiration < str(datetime.utcnow)
         ).update(
             {
-                Token.access_token: new_token,
-                Token.token_expiration: datetime.utcnow()
-                + timedelta(seconds=CONF_TOKEN_LIFETIME),
+                Token.access_token: new_access_token,
+                Token.token_expiration: datetime.utcnow() + timedelta(seconds=CONF_TOKEN_LIFETIME),
+                Token.refresh_token: new_refresh_token,
             },
             synchronize_session=False,
         )
         self.session.commit()
 
-        return new_token, refresh_token
+        return new_access_token, new_refresh_token
 
     async def revoke_token(self, access_token: str) -> bool:
         """Revoke access token for client_id."""

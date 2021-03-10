@@ -93,7 +93,6 @@ class Webserver:
                 client_secret="AYgD5Y2DV7bbWupYW7WmYQ",
                 redirect_uris=[
                     "http://127.0.0.1:3000/callback",
-                    "https://oauthdebugger.com/debug",
                 ],
             )
         )

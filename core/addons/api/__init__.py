@@ -67,7 +67,7 @@ class PhotosView(RequestView):
 
         # iterate through photos
         for photo in user_photos:
-            _LOGGER.debug(f"get additional data for {photo}")
+            _LOGGER.debug(f"get additional data for {photo.filepath}")
 
             # photo location
             location = None
@@ -85,7 +85,7 @@ class PhotosView(RequestView):
             tags = ["landscape", "sky", "night"]
 
             # add photo to results
-            results.add(
+            results.append(
                 Photo(
                     name="DSC_2340-HDR.jpg",
                     description="",

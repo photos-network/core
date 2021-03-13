@@ -29,17 +29,12 @@ async def async_setup(
 ) -> Optional[ApplicationCore]:
     """Set up Photos."""
     application = ApplicationCore()
-    _LOGGER.debug("main::async_setup()")
     application.config.config_dir = runtime_config.config_dir
     application.config.data_dir = runtime_config.data_dir
     application.async_enable_logging(verbose=True)
 
     # create date directory
     get_or_create_directory(directory=application.config.data_dir, is_relative=False)
-
-    _LOGGER.info(
-        f"Config directory: {runtime_config.config_dir}",
-    )
 
     return application
 
@@ -62,7 +57,7 @@ def get_or_create_directory(directory: str, is_relative: bool = True) -> str:
         directory_path = os.path.abspath(directory)
 
     if not os.path.exists(directory_path):
-        _LOGGER.warning("config_dir does not exist")
+        _LOGGER.info(f"create directory {directory_path}")
         os.mkdir(directory_path)
 
     return directory_path
@@ -71,8 +66,6 @@ def get_or_create_directory(directory: str, is_relative: bool = True) -> str:
 def main() -> int:
     """Start Photos.network application."""
     validate_python()
-
-    _LOGGER.debug("Now run the core system...")
 
     config_dir = get_or_create_directory(directory="config")
     data_dir = get_or_create_directory(directory="data", is_relative=False)

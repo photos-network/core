@@ -4,6 +4,7 @@ import logging
 import os
 
 from aiohttp import web
+
 from core.addons.api.dto.details import Details
 from core.addons.api.dto.location import Location
 from core.addons.api.dto.photo import Photo, PhotoEncoder
@@ -19,7 +20,10 @@ logging.basicConfig(level=logging.DEBUG)
 
 async def async_setup(core: ApplicationCore, config: dict) -> bool:
     """Set up addon to core application."""
-    is_cors_enabled = config["cors"]
+    if config is not None and "cors" in config:
+        is_cors_enabled = config["cors"]
+    else:
+        is_cors_enabled = False
     _LOGGER.info(f"enable cors: {is_cors_enabled}")
 
     core.http.register_request(APIStatusView())
@@ -76,9 +80,13 @@ class PhotosView(RequestView):
             if latitude is not None and longitude is not None:
                 altitude = await core.storage.read("altitude")
                 if altitude is not None:
-                    location = Location(latitude=latitude, longitude=longitude, altitude=altitude)
+                    location = Location(
+                        latitude=latitude, longitude=longitude, altitude=altitude
+                    )
                 else:
-                    location = Location(latitude=latitude, longitude=longitude, altitude="0.0")
+                    location = Location(
+                        latitude=latitude, longitude=longitude, altitude="0.0"
+                    )
 
             # photo tags
             tags = await core.storage.read("tags")
@@ -125,9 +133,13 @@ class PhotosView(RequestView):
 
         _LOGGER.info(f"loading data for user {user_id}")
 
-        response = PhotoResponse(offset=offset, limit=limit, size=len(results), results=results)
+        response = PhotoResponse(
+            offset=offset, limit=limit, size=len(results), results=results
+        )
 
-        return web.Response(text=json.dumps(response, cls=PhotoEncoder), content_type="application/json")
+        return web.Response(
+            text=json.dumps(response, cls=PhotoEncoder), content_type="application/json"
+        )
 
     async def post(self, core: ApplicationCore, request: web.Request) -> web.Response:
         """Upload new photo resource."""
@@ -167,7 +179,9 @@ class PhotosView(RequestView):
 
         status_code = HTTP_CREATED if new_entity_created else HTTP_OK
 
-        resp = self.json_message(f"File successfully added with ID: {new_entity_id}", status_code)
+        resp = self.json_message(
+            f"File successfully added with ID: {new_entity_id}", status_code
+        )
         resp.headers.add("Location", f"/api/photo/{new_entity_id}")
 
         return resp

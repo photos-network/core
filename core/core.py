@@ -4,6 +4,7 @@ import enum
 import json
 import logging
 import os
+import socket
 import sys
 from logging.handlers import TimedRotatingFileHandler
 from time import monotonic
@@ -56,8 +57,6 @@ class ApplicationCore:
 
     def __init__(self) -> None:
         """Initialize new ApplicationCore."""
-        _LOGGER.debug("ApplicationCore::init...")
-
         self.loop = asyncio.get_running_loop()
         self._pending_tasks: List = []
         self._track_task = True
@@ -174,8 +173,7 @@ class ApplicationCore:
             await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Something is blocking core from wrapping up the "
-                "start up phase. We're going to continue anyway."
+                "Something is blocking core from wrapping up the start up phase. We're going to continue anyway."
             )
 
         # Wait for all startup triggers before changing state
@@ -183,8 +181,7 @@ class ApplicationCore:
 
         if self.state != CoreState.starting:
             _LOGGER.warning(
-                "Photos.network startup has been interrupted. "
-                "Its state may be inconsistent"
+                "Photos.network startup has been interrupted. Its state may be inconsistent"
             )
             return
 
@@ -242,15 +239,29 @@ class ApplicationCore:
     async def _load_config(self) -> dict:
         """Load configuration from file and return as dict."""
         config_file = os.path.join(self.config.config_dir, "configuration.json")
-        _LOGGER.info(f"config_file {config_file}")
-        with open(config_file, encoding="utf-8") as file:
+
+        if not os.path.exists(config_file):
+            with open(file=config_file, mode="w+", encoding="utf-8") as file:
+                hostname = socket.gethostname()
+
+                output = {
+                    "internal_url": socket.gethostbyname(hostname),
+                    "external_url": "external.url.com",
+                    "data_dir": "data",
+                    "addons": [{"name": "api"}],
+                }
+                json.dump(output, file, indent=2)
+                file.close()
+            _LOGGER.info(f"default config_file {config_file} created.")
+        else:
+            _LOGGER.info(f"config_file found at {config_file}")
+
+        with open(file=config_file, mode="r", encoding="utf-8") as file:
             conf_dict = json.load(file)
+            file.close()
 
         if not isinstance(conf_dict, dict):
-            msg = (
-                f"The configuration file {os.path.basename(self.config.config_dir)} "
-                "does not contain a dictionary"
-            )
+            msg = f"The configuration file {os.path.basename(self.config.config_dir)} does not contain a dictionary"
             _LOGGER.error(msg)
             raise RuntimeError(msg)
         return conf_dict

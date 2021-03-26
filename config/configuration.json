@@ -3,6 +3,24 @@
   "external_url": "external.url.com",
   "port": 7777,
   "data_dir": "data",
+  "clients": [
+    {
+      "name": "Frontend",
+      "client_id": "d37c098d-ac25-4a96-b462-c1ca05f45952",
+      "client_secret": "AYgD5Y2DV7bbWupYW7WmYQ",
+      "redirect_uris": [
+        "http://192.168.0.1:3000/callback"
+      ]
+    },
+    {
+      "name": "Android App",
+      "client_id": "1803463f-c10f-4a65-aa15-b2e39be9f14d",
+      "client_secret": "1TmlFYywRd7MwlbRNiePjQ",
+      "redirect_uris": [
+        "photosapp://authenticate"
+      ]
+    }
+  ],
   "addons": [
     {
       "name": "api",

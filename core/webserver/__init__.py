@@ -71,8 +71,8 @@ class Webserver:
 
         host = self.core.config.external_url
         port = self.core.config.port
-        _LOGGER.debug(f"ignore host from config {host}")
 
+        _LOGGER.debug(f"ignore external_url ({host}) from config when using TCPSite.")
         # use host=None to listen on all interfaces.
         site = web.TCPSite(runner=self.runner, host=None, port=port)
         await site.start()
@@ -85,27 +85,9 @@ class Webserver:
         # setup auth
         self.auth = Auth(self.app, auth_database)
 
-        # TODO: read client config from configuration
-        self.auth.add_client(
-            AuthClient(
-                client_name="Frontend",
-                client_id="d37c098d-ac25-4a96-b462-c1ca05f45952",
-                client_secret="AYgD5Y2DV7bbWupYW7WmYQ",
-                redirect_uris=[
-                    "http://127.0.0.1:3000/callback",
-                ],
-            )
-        )
-        self.auth.add_client(
-            AuthClient(
-                client_name="Android App",
-                client_id="1803463f-c10f-4a65-aa15-b2e39be9f14d",
-                client_secret="1TmlFYywRd7MwlbRNiePjQ",
-                redirect_uris=["photosapp://authenticate"],
-            )
-        )
-
-        _LOGGER.info("init_auth done")
+        # add auth clients from config
+        for client in self.core.config.clients:
+            self.core.authentication.add_client(client)
 
     async def get_user_id(self, request: web.Request) -> Optional[str]:
         return await self.auth.check_authorized(request)

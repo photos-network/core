@@ -11,8 +11,9 @@ from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
 
 from .. import const
-from ..authentication import Auth, AuthClient
+from ..authentication import Authentication, AuthenticationClient
 from ..authentication.auth_database import AuthDatabase
+from ..authorization import Authorization
 from .request import KEY_AUTHENTICATED, KEY_USER_ID, RequestView  # noqa: F401
 
 if TYPE_CHECKING:
@@ -79,18 +80,18 @@ class Webserver:
         _LOGGER.info(f"Webserver is listening on {site._host}:{site._port}")
 
     async def init_auth(self):
-        database_file = f"{self.core.config.data_dir}/system.sqlite3"
-        auth_database = AuthDatabase(database_file)
+        auth_database = AuthDatabase()
 
         # setup auth
-        self.auth = Auth(self.app, auth_database)
+        self.core.authorization = Authorization(self.core, self.app)
+        self.core.authentication = Authentication(self.core, self.app, auth_database)
 
         # add auth clients from config
         for client in self.core.config.clients:
             self.core.authentication.add_client(client)
 
     async def get_user_id(self, request: web.Request) -> Optional[str]:
-        return await self.auth.check_authorized(request)
+        return await self.core.authentication.check_authorized(request)
 
     async def stop(self):
         """Stop webserver."""

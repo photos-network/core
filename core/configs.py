@@ -23,10 +23,15 @@ class Config:
         self.core = core
 
         self.internal_url: Optional[str] = "127.0.0.1"
-        self.external_url: Optional[str] = "127.0.0.1"
+        self.external_url: Optional[str] = "photos.example.com"
         self.port: Optional[int] = 7777
 
+        # Directory that holds application data
+        self.data_dir: Optional[str] = None
+
         self.time_zone: datetime.tzinfo = pytz.utc.zone
+
+        self.clients: Set[AuthenticationClient] = set()
 
         # List of loaded addons
         self.addons: Set[str] = set()
@@ -36,9 +41,6 @@ class Config:
 
         # Directory that holds configuration data
         self.config_dir: Optional[str] = None
-
-        # Directory that holds application data
-        self.data_dir: Optional[str] = None
 
     def path(self, *path: str) -> str:
         """Generate path to the file within the configuration directory.
@@ -59,13 +61,23 @@ class Config:
             time_zone = getattr(self.time_zone, "zone")
 
         return {
-            "internal_url": self.internal_url,
             "external_url": self.external_url,
+            "internal_url": self.internal_url,
             "port": self.port,
             "time_zone": time_zone,
             "addons": self.addons,
             "config_dir": self.config_dir,
             "data_dir": self.data_dir,
+            "clients": [
+              {
+                "name":"Frontend",
+                "client_id":"d37c098d-ac25-4a96-b462-c1ca05f45952",
+                "client_secret":"AYgD5Y2DV7bbWupYW7WmYQ",
+                "redirect_uris": [
+                    f"http://{self.internal_url}:3000/callback"
+                ]
+              }
+            ]
         }
 
 

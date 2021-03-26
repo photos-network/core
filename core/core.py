@@ -264,6 +264,31 @@ class ApplicationCore:
             msg = f"The configuration file {os.path.basename(self.config.config_dir)} does not contain a dictionary"
             _LOGGER.error(msg)
             raise RuntimeError(msg)
+
+        if "internal_url" in conf_dict:
+            self.config.internal_url = conf_dict["internal_url"]
+
+        if "external_url" in conf_dict:
+            self.config.external_url = conf_dict["external_url"]
+
+        if "port" in conf_dict:
+            self.config.port = conf_dict["port"]
+
+        if "data_dir" in conf_dict:
+            self.config.data_dir = conf_dict["data_dir"]
+
+        if "clients" in conf_dict:
+            for client in conf_dict["clients"]:
+                self.config.clients.add(
+                    AuthenticationClient(
+                        client_name=client["name"],
+                        client_id=client["client_id"],
+                        client_secret=client["client_secret"],
+                        redirect_uris=client["redirect_uris"]
+                    )
+                )
+            _LOGGER.info(f"added {len(self.config.clients)} auth clients to core config.")
+
         return conf_dict
 
     async def async_block_till_done(self) -> None:

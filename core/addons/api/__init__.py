@@ -24,7 +24,7 @@ async def async_setup(core: ApplicationCore, config: dict) -> bool:
         is_cors_enabled = config["cors"]
     else:
         is_cors_enabled = False
-    _LOGGER.info(f"enable cors: {is_cors_enabled}")
+    _LOGGER.debug(f"enable cors: {is_cors_enabled}")
 
     core.http.register_request(APIStatusView())
     core.http.register_request(PhotosView())

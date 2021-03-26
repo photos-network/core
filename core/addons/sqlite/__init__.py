@@ -23,27 +23,32 @@ async def async_setup(core: ApplicationCore, config: dict) -> bool:
     file_path = os.path.join(core.config.data_dir, database_name)
 
     if os.path.exists(os.path.abspath(file_path)):
-        _LOGGER.info("database file already exists.")
+        _LOGGER.debug("database file already exists.")
     else:
-        _LOGGER.info(f"create database {database_name}")
-        _LOGGER.error(f"database file_path {file_path}")
+        _LOGGER.debug(f"create database {database_name}")
+        _LOGGER.debug(f"database file_path {file_path}")
         file_object = open(file_path, "w")
         file_object.close()
 
+    # return if setup was successful
     return True
 
 
-async def create(key: str):
-    _LOGGER.debug(f"add key {key} into db")
+async def create(core: ApplicationCore, key: str, value: str):
+    _LOGGER.debug(f"add key {key} with value {value} into db")
 
 
-async def read(key: str):
-    _LOGGER.debug(f"read key {key} into db")
+async def read(core: ApplicationCore, key: str):
+    # TODO: read value from database
+    value = ""
+    _LOGGER.debug(f"read key {key} from db. value = {value}")
 
 
-async def update(key: str):
-    _LOGGER.debug(f"update key {key} in db")
+async def update(core: ApplicationCore, key: str, value: str):
+    # TODO: override key with value
+    _LOGGER.debug(f"update key {key} in with value {value} db.")
 
 
-async def delete(key: str):
-    _LOGGER.debug(f"delete key {key} from db")
+async def delete(core: ApplicationCore, key: str):
+    # remove key from db
+    _LOGGER.debug(f"delete key {key} from db.")

@@ -1,7 +1,7 @@
-"""Auth client representation."""
+"""Authentication client representation."""
 
 
-class AuthClient:
+class AuthenticationClient:
     def __init__(
         self, client_name: str, client_id: str, client_secret: str, redirect_uris: dict
     ):
@@ -11,4 +11,4 @@ class AuthClient:
         self.redirect_uris = redirect_uris
 
     def __repr__(self):
-        return f"AuthClient(client_name={self.client_name!r}, redirect_uris={self.redirect_uris!r})"
+        return f"AuthenticationClient(client_name={self.client_name!r}, redirect_uris={self.redirect_uris!r})"

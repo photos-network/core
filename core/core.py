@@ -8,23 +8,15 @@ import socket
 import sys
 from logging.handlers import TimedRotatingFileHandler
 from time import monotonic
-from typing import (
-    Any,
-    Awaitable,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    TypeVar,
-)
+from typing import (Any, Awaitable, Callable, Dict, Iterable, List, Optional,
+                    Sequence, Set, TypeVar)
 
 from colorlog import ColoredFormatter
 
 from core import loader
 from core.addon import Addon
+from core.authentication import Authentication, AuthenticationClient
+from core.authorization import Authorization
 from core.configs import Config
 from core.persistency.persistency import PersistencyManager
 from core.utils.timeout import TimeoutManager
@@ -65,6 +57,9 @@ class ApplicationCore:
         self.config = Config(self)
         self.addons = loader.Components(self)
         self.loaded_addons: Dict = {}
+
+        self.authentication: Authentication = None
+        self.authorization: Authorization = None
 
         # This is a dictionary that any addon can store any data on.
         self.data: dict = {}
@@ -284,10 +279,12 @@ class ApplicationCore:
                         client_name=client["name"],
                         client_id=client["client_id"],
                         client_secret=client["client_secret"],
-                        redirect_uris=client["redirect_uris"]
+                        redirect_uris=client["redirect_uris"],
                     )
                 )
-            _LOGGER.info(f"added {len(self.config.clients)} auth clients to core config.")
+            _LOGGER.info(
+                f"added {len(self.config.clients)} auth clients to core config."
+            )
 
         return conf_dict
 
@@ -304,6 +301,9 @@ class ApplicationCore:
 
         await self.http.start()
         _LOGGER.info("Webserver should be up and running...")
+
+        await self.storage.start_directory_observing()
+        _LOGGER.info("Observe user directories.")
 
         while self._pending_tasks:
             pending = [task for task in self._pending_tasks if not task.done()]

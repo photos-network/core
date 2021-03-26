@@ -3,25 +3,36 @@ import json
 import logging
 import secrets
 import uuid
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
+
+if TYPE_CHECKING:
+    from core.core import ApplicationCore
 
 import aiohttp_jinja2
 from aiohttp import hdrs, web
 
+from ..authorization import Authorization
 from ..const import CONF_TOKEN_LIFETIME
-from .auth_client import AuthClient
+from .auth_client import AuthenticationClient
 from .auth_database import AuthDatabase
 
 _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 
-class Auth:
+class Authentication:
     # list of registered auth clients
-    auth_clients: List[AuthClient] = []
+    auth_clients: List[AuthenticationClient] = []
 
-    def __init__(self, application: web.Application, auth_database: AuthDatabase):
+    def __init__(
+        self,
+        core: "ApplicationCore",
+        application: web.Application,
+        auth_database: AuthDatabase,
+    ):
+        self.core = core
         self.app = application
+        self.authorization = self.core.authorization
         self.auth_database = auth_database
 
         # Authorization Endpoint: obtain an authorization grant
@@ -34,10 +45,15 @@ class Auth:
         self.app.router.add_post("/revoke", self.revoke_token_handler, name="revoke")
         self.app.router.add_get("/protected", self.protected_handler, name="protected")
 
-    def add_client(self, auth_client: AuthClient):
+    def add_client(self, auth_client: AuthenticationClient):
         self.auth_clients.append(auth_client)
 
     async def revoke_token_handler(self, request: web.Request) -> web.StreamResponse:
+        """
+        Revoke the requeste token and all
+
+        See Section 2.1: https://tools.ietf.org/html/rfc7009#section-2.1
+        """
         _LOGGER.info("POST /revoke")
 
         await self.check_authorized(request)
@@ -47,12 +63,11 @@ class Auth:
 
         await self.auth_database.revoke_token(token_to_revoke)
 
-        # TODO: revoked successfully OR the client submitted an invalid token
         return web.Response(status=200)
 
     async def protected_handler(self, request: web.Request) -> web.StreamResponse:
         _LOGGER.warning("GET /protected")
-        await self.check_permission(request, "protected")
+        await self.check_permission(request, "library:read")
 
         response = web.Response(body=b"You are on protected page")
         return response
@@ -320,14 +335,14 @@ class Auth:
         if "code" not in data:
             _LOGGER.warning("code param not provided!")
             data = {"error": "invalid_request"}
-            return web.json_response(data)
+            return web.json_response(status=400, data=data)
         code = data["code"]
 
         # redirect_uri is REQUIRED
         if "redirect_uri" not in data:
             _LOGGER.warning("redirect_uri param not provided!")
             data = {"error": "invalid_request"}
-            return web.json_response(data)
+            return web.json_response(status=400, data=data)
         redirect_uri = data["redirect_uri"]
 
         # TODO: compare redirect_uri with previous call
@@ -336,14 +351,14 @@ class Auth:
         # client_id is REQUIRED
         if "client_id" not in data:
             data = {"error": "invalid_request"}
-            return web.json_response(data)
+            return web.json_response(status=400, data=data)
         client_id = data["client_id"]
 
         client_code_valid = await self.auth_database.validate_authorization_code(code, client_id)
         if not client_code_valid:
             _LOGGER.error("authorization_code invalid!")
             payload = {"error": "invalid_grant"}
-            return web.json_response(payload)
+            return web.json_response(status=400, data=payload)
 
         access_token, refresh_token = await self.auth_database.create_tokens(code, client_id)
 
@@ -353,7 +368,7 @@ class Auth:
             "expires_in": CONF_TOKEN_LIFETIME,
             "refresh_token": refresh_token,
         }
-        return web.json_response(payload)
+        return web.json_response(status=200, data=payload)
 
     async def _handle_refresh_token_request(self, request: web.Request, data) -> web.StreamResponse:
         """
@@ -437,9 +452,10 @@ class Auth:
 
             raise web.HTTPForbidden()
 
-    async def check_permission(self, request: web.Request, permission: str) -> None:
-        """Check if given authorization header is valid and user has granted access to given permission."""
+    async def check_permission(self, request: web.Request, scope: str) -> None:
+        """Check if given authorization header is valid and user has granted access to given scope."""
+        # check if user is authorized
         await self.check_authorized(request)
 
-        # TODO: check if scope is granted
-        _LOGGER.debug("TODO: check if scope for token is granted")
+        # check if required scope is granted
+        await self.core.authorization.check_scope(scope)

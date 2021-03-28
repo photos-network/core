@@ -1,17 +1,17 @@
 """Access token representation."""
 from datetime import datetime, timedelta
 
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 
-from ...base import Base
+from ...base import Base, generate_uuid
 from ...const import CONF_TOKEN_LIFETIME
 
 
 class Token(Base):
     __tablename__ = "tokens"
 
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer)
+    id = Column(String, name="uuid", primary_key=True, default=generate_uuid)
+    user_id = Column(Integer, ForeignKey("users.uuid"), nullable=False)
     client_id = Column(String)
     access_token = Column(String)
     token_expiration = Column(DateTime)

@@ -21,11 +21,10 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class AuthDatabase:
-    def __init__(self):
+    def __init__(self, data_dir: str):
         Base.metadata.create_all(engine)
-        self.session = Session()
 
-        users = self.session.query(User).all()
+        users = Session.query(User).all()
         if len(users) < 1:
             # insert admin user with generated password into database
             generated_password = "".join(
@@ -33,31 +32,38 @@ class AuthDatabase:
                 for _ in range(10)
             )
             _LOGGER.warning(
-                f"generated an admin user with password: '{generated_password}'"
+                f"generated an admin user with username: 'admin@photos.network' password: '{generated_password}'."
             )
 
             hashed = sha256_crypt.hash(generated_password)
-            user = User("admin", hashed, True, False)
-            self.session.add(user)
-            self.session.commit()
+            user = User(
+                "admin@photos.network",
+                hashed,
+                "Administrator",
+                "Generated User",
+                True,
+                False,
+            )
+            Session.add(user)
+            Session.commit()
 
-    async def check_credentials(self, username: str, password: str) -> bool:
-        """Check if the given username is found, not disabled and matches with the hashed password."""
+    async def check_credentials(self, email: str, password: str) -> bool:
+        """Check if the given email is found, not disabled and matches with the hashed password."""
         user = (
-            self.session.query(User)
-            .filter(User.login == username)
+            Session.query(User)
+            .filter(User.email == email)
             .filter(User.disabled == false())
             .first()
         )
 
         if user is not None:
-            return sha256_crypt.verify(password, user.passwd)
+            return sha256_crypt.verify(password, user.password)
         else:
             return False
 
     def create_authorization_code(
         self,
-        username: str,
+        email: str,
         client_id: str,
         origin: str,
     ) -> Optional[uuid.UUID]:
@@ -67,19 +73,19 @@ class AuthDatabase:
         authorization_code = uuid.uuid4()
 
         user = (
-            self.session.query(User)
-            .filter(User.login == username)
+            Session.query(User)
+            .filter(User.email == email)
             .filter(User.disabled == false())
             .first()
         )
 
-        self.session.query(User).filter(User.login == username).update(
+        Session.query(User).filter(User.email == email).update(
             {User.last_login: datetime.utcnow(), User.last_ip: origin},
             synchronize_session=False,
         )
 
-        self.session.add(AuthorizationCode(user.id, client_id, str(authorization_code)))
-        self.session.commit()
+        Session.add(AuthorizationCode(user.id, client_id, str(authorization_code)))
+        Session.commit()
 
         return authorization_code
 
@@ -92,7 +98,7 @@ class AuthDatabase:
         Validates the given authorization_code
         """
         count = (
-            self.session.query(AuthorizationCode)
+            Session.query(AuthorizationCode)
             .filter(AuthorizationCode.authorization_code == authorization_code)
             .filter(AuthorizationCode.expiration_time < str(datetime.utcnow))
             .filter(AuthorizationCode.used == false())
@@ -100,7 +106,7 @@ class AuthDatabase:
         )
 
         if count > 0:
-            self.session.query(AuthorizationCode).filter(
+            Session.query(AuthorizationCode).filter(
                 AuthorizationCode.authorization_code == authorization_code
             ).filter(AuthorizationCode.expiration_time < str(datetime.utcnow)).update(
                 {AuthorizationCode.used: True}, synchronize_session=False
@@ -120,7 +126,7 @@ class AuthDatabase:
         Create and persist access and refresh tokens.
         """
         auth_code = (
-            self.session.query(AuthorizationCode)
+            Session.query(AuthorizationCode)
             .filter(AuthorizationCode.authorization_code == authorization_code)
             .first()
         )
@@ -139,8 +145,8 @@ class AuthDatabase:
             access_token=access_token,
             refresh_token=refresh_token,
         )
-        self.session.add(token)
-        self.session.commit()
+        Session.add(token)
+        Session.commit()
 
         return access_token, refresh_token
 
@@ -151,7 +157,7 @@ class AuthDatabase:
 
         # validate refresh token
         count = (
-            self.session.query(Token)
+            Session.query(Token)
             .filter(Token.client_id == client_id)
             .filter(Token.refresh_token == refresh_token)
             .count()
@@ -173,7 +179,7 @@ class AuthDatabase:
         )
 
         # update tokens in database
-        self.session.query(Token).filter(Token.client_id == client_id).filter(
+        Session.query(Token).filter(Token.client_id == client_id).filter(
             Token.token_expiration < str(datetime.utcnow)
         ).update(
             {
@@ -184,7 +190,7 @@ class AuthDatabase:
             },
             synchronize_session=False,
         )
-        self.session.commit()
+        Session.commit()
 
         return new_access_token, new_refresh_token
 
@@ -194,34 +200,34 @@ class AuthDatabase:
         # TODO: validate if the token was issued by the requesting
         # TODO: if the provided token is a refresh_token, invalidate all access_tokens based with this refresh_token
         count = (
-            self.session.query(Token)
+            Session.query(Token)
             .filter(or_(Token.access_token == token, Token.refresh_token == token))
             .delete()
         )
-        self.session.commit()
+        Session.commit()
 
         return count > 0
 
     async def validate_access_token(self, access_token: str) -> bool:
         count = (
-            self.session.query(Token)
+            Session.query(Token)
             .filter(Token.access_token == access_token)
             .filter(Token.token_expiration > str(datetime.utcnow()))
             .count()
         )
 
         if count > 0:
-            self.session.query(Token).filter(Token.access_token == access_token).update(
+            Session.query(Token).filter(Token.access_token == access_token).update(
                 {Token.last_used: datetime.utcnow()},
                 synchronize_session=False,
             )
-            self.session.commit()
+            Session.commit()
 
         return count > 0
 
     async def user_id_for_token(self, access_token: str) -> str:
         row = (
-            self.session.query(Token)
+            Session.query(Token)
             .filter(Token.access_token == access_token)
             .filter(Token.token_expiration > str(datetime.utcnow()))
             .first()

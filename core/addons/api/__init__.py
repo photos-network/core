@@ -4,13 +4,12 @@ import logging
 import os
 import pathlib
 from datetime import datetime
-from typing import Optional
 
 from aiohttp import web
+
 from core.addons.api.dto.details import Details
 from core.addons.api.dto.location import Location
-from core.addons.api.dto.photo import (PhotoDetailsResponse, PhotoEncoder,
-                                       PhotoResponse)
+from core.addons.api.dto.photo import PhotoDetailsResponse, PhotoEncoder, PhotoResponse
 from core.addons.api.dto.photo_response import PhotosResponse
 from core.base import Session
 from core.core import ApplicationCore
@@ -63,7 +62,7 @@ class PhotosView(RequestView):
 
     async def get(self, core: ApplicationCore, request: web.Request) -> web.Response:
         """Get a list of all photo resources."""
-        _LOGGER.debug(f"GET /v1/photos")
+        _LOGGER.debug("GET /v1/photos")
         await core.authentication.check_permission(request, "library:read")
 
         user_id = await core.http.get_user_id(request)
@@ -79,7 +78,9 @@ class PhotosView(RequestView):
         if "offset" in request.query:
             offset = int(request.query["offset"])
 
-        _LOGGER.debug(f"read {limit} photos for user_id {user_id} beginning with {offset}")
+        _LOGGER.debug(
+            f"read {limit} photos for user_id {user_id} beginning with {offset}"
+        )
         user_photos = await core.storage.read_photos(user_id, offset, limit)
 
         results = []
@@ -89,12 +90,16 @@ class PhotosView(RequestView):
                 PhotoResponse(
                     id=photo.uuid,
                     name=photo.filename,
-                    image_url=f"{core.config.external_url}/v1/file/{photo.uuid}"
+                    image_url=f"{core.config.external_url}/v1/file/{photo.uuid}",
                 )
             )
 
-        response = PhotosResponse(offset=offset, limit=limit, size=len(results), results=results)
-        return web.Response(text=json.dumps(response, cls=PhotoEncoder), content_type="application/json")
+        response = PhotosResponse(
+            offset=offset, limit=limit, size=len(results), results=results
+        )
+        return web.Response(
+            text=json.dumps(response, cls=PhotoEncoder), content_type="application/json"
+        )
 
 
 class PhotoDetailsView(RequestView):
@@ -103,7 +108,9 @@ class PhotoDetailsView(RequestView):
     url = "/v1/photo/{entity_id}"
     name = "v1:photo"
 
-    async def get(self, core: ApplicationCore, request: web.Request, entity_id: str) -> web.Response:
+    async def get(
+        self, core: ApplicationCore, request: web.Request, entity_id: str
+    ) -> web.Response:
         """Return an entity."""
         _LOGGER.debug(f"GET /v1/photo/{entity_id}")
 
@@ -133,9 +140,13 @@ class PhotoDetailsView(RequestView):
         if latitude is not None and longitude is not None:
             altitude = await core.storage.read("altitude")
             if altitude is not None:
-                location = Location(latitude=latitude, longitude=longitude, altitude=altitude)
+                location = Location(
+                    latitude=latitude, longitude=longitude, altitude=altitude
+                )
             else:
-                location = Location(latitude=latitude, longitude=longitude, altitude="0.0")
+                location = Location(
+                    latitude=latitude, longitude=longitude, altitude="0.0"
+                )
 
         # photo tags
         tags = await core.storage.read("tags")
@@ -143,21 +154,24 @@ class PhotoDetailsView(RequestView):
         result = PhotoDetailsResponse(
             id=photo.uuid,
             name=photo.filename,
-            author=photo.owner,
+            owner=photo.owner,
             created_at=ctime.isoformat(),
+            modified_at=mtime.isoformat(),
             details=Details(
-                        camera="Nikon Z7",
-                        lens="Nikkor 200mm F1.8",
-                        focal_length="200",
-                        iso="400",
-                        shutter_speed="1/2000",
-                        aperture="4.0",
+                camera="Nikon Z7",
+                lens="Nikkor 200mm F1.8",
+                focal_length="200",
+                iso="400",
+                shutter_speed="1/2000",
+                aperture="4.0",
             ),
             tags=tags,
             location=location,
-            image_url=f"{core.config.external_url}/v1/file/{entity_id}"
+            image_url=f"{core.config.external_url}/v1/file/{entity_id}",
         )
-        return web.Response(text=json.dumps(result, cls=PhotoEncoder), content_type="application/json")
+        return web.Response(
+            text=json.dumps(result, cls=PhotoEncoder), content_type="application/json"
+        )
 
 
 class PhotoView(RequestView):
@@ -168,7 +182,9 @@ class PhotoView(RequestView):
     url = "/v1/file/{entity_id}"
     name = "v1:file"
 
-    async def get(self, core: ApplicationCore, request: web.Request, entity_id: str) -> web.Response:
+    async def get(
+        self, core: ApplicationCore, request: web.Request, entity_id: str
+    ) -> web.Response:
         """Return an entity."""
         _LOGGER.debug(f"GET /v1/file/{entity_id}")
 
@@ -224,7 +240,9 @@ class PhotoView(RequestView):
 
         status_code = HTTP_CREATED if new_entity_created else HTTP_OK
 
-        resp = self.json_message(f"File successfully added with ID: {new_entity_id}", status_code)
+        resp = self.json_message(
+            f"File successfully added with ID: {new_entity_id}", status_code
+        )
         resp.headers.add("Location", f"/api/photo/{new_entity_id}")
 
         return resp

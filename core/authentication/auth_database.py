@@ -190,6 +190,9 @@ class AuthDatabase:
 
     async def revoke_token(self, token: str) -> bool:
         """Revoke given token and associated tokens."""
+
+        # TODO: validate if the token was issued by the requesting
+        # TODO: if the provided token is a refresh_token, invalidate all access_tokens based with this refresh_token
         count = (
             self.session.query(Token)
             .filter(or_(Token.access_token == token, Token.refresh_token == token))

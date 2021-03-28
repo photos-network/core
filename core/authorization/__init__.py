@@ -19,14 +19,13 @@ class Authorization:
         self.core = core
         self.app = application
 
-        self.app.router.add_put(path="/users/", handler=self.create_user_handler)
-        self.app.router.add_get(path="/users", handler=self.get_users_handler)
-        self.app.router.add_get(path="/users/{userId}", handler=self.get_user_handler)
-        self.app.router.add_patch(path="/users/{userId}", handler=self.update_user_handler)
-        self.app.router.add_delete(path="/users/{userId}", handler=self.delete_user_handler)
+        self.app.router.add_put(path="/v1/users/", handler=self.create_user_handler)
+        self.app.router.add_get(path="/v1/users", handler=self.get_users_handler)
+        self.app.router.add_get(path="/v1/users/{userId}", handler=self.get_user_handler)
+        self.app.router.add_patch(path="/v1/users/{userId}", handler=self.update_user_handler)
+        self.app.router.add_delete(path="/v1/users/{userId}", handler=self.delete_user_handler)
 
         Base.metadata.create_all(engine)
-        self.session = Session()
 
     async def update_user_handler(self, request: web.Request) -> web.StreamResponse:
         userId = request.match_info["userId"]
@@ -56,13 +55,13 @@ class Authorization:
         _LOGGER.warning(f"TODO: create/update data: {data}")
         login = data["login"]
 
-        user = self.session.query(User).filter(User.login == username).filter(User.disabled == false()).first()
+        user = Session.query(User).filter(User.login == username).filter(User.disabled == false()).first()
 
         if user is not None:
             hashed = sha256_crypt.hash(generated_password)
             user = User("max", hashed, True, False)
-            self.session.add(user)
-            self.session.commit()
+            Session.add(user)
+            Session.commit()
 
             data = {
                 "properties.id": "2",

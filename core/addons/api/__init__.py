@@ -2,15 +2,19 @@
 import json
 import logging
 import os
+import pathlib
+from datetime import datetime
+from typing import Optional
 
 from aiohttp import web
-
 from core.addons.api.dto.details import Details
 from core.addons.api.dto.location import Location
-from core.addons.api.dto.photo import Photo, PhotoEncoder
-from core.addons.api.dto.photo_response import PhotoResponse
-from core.addons.api.dto.photo_url import PhotoUrl
+from core.addons.api.dto.photo import (PhotoDetailsResponse, PhotoEncoder,
+                                       PhotoResponse)
+from core.addons.api.dto.photo_response import PhotosResponse
+from core.base import Session
 from core.core import ApplicationCore
+from core.persistency.dto.photo import Photo
 from core.webserver.request import KEY_USER_ID, RequestView
 from core.webserver.status import HTTP_CREATED, HTTP_OK
 
@@ -28,6 +32,7 @@ async def async_setup(core: ApplicationCore, config: dict) -> bool:
 
     core.http.register_request(APIStatusView())
     core.http.register_request(PhotosView())
+    core.http.register_request(PhotoDetailsView())
     core.http.register_request(PhotoView())
     core.http.register_request(AlbumView())
 
@@ -53,93 +58,133 @@ class APIStatusView(RequestView):
 class PhotosView(RequestView):
     """View to handle photos requests."""
 
-    url = "/api/photo/"
-    name = "api:photo:upload"
+    url = "/v1/photos"
+    name = "v1:photo"
 
     async def get(self, core: ApplicationCore, request: web.Request) -> web.Response:
         """Get a list of all photo resources."""
+        _LOGGER.debug(f"GET /v1/photos")
+        await core.authentication.check_permission(request, "library:read")
+
         user_id = await core.http.get_user_id(request)
 
         if user_id is None:
             raise web.HTTPForbidden()
 
-        _LOGGER.debug(f"read photos for user_id {user_id}")
-        user_photos = await core.storage.read_photos(user_id)
-        _LOGGER.debug(f"iterate through {len(user_photos)} photos.")
+        limit = 50
+        if "limit" in request.query:
+            limit = int(request.query["limit"])
+
+        offset = 0
+        if "offset" in request.query:
+            offset = int(request.query["offset"])
+
+        _LOGGER.debug(f"read {limit} photos for user_id {user_id} beginning with {offset}")
+        user_photos = await core.storage.read_photos(user_id, offset, limit)
 
         results = []
 
-        # iterate through photos
         for photo in user_photos:
-            _LOGGER.debug(f"get additional data for {photo.filepath}")
-
-            # photo location
-            location = None
-            latitude = await core.storage.read("latitude")
-            longitude = await core.storage.read("longitude")
-            if latitude is not None and longitude is not None:
-                altitude = await core.storage.read("altitude")
-                if altitude is not None:
-                    location = Location(
-                        latitude=latitude, longitude=longitude, altitude=altitude
-                    )
-                else:
-                    location = Location(
-                        latitude=latitude, longitude=longitude, altitude="0.0"
-                    )
-
-            # photo tags
-            tags = await core.storage.read("tags")
-            tags = ["landscape", "sky", "night"]
-
-            # add photo to results
             results.append(
-                Photo(
-                    name="DSC_2340-HDR.jpg",
-                    description="",
-                    author="",
-                    created_at="2012-02-09T21:11:53-05:00",
-                    details=Details(
-                        camera="Canon EOS-1D Mark IV",
-                        lens="E 18-200mm F3.5-6.3 OSS",
-                        focal_length="700",
-                        iso="400",
-                        shutter_speed="1/2000",
-                        aperture="6.3",
-                    ),
-                    tags=tags,
-                    location=location,
-                    image_urls=[
-                        PhotoUrl(size="1080", url="/data/cache/DSC_2340-HDR_1080.jpg"),
-                        PhotoUrl(size="1600", url="/data/cache/DSC_2340-HDR_1600.jpg"),
-                        PhotoUrl(size="2048", url="/data/cache/DSC_2340-HDR_2048.jpg"),
-                        PhotoUrl(size="full", url="/data/cache/DSC_2340-HDR.jpg"),
-                    ],
+                PhotoResponse(
+                    id=photo.uuid,
+                    name=photo.filename,
+                    image_url=f"{core.config.external_url}/v1/file/{photo.uuid}"
                 )
             )
 
-        # key = "latitude"
-        # _LOGGER.error(f"key/value: {key}/{value}")
+        response = PhotosResponse(offset=offset, limit=limit, size=len(results), results=results)
+        return web.Response(text=json.dumps(response, cls=PhotoEncoder), content_type="application/json")
 
-        # data = request.query
 
-        offset = 0
-        # if data["size"]:
-        #     offset = data["size"]  # integer  0..N
+class PhotoDetailsView(RequestView):
+    """View to handle single photo requests."""
 
-        limit = 50
-        # if data["size"]:  # integer   Number of records per page.
-        #     limit = data["size"]
+    url = "/v1/photo/{entity_id}"
+    name = "v1:photo"
 
-        _LOGGER.info(f"loading data for user {user_id}")
+    async def get(self, core: ApplicationCore, request: web.Request, entity_id: str) -> web.Response:
+        """Return an entity."""
+        _LOGGER.debug(f"GET /v1/photo/{entity_id}")
 
-        response = PhotoResponse(
-            offset=offset, limit=limit, size=len(results), results=results
+        # TODO: add user_id to check if user has access to image
+        photo = await core.storage.read_photo(entity_id)
+
+        if photo is None:
+            raise web.HTTPNotFound
+
+        # photo owner
+        # TODO: get first-/lastname of owner
+        # owner = await core.authentication
+
+        _LOGGER.debug(f"photo {photo.uuid}")
+        file = os.path.join(photo.directory, photo.filename)
+        _LOGGER.debug(f"get additional data for {file} / {os.path.exists(file)}")
+
+        # photo creation time
+        fname = pathlib.Path(file)
+        mtime = datetime.fromtimestamp(fname.stat().st_mtime)
+        ctime = datetime.fromtimestamp(fname.stat().st_ctime)
+
+        # photo location
+        location = None
+        latitude = await core.storage.read("latitude")
+        longitude = await core.storage.read("longitude")
+        if latitude is not None and longitude is not None:
+            altitude = await core.storage.read("altitude")
+            if altitude is not None:
+                location = Location(latitude=latitude, longitude=longitude, altitude=altitude)
+            else:
+                location = Location(latitude=latitude, longitude=longitude, altitude="0.0")
+
+        # photo tags
+        tags = await core.storage.read("tags")
+
+        result = PhotoDetailsResponse(
+            id=photo.uuid,
+            name=photo.filename,
+            author=photo.owner,
+            created_at=ctime.isoformat(),
+            details=Details(
+                        camera="Nikon Z7",
+                        lens="Nikkor 200mm F1.8",
+                        focal_length="200",
+                        iso="400",
+                        shutter_speed="1/2000",
+                        aperture="4.0",
+            ),
+            tags=tags,
+            location=location,
+            image_url=f"{core.config.external_url}/v1/file/{entity_id}"
         )
+        return web.Response(text=json.dumps(result, cls=PhotoEncoder), content_type="application/json")
 
-        return web.Response(
-            text=json.dumps(response, cls=PhotoEncoder), content_type="application/json"
-        )
+
+class PhotoView(RequestView):
+    """View to handle photo file requests."""
+
+    # TODO: enable auth
+    requires_auth = False
+    url = "/v1/file/{entity_id}"
+    name = "v1:file"
+
+    async def get(self, core: ApplicationCore, request: web.Request, entity_id: str) -> web.Response:
+        """Return an entity."""
+        _LOGGER.debug(f"GET /v1/file/{entity_id}")
+
+        # TODO: parse params  max-with / max-height   =wmax-width-hmax-height  (=w2048-h1024)
+        # -wmax-width   (preserving the aspect ratio)
+        # -hmax-height  (preserving the aspect ratio)
+        # -c  crop images to max-width / max-height
+        # -d  remove exif data
+
+        result = Session.query(Photo).filter(Photo.uuid == entity_id).first()
+
+        file = os.path.join(result.directory, result.filename)
+        if os.path.exists(os.path.join(file)):
+            return web.FileResponse(path=file, status=200)
+        else:
+            raise web.HTTPNotFound()
 
     async def post(self, core: ApplicationCore, request: web.Request) -> web.Response:
         """Upload new photo resource."""
@@ -179,30 +224,16 @@ class PhotosView(RequestView):
 
         status_code = HTTP_CREATED if new_entity_created else HTTP_OK
 
-        resp = self.json_message(
-            f"File successfully added with ID: {new_entity_id}", status_code
-        )
+        resp = self.json_message(f"File successfully added with ID: {new_entity_id}", status_code)
         resp.headers.add("Location", f"/api/photo/{new_entity_id}")
 
         return resp
 
-
-class PhotoView(RequestView):
-    """View to handle single photo requests."""
-
-    url = "/api/photo/{entity_id}"
-    name = "api:photo"
-
-    async def get(self, request: web.Request, entity_id) -> web.Response:
-        """Return an entity."""
-        return self.json_message(f"return GET {entity_id}")
-
-    async def post(self, request: web.Request, entity_id):
-        """Create an entity."""
-        return self.json_message(f"return POST {entity_id}")
-
-    async def delete(self, request: web.Request, entity_id):
+    async def delete(self, core: ApplicationCore, request: web.Request, entity_id: str):
         """Delete an entity."""
+        _LOGGER.debug(f"DELETE /v1/file/{entity_id}")
+
+        # TODO: delete entity
         return self.json_message(f"return DELETE {entity_id}")
 
 

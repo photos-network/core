@@ -50,7 +50,7 @@ class Authentication:
 
     async def revoke_token_handler(self, request: web.Request) -> web.StreamResponse:
         """
-        Revoke the requeste token and all
+        Revoke the request token and all associated access tokens [RFC 7009]
 
         See Section 2.1: https://tools.ietf.org/html/rfc7009#section-2.1
         """
@@ -240,12 +240,13 @@ class Authentication:
         if "client_id" not in request.query:
             _LOGGER.warning("invalid form")
             raise web.HTTPFound(f"{redirect_uri}?error=unauthorized_client")
-
         client_id = request.query["client_id"]
+        _LOGGER.debug(f"client_id {client_id}")
 
         state = None
         if "state" in request.query:
             state = request.query["state"]
+            _LOGGER.debug(f"state {state}")
 
         # check if client is known
         if not any(client.client_id == client_id for client in self.auth_clients):
@@ -277,6 +278,7 @@ class Authentication:
         if credentials_are_valid:
             # create an authorization code
             authorization_code = self.auth_database.create_authorization_code(username, client_id, request.remote)
+            _LOGGER.debug(f"authorization_code: {authorization_code}")
             if authorization_code is None:
                 _LOGGER.warning("could not create auth code for client!")
                 error_reason = "access_denied"
@@ -286,8 +288,10 @@ class Authentication:
                     raise web.HTTPFound(f"{redirect_uri}?error={error_reason}")
 
             if state is not None:
+                _LOGGER.debug(f"HTTPFound: {redirect_uri}?code={authorization_code}&state={state}")
                 redirect_response = web.HTTPFound(f"{redirect_uri}?code={authorization_code}&state={state}")
             else:
+                _LOGGER.debug(f"HTTPFound: {redirect_uri}?code={authorization_code}")
                 redirect_response = web.HTTPFound(f"{redirect_uri}?code={authorization_code}")
 
             raise redirect_response

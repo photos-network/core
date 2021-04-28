@@ -11,7 +11,7 @@ from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
 
 from .. import const
-from ..authentication import Authentication, AuthenticationClient
+from ..authentication import Authentication
 from ..authentication.auth_database import AuthDatabase
 from ..authorization import Authorization
 from .request import KEY_AUTHENTICATED, KEY_USER_ID, RequestView  # noqa: F401
@@ -80,7 +80,7 @@ class Webserver:
         _LOGGER.info(f"Webserver is listening on {site._host}:{site._port}")
 
     async def init_auth(self):
-        auth_database = AuthDatabase()
+        auth_database = AuthDatabase(self.core, self.core.config.data_dir)
 
         # setup auth
         self.core.authorization = Authorization(self.core, self.app)

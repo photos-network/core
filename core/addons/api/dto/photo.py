@@ -9,12 +9,11 @@ class PhotoEncoder(JSONEncoder):
         """Encode all properties."""
         return o.__dict__
 
+
 class PhotoResponse:
     """Photo response object."""
 
-    def __init__(
-        self, id, name, image_url
-    ):
+    def __init__(self, id, name, image_url):
         """Initialize photo response object."""
         self.id = id
         self.name = name
@@ -25,13 +24,23 @@ class PhotoDetailsResponse:
     """Photo response object."""
 
     def __init__(
-        self, id, name, owner, created_at, details, tags, location, image_url
+        self,
+        id,
+        name,
+        owner,
+        created_at,
+        modified_at,
+        details,
+        tags,
+        location,
+        image_url,
     ):
         """Initialize photo response object."""
         self.id = id
         self.name = name
         self.owner = owner
         self.created_at = created_at
+        self.modified_at = modified_at
         self.details = details
         self.tags = tags
         self.location = location

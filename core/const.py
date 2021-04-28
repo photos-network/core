@@ -13,9 +13,13 @@ DEVICE_DEFAULT_NAME = "Unnamed Device"
 
 URL_API = "/api/"
 
+# token lifetime: 1hour (60sec * 60min)
 CONF_TOKEN_LIFETIME = 3600
 CONF_ACCESS_TOKEN = "access_token"
 CONF_ADDRESS = "address"
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
+
+# token lifetime: 30days (60sec * 60min * 24hour * 30days)
+CONF_DEADLINE = 2592000
 CORE_VERSION = __version__

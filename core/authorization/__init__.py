@@ -1,11 +1,15 @@
 """authorization handles permissions / rights"""
-import json
 import logging
-from typing import TYPE_CHECKING, Optional
+from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
-from aiohttp import hdrs, web
+from aiohttp import web
+from passlib.hash import sha256_crypt
 
+from ..authentication.dto.token import Token
+from ..authentication.dto.user import User
 from ..base import Base, Session, engine
+from ..const import CONF_DEADLINE
 
 if TYPE_CHECKING:
     from core.core import ApplicationCore
@@ -19,99 +23,234 @@ class Authorization:
         self.core = core
         self.app = application
 
-        self.app.router.add_put(path="/v1/users/", handler=self.create_user_handler)
         self.app.router.add_get(path="/v1/users", handler=self.get_users_handler)
-        self.app.router.add_get(path="/v1/users/{userId}", handler=self.get_user_handler)
-        self.app.router.add_patch(path="/v1/users/{userId}", handler=self.update_user_handler)
-        self.app.router.add_delete(path="/v1/users/{userId}", handler=self.delete_user_handler)
+        self.app.router.add_get(path="/v1/user/", handler=self.me_user_handler)
+        self.app.router.add_get(path="/v1/user/{userId}", handler=self.get_user_handler)
+        self.app.router.add_post(path="/v1/user/", handler=self.create_user_handler)
+        self.app.router.add_patch(
+            path="/v1/user/{userId}", handler=self.update_user_handler
+        )
+        self.app.router.add_delete(
+            path="/v1/user/{userId}", handler=self.delete_user_handler
+        )
 
         Base.metadata.create_all(engine)
 
-    async def update_user_handler(self, request: web.Request) -> web.StreamResponse:
+    async def me_user_handler(self, request: web.Request) -> web.StreamResponse:
+        """Return detailed information of the current loggedin user."""
+        _LOGGER.debug("GET /user/ myself")
+
+        await self.core.authentication.check_permission(request, "openid")
+        await self.core.authentication.check_permission(request, "profile")
+        await self.core.authentication.check_permission(request, "email")
+
+        loggedInUser = await self.core.authentication.check_authorized(request)
+        _LOGGER.debug(f"loggedInUser {loggedInUser}")
+
+        user = Session.query(User).filter(User.id == loggedInUser).first()
+        _LOGGER.debug(f"user {user}")
+
+        lastSeen = "Never"
+        if user.last_login is not None:
+            lastSeen = user.last_login.isoformat()
+
+        data = {
+            "id": user.id,
+            "email": user.email,
+            "lastname": user.lastname,
+            "firstname": user.firstname,
+            "lastSeen": lastSeen,
+        }
+
+        return web.json_response(status=200, data=data)
+
+    async def get_users_handler(self, request: web.Request) -> web.StreamResponse:
+        """Return a simplified list of registered Users."""
+        _LOGGER.debug("GET /users")
+        await self.core.authentication.check_permission(request, "admin.users:read")
+
+        users = Session.query(User).all()
+
+        if len(users) < 1:
+            raise web.HTTPInternalServerError()
+
+        result = []
+        for user in users:
+            lastSeen = "Never"
+            if user.last_login is not None:
+                lastSeen = user.last_login.isoformat()
+
+            result.append(
+                {
+                    "id": user.id,
+                    "lastName": user.lastname,
+                    "firstName": user.firstname,
+                    "lastSeen": lastSeen,
+                }
+            )
+
+        return web.json_response(status=200, data=result)
+
+    async def get_user_handler(self, request: web.Request) -> web.StreamResponse:
+        """Get a user by user ID"""
         userId = request.match_info["userId"]
-        _LOGGER.debug(f"PATCH /users/{userId}")
-        await self.core.authentication.check_permission(request, "admin.users:write")
+        _LOGGER.debug(f"GET /user/{userId}")
 
-        # TODO: update user properties
+        await self.core.authentication.check_permission(request, "openid")
+        await self.core.authentication.check_permission(request, "profile")
+        await self.core.authentication.check_permission(request, "email")
 
+        if userId is None:
+            raise web.HTTPBadRequest()
+
+        user = Session.query(User).filter(User.id == userId).first()
+        if not user:
+            raise web.HTTPNotFound
+
+        lastSeen = "Never"
+        if user.last_login is not None:
+            lastSeen = user.last_login.isoformat()
+
+        data = {
+            "id": user.id,
+            "lastname": user.lastname,
+            "firstname": user.firstname,
+            "lastSeen": lastSeen,
+        }
+
+        return web.json_response(status=200, data=data)
+
+    async def update_user_handler(self, request: web.Request) -> web.StreamResponse:
+        """Update properties of the loggedin user."""
+        userId = request.match_info["userId"]
+        _LOGGER.debug(f"PATCH /user/{userId}")
+
+        await self.core.authentication.check_permission(request, "openid")
+        await self.core.authentication.check_permission(request, "profile")
+        await self.core.authentication.check_permission(request, "email")
+
+        loggedInUser = await self.core.authentication.check_authorized(request)
+        if loggedInUser != userId:
+            _LOGGER.error(
+                f"attempt to change a different user! Authenticated user: {loggedInUser}, user to change: {userId}"
+            )
+            raise web.HTTPForbidden
+        data = await request.json()
+
+        if "email" in data:
+            Session.query(User).filter(User.id == loggedInUser).update(
+                {User.email: data["email"]},
+                synchronize_session=False,
+            )
+
+        if "firstname" in data:
+            Session.query(User).filter(User.id == loggedInUser).update(
+                {User.firstname: data["firstname"]},
+                synchronize_session=False,
+            )
+
+        if "lastname" in data:
+            Session.query(User).filter(User.id == loggedInUser).update(
+                {User.lastname: data["lastname"]},
+                synchronize_session=False,
+            )
+
+        if "password" in data:
+            hashed = sha256_crypt.hash(data["password"])
+            Session.query(User).filter(User.id == loggedInUser).update(
+                {User.password: hashed},
+                synchronize_session=False,
+            )
+
+        Session.commit()
         return web.json_response(status=204)
 
     async def delete_user_handler(self, request: web.Request) -> web.StreamResponse:
         userId = request.match_info["userId"]
         _LOGGER.debug(f"DELETE /users/{userId}")
-        await self.core.authentication.check_permission(request, "admin.users:write")
+        await self.core.authentication.check_permission(request, "profile")
 
-        # TODO: delete user
+        loggedInUser = await self.core.authentication.check_authorized(request)
+        if loggedInUser != userId:
+            # admin users can delete other users
+            try:
+                await self.core.authentication.check_permission(
+                    request, "admin.users:write"
+                )
+            except web.HTTPForbidden:
+                _LOGGER.error(
+                    f"attempt to change a different user! Authenticated user: {loggedInUser}, user to change: {userId}"
+                )
+                raise web.HTTPForbidden
 
-        return web.json_response(status=204)
+        Session.query(User).filter(User.id == loggedInUser).update(
+            {User.deleted_date: datetime.utcnow(), User.disabled: True},
+            synchronize_session=False,
+        )
+
+        Session.commit()
+
+        deadline = datetime.utcnow() + timedelta(seconds=CONF_DEADLINE)
+        data = {"deadline": deadline.isoformat()}
+
+        # invalidate all user tokens
+        Session.query(Token).filter(Token.user_id == loggedInUser).delete()
+        return web.json_response(status=202, data=data)
 
     async def create_user_handler(self, request: web.Request) -> web.StreamResponse:
-        _LOGGER.warning(f"PUT /users/")
+        _LOGGER.warning("POST /user/")
         await self.core.authentication.check_permission(request, "admin.users:write")
 
-        data = request.content
+        data = await request.json()
+        if (
+            "email" not in data
+            or "lastname" not in data
+            or "firstname" not in data
+            or "password" not in data
+        ):
+            raise web.HTTPBadRequest
 
-        # TODO: create user with given properties
-        _LOGGER.warning(f"TODO: create/update data: {data}")
-        login = data["login"]
+        email = data["email"]
+        lastname = data["lastname"]
+        firstname = data["firstname"]
+        password = data["password"]
 
-        user = Session.query(User).filter(User.login == username).filter(User.disabled == false()).first()
+        count = Session.query(User).filter(User.email == email).count()
 
-        if user is not None:
-            hashed = sha256_crypt.hash(generated_password)
-            user = User("max", hashed, True, False)
-            Session.add(user)
-            Session.commit()
-
+        if count > 0:
             data = {
-                "properties.id": "2",
-                "properties.email": "max.mustermann@photos.network",
-                "properties.firstName": "Max",
-                "properties.lastName": "Mustermann",
+                "error": "alreday_registered",
+                "error_description": "This email is already registered!",
             }
-
-            return web.json_response(status=200, data=data)
-        else:
-            data = {"error": "not_implemented", "error_description": "This request is missing an implementation"}
-
             return web.json_response(status=400, data=data)
 
-    async def get_users_handler(self, request: web.Request) -> web.StreamResponse:
-        _LOGGER.debug(f"GET /users")
-        await self.core.authentication.check_permission(request, "admin.users:read")
+        hashed = sha256_crypt.hash(password)
+        user = User(
+            email=email, password=hashed, lastname=lastname, firstname=firstname
+        )
+        Session.add(user)
+        Session.commit()
 
-        # TODO: get users
-        data = {
-            "value": [
-                {
-                    "id": "1",
-                    "displayName": "Max Mustermann",
-                    "email": "max.mustermann@photos.network",
-                    "firstName": "Max",
-                    "lastName": "Mustermann",
-                }
-            ]
-        }
+        new_user = Session.query(User).filter(User.email == email).first()
 
-        return web.json_response(status=200, data=data)
+        if new_user:
+            data = {
+                "id": new_user.id,
+                "email": new_user.email,
+                "firstname": new_user.firstname,
+                "lastname": new_user.lastname,
+            }
 
-    async def get_user_handler(self, request: web.Request) -> web.StreamResponse:
-        userId = request.match_info["userId"]
-        _LOGGER.debug(f"GET /users/{userId}")
-        await self.core.authentication.check_permission(request, "admin.users:read")
+            # create user home
+            self.core.storage.create_user_home(new_user.id)
 
-        # TODO: get user properties
-        data = {
-            "properties.id": "1",
-            "properties.email": "max.mustermann@photos.network",
-            "properties.firstName": "Max",
-            "properties.lastName": "Mustermann",
-        }
+            return web.json_response(status=201, data=data)
 
-        return web.json_response(status=200, data=data)
+        _LOGGER.error(f"Could not find newly created user {email}")
+        return web.json_response(status=500, data=data)
 
     async def check_scope(self, scope: str):
+        # TODO: check if requested scope has been granted by the user when creating the current token
         _LOGGER.warning(f"check_scope({scope})")
 
-        # TODO: raise if scope is missing
         # raise web.HTTPForbidden()

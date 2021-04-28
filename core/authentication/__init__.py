@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 import aiohttp_jinja2
 from aiohttp import hdrs, web
 
-from ..authorization import Authorization
 from ..const import CONF_TOKEN_LIFETIME
 from .auth_client import AuthenticationClient
 from .auth_database import AuthDatabase
@@ -36,11 +35,17 @@ class Authentication:
         self.auth_database = auth_database
 
         # Authorization Endpoint: obtain an authorization grant
-        self.app.router.add_get(path="/oauth/authorize", handler=self.authorization_endpoint_get)
-        self.app.router.add_post(path="/oauth/authorize", handler=self.authorization_endpoint_post)
+        self.app.router.add_get(
+            path="/oauth/authorize", handler=self.authorization_endpoint_get
+        )
+        self.app.router.add_post(
+            path="/oauth/authorize", handler=self.authorization_endpoint_post
+        )
 
         # Token Endpoint: obtain an access token by authorization grant or refresh token
-        self.app.router.add_post(path="/oauth/token", handler=self.token_endpoint_handler)
+        self.app.router.add_post(
+            path="/oauth/token", handler=self.token_endpoint_handler
+        )
 
         self.app.router.add_post("/revoke", self.revoke_token_handler, name="revoke")
         self.app.router.add_get("/protected", self.protected_handler, name="protected")
@@ -73,7 +78,9 @@ class Authentication:
         return response
 
     @aiohttp_jinja2.template("authorize.jinja2")
-    async def authorization_endpoint_get(self, request: web.Request) -> web.StreamResponse:
+    async def authorization_endpoint_get(
+        self, request: web.Request
+    ) -> web.StreamResponse:
         """
         Validate the request to ensure that all required parameters are present and valid.
 
@@ -105,7 +112,9 @@ class Authentication:
 
             # validate response_type
             if response_type != "code":
-                _LOGGER.warning(f"The request is using an invalid response_type: {response_type}")
+                _LOGGER.warning(
+                    f"The request is using an invalid response_type: {response_type}"
+                )
                 data = """{
                     "error":"unsupported_response_type",
                     "error_description":"The request is using an invalid response_type"
@@ -120,7 +129,9 @@ class Authentication:
                 None,
             )
             # validate if redirect_uri is in registered_auth_client
-            if not any(uri == redirect_uri for uri in registered_auth_client.redirect_uris):
+            if not any(
+                uri == redirect_uri for uri in registered_auth_client.redirect_uris
+            ):
                 _LOGGER.error(f"redirect uri not found: {redirect_uri}")
                 data = """{
                     "error":"unauthorized_client",
@@ -153,7 +164,9 @@ class Authentication:
             # check if the requested scope is registered
             for requested_scope in requested_scopes:
                 if requested_scope not in registered_scopes:
-                    _LOGGER.error(f"The requested scope '{requested_scope}' is invalid, unknown, or malformed.")
+                    _LOGGER.error(
+                        f"The requested scope '{requested_scope}' is invalid, unknown, or malformed."
+                    )
                     data = """{
                         "error":"invalid_scope",
                         "error_description":"The requested scope is invalid, unknown, or malformed."
@@ -227,7 +240,9 @@ class Authentication:
                 }"""
             return web.json_response(json.loads(data))
 
-    async def authorization_endpoint_post(self, request: web.Request) -> web.StreamResponse:
+    async def authorization_endpoint_post(
+        self, request: web.Request
+    ) -> web.StreamResponse:
         """
         Validate the resource owners credentials.
 
@@ -252,7 +267,9 @@ class Authentication:
         if not any(client.client_id == client_id for client in self.auth_clients):
             _LOGGER.warning(f"unknown client_id {client_id}")
             if state is not None:
-                raise web.HTTPFound(f"{redirect_uri}?error=unauthorized_client&state={state}")
+                raise web.HTTPFound(
+                    f"{redirect_uri}?error=unauthorized_client&state={state}"
+                )
             else:
                 raise web.HTTPFound(f"{redirect_uri}?error=unauthorized_client")
 
@@ -265,41 +282,57 @@ class Authentication:
         if not any(uri == redirect_uri for uri in registered_auth_client.redirect_uris):
             _LOGGER.error(f"invalid redirect_uri {redirect_uri}")
             if state is not None:
-                raise web.HTTPFound(f"{redirect_uri}?error=unauthorized_client&state={state}")
+                raise web.HTTPFound(
+                    f"{redirect_uri}?error=unauthorized_client&state={state}"
+                )
             else:
                 raise web.HTTPFound(f"{redirect_uri}?error=unauthorized_client")
 
-        username = data["uname"]
+        email = data["email"]
         password = data["password"]
 
         # validate credentials
-        credentials_are_valid = await self.auth_database.check_credentials(username, password)
+        credentials_are_valid = await self.auth_database.check_credentials(
+            email, password
+        )
 
         if credentials_are_valid:
             # create an authorization code
-            authorization_code = self.auth_database.create_authorization_code(username, client_id, request.remote)
+            authorization_code = self.auth_database.create_authorization_code(
+                email, client_id, request.remote
+            )
             _LOGGER.debug(f"authorization_code: {authorization_code}")
             if authorization_code is None:
                 _LOGGER.warning("could not create auth code for client!")
                 error_reason = "access_denied"
                 if state is not None:
-                    raise web.HTTPFound(f"{redirect_uri}?error={error_reason}&state={state}")
+                    raise web.HTTPFound(
+                        f"{redirect_uri}?error={error_reason}&state={state}"
+                    )
                 else:
                     raise web.HTTPFound(f"{redirect_uri}?error={error_reason}")
 
             if state is not None:
-                _LOGGER.debug(f"HTTPFound: {redirect_uri}?code={authorization_code}&state={state}")
-                redirect_response = web.HTTPFound(f"{redirect_uri}?code={authorization_code}&state={state}")
+                _LOGGER.debug(
+                    f"HTTPFound: {redirect_uri}?code={authorization_code}&state={state}"
+                )
+                redirect_response = web.HTTPFound(
+                    f"{redirect_uri}?code={authorization_code}&state={state}"
+                )
             else:
                 _LOGGER.debug(f"HTTPFound: {redirect_uri}?code={authorization_code}")
-                redirect_response = web.HTTPFound(f"{redirect_uri}?code={authorization_code}")
+                redirect_response = web.HTTPFound(
+                    f"{redirect_uri}?code={authorization_code}"
+                )
 
             raise redirect_response
         else:
             error_reason = "access_denied"
             _LOGGER.warning(f"redirect with error {error_reason}")
             if state is not None:
-                raise web.HTTPFound(f"{redirect_uri}?error={error_reason}&state={state}")
+                raise web.HTTPFound(
+                    f"{redirect_uri}?error={error_reason}&state={state}"
+                )
             else:
                 raise web.HTTPFound(f"{redirect_uri}?error={error_reason}")
 
@@ -358,13 +391,17 @@ class Authentication:
             return web.json_response(status=400, data=data)
         client_id = data["client_id"]
 
-        client_code_valid = await self.auth_database.validate_authorization_code(code, client_id)
+        client_code_valid = await self.auth_database.validate_authorization_code(
+            code, client_id
+        )
         if not client_code_valid:
             _LOGGER.error("authorization_code invalid!")
             payload = {"error": "invalid_grant"}
             return web.json_response(status=400, data=payload)
 
-        access_token, refresh_token = await self.auth_database.create_tokens(code, client_id)
+        access_token, refresh_token = await self.auth_database.create_tokens(
+            code, client_id
+        )
 
         payload = {
             "access_token": access_token,
@@ -374,7 +411,9 @@ class Authentication:
         }
         return web.json_response(status=200, data=payload)
 
-    async def _handle_refresh_token_request(self, request: web.Request, data) -> web.StreamResponse:
+    async def _handle_refresh_token_request(
+        self, request: web.Request, data
+    ) -> web.StreamResponse:
         """
         See Section 6: https://tools.ietf.org/html/rfc6749#section-6
         """
@@ -414,7 +453,9 @@ class Authentication:
             data = {"error": "invalid_client"}
             return web.json_response(data)
 
-        access_token, refresh_token = await self.auth_database.renew_tokens(client_id, refresh_token)
+        access_token, refresh_token = await self.auth_database.renew_tokens(
+            client_id, refresh_token
+        )
 
         if access_token is None:
             raise web.HTTPForbidden()
@@ -436,11 +477,13 @@ class Authentication:
         _LOGGER.info(f"generated client_secret: {client_secret}")
 
     async def check_authorized(self, request: web.Request) -> Optional[str]:
-        """Check if authorization header and returns username if valid"""
+        """Check if authorization header and returns user ID if valid"""
 
         if hdrs.AUTHORIZATION in request.headers:
             try:
-                auth_type, auth_val = request.headers.get(hdrs.AUTHORIZATION).split(" ", 1)
+                auth_type, auth_val = request.headers.get(hdrs.AUTHORIZATION).split(
+                    " ", 1
+                )
                 if not await self.auth_database.validate_access_token(auth_val):
                     raise web.HTTPForbidden()
 

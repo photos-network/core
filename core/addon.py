@@ -233,6 +233,22 @@ class Addon:
 
         return True
 
+    async def read(self, key):
+        """read key/value pair from addon."""
+        try:
+            component = importlib.import_module(f"core.addons.{self.domain}")
+        except ImportError as err:
+            _LOGGER.error(f"Unable to import addon '{self.domain}': {err}")
+            return False
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(f"Setup failed for {self.domain}: unknown error")
+            return False
+
+        if hasattr(component, "read"):
+            await component.read(self.core, key)
+        else:
+            _LOGGER.error(f"Unable to read key from addon '{self.domain}'")
+
     async def async_process_images_in_addons(self, images) -> bool:
         """Trigger image addons with images to process."""
         if self.type == AddonType.IMAGE:

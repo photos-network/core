@@ -195,10 +195,12 @@ class PhotoView(RequestView):
         # -d  remove exif data
 
         result = Session.query(Photo).filter(Photo.uuid == entity_id).first()
-
-        file = os.path.join(result.directory, result.filename)
-        if os.path.exists(os.path.join(file)):
-            return web.FileResponse(path=file, status=200)
+        if result:
+            file = os.path.join(result.directory, result.filename)
+            if os.path.exists(os.path.join(file)):
+                return web.FileResponse(path=file, status=200)
+            else:
+                raise web.HTTPNotFound()
         else:
             raise web.HTTPNotFound()
 

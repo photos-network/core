@@ -172,10 +172,16 @@ class Authorization:
 
         loggedInUser = await self.core.authentication.check_authorized(request)
         if loggedInUser != userId:
-            _LOGGER.error(
-                f"attempt to change a different user! Authenticated user: {loggedInUser}, user to change: {userId}"
-            )
-            raise web.HTTPForbidden
+            # admin users can delete other users
+            try:
+                await self.core.authentication.check_permission(
+                    request, "admin.users:write"
+                )
+            except web.HTTPForbidden:
+                _LOGGER.error(
+                    f"attempt to change a different user! Authenticated user: {loggedInUser}, user to change: {userId}"
+                )
+                raise web.HTTPForbidden
 
         Session.query(User).filter(User.id == loggedInUser).update(
             {User.deleted_date: datetime.utcnow(), User.disabled: True},
@@ -235,13 +241,16 @@ class Authorization:
                 "lastname": new_user.lastname,
             }
 
+            # create user home
+            self.core.storage.create_user_home(new_user.id)
+
             return web.json_response(status=201, data=data)
 
         _LOGGER.error(f"Could not find newly created user {email}")
         return web.json_response(status=500, data=data)
 
     async def check_scope(self, scope: str):
+        # TODO: check if requested scope has been granted by the user when creating the current token
         _LOGGER.warning(f"check_scope({scope})")
 
-        # TODO: raise if scope is missing
         # raise web.HTTPForbidden()

@@ -102,14 +102,8 @@ class PersistencyManager:
                 time.sleep(1)
 
     async def start_directory_observing(self) -> None:
-        _LOGGER.debug("start_directory_observing")
+        """Start observing user directories for changes."""
         self.worker.start()
-
-        # TODO: add directories into database
-        # webDir = os.path.join(self.core.config.data_dir, "web")
-        # directory = Directory(webDir, 1)
-        # Session.add(directory)
-        # Session.commit()
 
         directories = Session.query(Directory).all()
         for dir in directories:
@@ -118,10 +112,31 @@ class PersistencyManager:
         self.observer.start()
 
     async def stop_directory_observing(self) -> None:
-        _LOGGER.debug("stop_directory_observing")
+        """Stop observing user directories."""
         self.worker.stop()
         self.observer.stop()
         self.observer.join()
+
+    async def restart_directory_observing(self) -> None:
+        """stop and re-start directory observing."""
+        await self.stop_directory_observing()
+        await self.start_directory_observing()
+
+    def create_user_home(self, user_id: str) -> None:
+        """Create a directory for the user in the configured data directory."""
+        # create user_home in filesystem
+        path = os.path.join(self.config.data_dir, user_id)
+        os.mkdir(path)
+
+        # add user_home to observing
+        self.observer.schedule(self.event_handler, path, recursive=True)
+
+        # add user_home to database
+        directory = Directory(path, user_id)
+        Session.add(directory)
+        Session.commit()
+
+        _LOGGER.info(f"user home for user {user_id} created.")
 
     async def read_photos(self, user_id: int, offset: int = 0, limit: int = 10) -> List:
         return (

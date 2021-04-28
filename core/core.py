@@ -8,8 +8,18 @@ import socket
 import sys
 from logging.handlers import TimedRotatingFileHandler
 from time import monotonic
-from typing import (Any, Awaitable, Callable, Dict, Iterable, List, Optional,
-                    Sequence, Set, TypeVar)
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    TypeVar,
+)
 
 from colorlog import ColoredFormatter
 
@@ -17,6 +27,7 @@ from core import loader
 from core.addon import Addon
 from core.authentication import Authentication, AuthenticationClient
 from core.authorization import Authorization
+from core.base import Base, engine
 from core.configs import Config
 from core.persistency.persistency import PersistencyManager
 from core.utils.timeout import TimeoutManager
@@ -296,14 +307,16 @@ class ApplicationCore:
 
         self.http = Webserver(self)
 
+        Base.metadata.create_all(engine)
+
         # setup addons from config entries
         await self.async_set_up_addons()
 
+        await self.storage.start_directory_observing()
+        _LOGGER.info("Observe user directories for file changes.")
+
         await self.http.start()
         _LOGGER.info("Webserver should be up and running...")
-
-        await self.storage.start_directory_observing()
-        _LOGGER.info("Observe user directories.")
 
         while self._pending_tasks:
             pending = [task for task in self._pending_tasks if not task.done()]

@@ -3,7 +3,10 @@ import random
 import string
 import uuid
 from datetime import datetime, timedelta
-from typing import Optional, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple
+
+if TYPE_CHECKING:
+    from core.core import ApplicationCore
 
 import jwt
 from passlib.hash import sha256_crypt
@@ -21,7 +24,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class AuthDatabase:
-    def __init__(self, data_dir: str):
+    def __init__(self, core: "ApplicationCore", data_dir: str):
         Base.metadata.create_all(engine)
 
         users = Session.query(User).all()
@@ -46,6 +49,8 @@ class AuthDatabase:
             )
             Session.add(user)
             Session.commit()
+
+            core.storage.create_user_home(user.id)
 
     async def check_credentials(self, email: str, password: str) -> bool:
         """Check if the given email is found, not disabled and matches with the hashed password."""

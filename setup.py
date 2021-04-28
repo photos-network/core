@@ -64,6 +64,7 @@ setup(
         "sqlalchemy>=1.3.20",
         "voluptuous>=0.12.0",
         "voluptuous-serialize>=2.4.0",
+        "watchdog>=2.0.0",
         "wheel>=0.36.2",
     ],
 )

@@ -1,6 +1,6 @@
 FROM python:3.9
 LABEL "description"="Photos.network core system"
-LABEL "version"="0.0.1"
+LABEL "version"="0.2.0"
 LABEL "maintainer"="github.com/photos-network"
 
 WORKDIR /app

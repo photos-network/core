@@ -288,7 +288,7 @@ class Authentication:
             else:
                 raise web.HTTPFound(f"{redirect_uri}?error=unauthorized_client")
 
-        email = data["email"]
+        email = data["email"].strip(" ").lower()
         password = data["password"]
 
         # validate credentials

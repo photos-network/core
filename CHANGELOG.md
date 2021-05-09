@@ -1,3 +1,8 @@
+## [0.2.1] - 2020-05-09
+### Changed
+- trim and lowercase username on oauth login
+
+
 ## [0.2.0] - 2020-05-06
 ### Added
 - dynamic client loading from `configuration.json`

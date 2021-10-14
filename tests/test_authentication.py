@@ -5,7 +5,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from core.authentication import Auth, AuthClient
+from core.authentication import Authentication, AuthenticationClient
 from core.authentication.auth_database import AuthDatabase
 
 
@@ -32,9 +32,9 @@ async def test_authorization_grant(tmp_path):
     file_object = open(database_file, "w")
     file_object.close()
     auth_database = AuthDatabase(database_file)
-    auth = Auth(application, auth_database)
+    auth = Authentication(application, auth_database)
     auth.add_client(
-        AuthClient(
+        AuthenticationClient(
             client_name="Frontend",
             client_id="a12b345c",
             client_secret="ABcD1E2F",

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 import aiohttp_jinja2
 from aiohttp import hdrs, web
 
-from ..const import CONF_TOKEN_LIFETIME
+from ..const import CONF_TOKEN_LIFETIME, URL_API
 from .auth_client import AuthenticationClient
 from .auth_database import AuthDatabase
 
@@ -36,19 +36,23 @@ class Authentication:
 
         # Authorization Endpoint: obtain an authorization grant
         self.app.router.add_get(
-            path="/oauth/authorize", handler=self.authorization_endpoint_get
+            path=URL_API + "/oauth/authorize", handler=self.authorization_endpoint_get
         )
         self.app.router.add_post(
-            path="/oauth/authorize", handler=self.authorization_endpoint_post
+            path=URL_API + "/oauth/authorize", handler=self.authorization_endpoint_post
         )
 
         # Token Endpoint: obtain an access token by authorization grant or refresh token
         self.app.router.add_post(
-            path="/oauth/token", handler=self.token_endpoint_handler
+            path=URL_API + "/oauth/token", handler=self.token_endpoint_handler
         )
 
-        self.app.router.add_post("/revoke", self.revoke_token_handler, name="revoke")
-        self.app.router.add_get("/protected", self.protected_handler, name="protected")
+        self.app.router.add_post(
+            URL_API + "/revoke", self.revoke_token_handler, name="revoke"
+        )
+        self.app.router.add_get(
+            URL_API + "/protected", self.protected_handler, name="protected"
+        )
 
     def add_client(self, auth_client: AuthenticationClient):
         self.auth_clients.append(auth_client)

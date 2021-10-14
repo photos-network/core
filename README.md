@@ -68,3 +68,15 @@ python3 setup.py install
 ```shell
 python3 ./venv/bin/core
 ```
+
+
+## Release
+build the docker image by running:
+```
+docker build -t photosnetwork/core:0.3.0 .
+```                            
+
+publish the docker image:
+```
+docker push photosnetwork/core:0.3.0
+```

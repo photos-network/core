@@ -9,7 +9,7 @@ from passlib.hash import sha256_crypt
 from ..authentication.dto.token import Token
 from ..authentication.dto.user import User
 from ..base import Base, Session, engine
-from ..const import CONF_DEADLINE
+from ..const import CONF_DEADLINE, URL_API
 
 if TYPE_CHECKING:
     from core.core import ApplicationCore
@@ -23,15 +23,19 @@ class Authorization:
         self.core = core
         self.app = application
 
-        self.app.router.add_get(path="/v1/users", handler=self.get_users_handler)
-        self.app.router.add_get(path="/v1/user/", handler=self.me_user_handler)
-        self.app.router.add_get(path="/v1/user/{userId}", handler=self.get_user_handler)
-        self.app.router.add_post(path="/v1/user/", handler=self.create_user_handler)
+        self.app.router.add_get(path=URL_API + "/users", handler=self.get_users_handler)
+        self.app.router.add_get(path=URL_API + "/user/", handler=self.me_user_handler)
+        self.app.router.add_get(
+            path=URL_API + "/user/{userId}", handler=self.get_user_handler
+        )
+        self.app.router.add_post(
+            path=URL_API + "/user/", handler=self.create_user_handler
+        )
         self.app.router.add_patch(
-            path="/v1/user/{userId}", handler=self.update_user_handler
+            path=URL_API + "/user/{userId}", handler=self.update_user_handler
         )
         self.app.router.add_delete(
-            path="/v1/user/{userId}", handler=self.delete_user_handler
+            path=URL_API + "/user/{userId}", handler=self.delete_user_handler
         )
 
         Base.metadata.create_all(engine)

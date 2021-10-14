@@ -9,7 +9,7 @@
       "client_id": "d37c098d-ac25-4a96-b462-c1ca05f45952",
       "client_secret": "AYgD5Y2DV7bbWupYW7WmYQ",
       "redirect_uris": [
-        "http://192.168.0.1:3000/callback"
+        "http://127.0.0.1/callback"
       ]
     },
     {

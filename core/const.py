@@ -11,7 +11,7 @@ RESTART_EXIT_CODE = 100
 
 DEVICE_DEFAULT_NAME = "Unnamed Device"
 
-URL_API = "/api/"
+URL_API = "/api"
 
 # token lifetime: 1hour (60sec * 60min)
 CONF_TOKEN_LIFETIME = 3600

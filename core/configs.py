@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, Dict, Optional, Set
 
 import pytz
 
+from core.authentication import AuthenticationClient
+
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
     from core.core import ApplicationCore

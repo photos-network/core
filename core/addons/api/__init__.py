@@ -42,7 +42,7 @@ class APIStatusView(RequestView):
     """View to handle Status requests."""
 
     requires_auth = False
-    url = "/"
+    url = "/api"
     name = "api:status"
 
     async def get(self, core: ApplicationCore, request: web.Request):
@@ -57,12 +57,12 @@ class APIStatusView(RequestView):
 class PhotosView(RequestView):
     """View to handle photos requests."""
 
-    url = "/v1/photos"
-    name = "v1:photo"
+    url = "/api/photos"
+    name = "api:photo"
 
     async def get(self, core: ApplicationCore, request: web.Request) -> web.Response:
         """Get a list of all photo resources."""
-        _LOGGER.debug("GET /v1/photos")
+        _LOGGER.debug("GET /api/photos")
         await core.authentication.check_permission(request, "library:read")
 
         user_id = await core.http.get_user_id(request)
@@ -90,7 +90,9 @@ class PhotosView(RequestView):
                 PhotoResponse(
                     id=photo.uuid,
                     name=photo.filename,
-                    image_url=f"{core.config.external_url}/v1/file/{photo.uuid}",
+                    image_url=f"{core.config.external_url}/api/file/{photo.uuid}",
+                    date_added=photo.date_added,
+                    date_taken=photo.date_taken,
                 )
             )
 
@@ -105,14 +107,14 @@ class PhotosView(RequestView):
 class PhotoDetailsView(RequestView):
     """View to handle single photo requests."""
 
-    url = "/v1/photo/{entity_id}"
-    name = "v1:photo"
+    url = "/api/photo/{entity_id}"
+    name = "api:photo"
 
     async def get(
         self, core: ApplicationCore, request: web.Request, entity_id: str
     ) -> web.Response:
         """Return an entity."""
-        _LOGGER.debug(f"GET /v1/photo/{entity_id}")
+        _LOGGER.debug(f"GET /api/photo/{entity_id}")
 
         # TODO: add user_id to check if user has access to image
         photo = await core.storage.read_photo(entity_id)
@@ -167,7 +169,7 @@ class PhotoDetailsView(RequestView):
             ),
             tags=tags,
             location=location,
-            image_url=f"{core.config.external_url}/v1/file/{entity_id}",
+            image_url=f"{core.config.external_url}/api/file/{entity_id}",
         )
         return web.Response(
             text=json.dumps(result, cls=PhotoEncoder), content_type="application/json"
@@ -177,16 +179,15 @@ class PhotoDetailsView(RequestView):
 class PhotoView(RequestView):
     """View to handle photo file requests."""
 
-    # TODO: enable auth
-    requires_auth = False
-    url = "/v1/file/{entity_id}"
-    name = "v1:file"
+    requires_auth = True
+    url = "/api/file/{entity_id}"
+    name = "api:file"
 
     async def get(
         self, core: ApplicationCore, request: web.Request, entity_id: str
     ) -> web.Response:
         """Return an entity."""
-        _LOGGER.debug(f"GET /v1/file/{entity_id}")
+        _LOGGER.debug(f"GET /api/file/{entity_id}")
 
         # TODO: parse params  max-with / max-height   =wmax-width-hmax-height  (=w2048-h1024)
         # -wmax-width   (preserving the aspect ratio)
@@ -251,7 +252,7 @@ class PhotoView(RequestView):
 
     async def delete(self, core: ApplicationCore, request: web.Request, entity_id: str):
         """Delete an entity."""
-        _LOGGER.debug(f"DELETE /v1/file/{entity_id}")
+        _LOGGER.debug(f"DELETE /api/file/{entity_id}")
 
         # TODO: delete entity
         return self.json_message(f"return DELETE {entity_id}")

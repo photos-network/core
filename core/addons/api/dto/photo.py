@@ -13,11 +13,13 @@ class PhotoEncoder(JSONEncoder):
 class PhotoResponse:
     """Photo response object."""
 
-    def __init__(self, id, name, image_url):
+    def __init__(self, id, name, image_url, date_added, date_taken):
         """Initialize photo response object."""
         self.id = id
         self.name = name
         self.image_url = image_url
+        self.date_added = date_added
+        self.date_taken = date_taken
 
 
 class PhotoDetailsResponse:
@@ -28,8 +30,8 @@ class PhotoDetailsResponse:
         id,
         name,
         owner,
-        created_at,
-        modified_at,
+        date_added,
+        date_taken,
         details,
         tags,
         location,
@@ -39,8 +41,8 @@ class PhotoDetailsResponse:
         self.id = id
         self.name = name
         self.owner = owner
-        self.created_at = created_at
-        self.modified_at = modified_at
+        self.date_added = date_added
+        self.date_taken = date_taken
         self.details = details
         self.tags = tags
         self.location = location

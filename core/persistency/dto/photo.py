@@ -1,5 +1,7 @@
 """Photo representation for persistency."""
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from datetime import datetime
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 
 from ...base import Base, generate_uuid
 
@@ -13,7 +15,9 @@ class Photo(Base):
     directory = Column(String)
     filename = Column(String)
     owner = Column(Integer, ForeignKey("users.uuid"), nullable=False)
-    is_missing = Column(Boolean, default=False)
+    date_added = Column(DateTime, default=datetime.utcnow)  # added to core
+    date_taken = Column(DateTime)  # photographed
+    is_missing = Column(Boolean, default=False)  # file is missing on disk
     hash = Column(String)
 
     def __init__(self, directory, filename, owner, is_missing=False, hash=""):

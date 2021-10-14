@@ -1,3 +1,11 @@
+## [0.3.0] - 2021-10-03
+### Added
+- Enrich photo list metadata
+
+### Changed
+- changed request url to `api` instead of `v1`
+
+
 ## [0.2.1] - 2020-05-09
 ### Changed
 - trim and lowercase username on oauth login

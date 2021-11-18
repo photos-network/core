@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 import aiohttp_jinja2
 from aiohttp import hdrs, web
 
-from ..const import CONF_TOKEN_LIFETIME, URL_API
+from ..const import CONF_TOKEN_LIFETIME, CORE_VERSION, URL_API
 from .auth_client import AuthenticationClient
 from .auth_database import AuthDatabase
 
@@ -78,8 +78,7 @@ class Authentication:
         _LOGGER.warning("GET /protected")
         await self.check_permission(request, "library:read")
 
-        response = web.Response(body=b"You are on protected page")
-        return response
+        return web.json_response({"Core": CORE_VERSION})
 
     @aiohttp_jinja2.template("authorize.jinja2")
     async def authorization_endpoint_get(

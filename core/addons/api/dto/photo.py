@@ -1,13 +1,19 @@
 """Photo."""
+import datetime
 from json.encoder import JSONEncoder
 
 
 class PhotoEncoder(JSONEncoder):
     """Encode photo to json."""
 
-    def default(self, o):
+    def default(self, obj):
         """Encode all properties."""
-        return o.__dict__
+        if isinstance(obj, (datetime.datetime, datetime.date, datetime.time)):
+            return obj.isoformat()
+        elif isinstance(obj, datetime.timedelta):
+            return (datetime.datetime.min + obj).time().isoformat()
+
+        return obj.__dict__
 
 
 class PhotoResponse:

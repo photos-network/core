@@ -85,12 +85,14 @@ class PhotosView(RequestView):
 
         results = []
 
+        _LOGGER.debug(f"found {len(user_photos)} photos")
+
         for photo in user_photos:
             results.append(
                 PhotoResponse(
                     id=photo.uuid,
                     name=photo.filename,
-                    image_url=f"{core.config.external_url}/api/file/{photo.uuid}",
+                    image_url=f"{core.config.external_url}:{core.config.port}/api/file/{photo.uuid}",
                     date_added=photo.date_added,
                     date_taken=photo.date_taken,
                 )

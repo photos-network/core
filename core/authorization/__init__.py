@@ -138,7 +138,7 @@ class Authorization:
             _LOGGER.error(
                 f"attempt to change a different user! Authenticated user: {loggedInUser}, user to change: {userId}"
             )
-            raise web.HTTPForbidden
+            raise web.HTTPUnauthorized
         data = await request.json()
 
         if "email" in data:
@@ -181,11 +181,11 @@ class Authorization:
                 await self.core.authentication.check_permission(
                     request, "admin.users:write"
                 )
-            except web.HTTPForbidden:
+            except web.HTTPUnauthorized:
                 _LOGGER.error(
                     f"attempt to change a different user! Authenticated user: {loggedInUser}, user to change: {userId}"
                 )
-                raise web.HTTPForbidden
+                raise web.HTTPUnauthorized
 
         Session.query(User).filter(User.id == loggedInUser).update(
             {User.deleted_date: datetime.utcnow(), User.disabled: True},
@@ -257,4 +257,4 @@ class Authorization:
         # TODO: check if requested scope has been granted by the user when creating the current token
         _LOGGER.warning(f"check_scope({scope})")
 
-        # raise web.HTTPForbidden()
+        # raise web.HTTPUnauthorized()

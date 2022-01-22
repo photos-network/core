@@ -1,0 +1,21 @@
+[BASIC]
+# W1203: logging-fstring-interpolation - f-string brings better readability and unifies style
+# W1202: logging-format-interpolation - lazy formatting in logging functions
+# R0903: too-few-public-methods - False negatives in pydantic classes
+# W0707: raise-missing-from - Tends to be a false positive as exception are closely encapsulated
+disable=W1203,W1202,R0903,W0707
+
+docstring-min-length=20
+max-args=7
+max-attributes=12
+
+# usual typevar naming
+good-names=T,C
+
+[MASTER]
+fail-under=6.0
+init-hook='from pylint.config import find_pylintrc; import os, sys; sys.path.append(os.path.dirname(find_pylintrc()))'
+extension-pkg-allow-list=pydantic
+
+[MESSAGES CONTROL]
+disable=line-too-long,no-name-in-module,no-member

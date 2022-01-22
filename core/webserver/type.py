@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 APPLICATION_JSON = "application/json"
 APPLICATION_X_WWW_FORM_URL_ENCODED = "application/x-www-form-urlencoded"
 IMAGE_JPEG = "image/jpeg"

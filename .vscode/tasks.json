@@ -33,6 +33,9 @@
       "label": "Flake8",
       "type": "shell",
       "command": "pre-commit run flake8 --all-files",
+      "dependsOn": [
+        "Install all Test Requirements"
+      ],
       "group": {
         "kind": "test",
         "isDefault": true
@@ -46,7 +49,7 @@
     {
       "label": "Pylint",
       "type": "shell",
-      "command": "pylint photos",
+      "command": "pylint core",
       "dependsOn": [
         "Install all Requirements"
       ],

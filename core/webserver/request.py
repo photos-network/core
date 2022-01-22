@@ -7,11 +7,8 @@ from typing import TYPE_CHECKING, Any, Callable, List, Optional
 import voluptuous
 from aiohttp import web
 from aiohttp.typedefs import LooseHeaders
-from aiohttp.web_exceptions import (
-    HTTPBadRequest,
-    HTTPInternalServerError,
-    HTTPUnauthorized,
-)
+from aiohttp.web_exceptions import (HTTPBadRequest, HTTPInternalServerError,
+                                    HTTPUnauthorized)
 
 if TYPE_CHECKING:
     from core.core import ApplicationCore
@@ -95,12 +92,12 @@ class RequestView:
 class ComplexEncoder(json.JSONEncoder):
     """Encoder for complex classes."""
 
-    def default(self, obj):
+    def default(self, o):
         """Encode all properties."""
-        if isinstance(obj, complex):
-            return [obj.real, obj.imag]
+        if isinstance(o, complex):
+            return [o.real, o.imag]
         # Let the base class default method raise the TypeError.
-        return json.JSONEncoder.default(self, obj)
+        return json.JSONEncoder.default(self, o)
 
 
 def request_handler_factory(

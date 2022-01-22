@@ -8,18 +8,8 @@ import socket
 import sys
 from logging.handlers import TimedRotatingFileHandler
 from time import monotonic
-from typing import (
-    Any,
-    Awaitable,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    TypeVar,
-)
+from typing import (Any, Awaitable, Callable, Dict, Iterable, List, Optional,
+                    Sequence, Set, TypeVar)
 
 from colorlog import ColoredFormatter
 

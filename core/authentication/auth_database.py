@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class AuthDatabase:
-    def __init__(self, core: "ApplicationCore", data_dir: str):
+    def __init__(self, core: "ApplicationCore"):
         Base.metadata.create_all(engine)
 
         users = Session.query(User).all()
@@ -189,8 +189,7 @@ class AuthDatabase:
         ).update(
             {
                 Token.access_token: new_access_token,
-                Token.token_expiration: datetime.utcnow()
-                + timedelta(seconds=CONF_TOKEN_LIFETIME),
+                Token.token_expiration: datetime.utcnow() + timedelta(seconds=CONF_TOKEN_LIFETIME),
                 Token.refresh_token: new_refresh_token,
             },
             synchronize_session=False,

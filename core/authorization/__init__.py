@@ -206,12 +206,7 @@ class Authorization:
         await self.core.authentication.check_permission(request, "admin.users:write")
 
         data = await request.json()
-        if (
-            "email" not in data
-            or "lastname" not in data
-            or "firstname" not in data
-            or "password" not in data
-        ):
+        if ("email" not in data or "lastname" not in data or "firstname" not in data or "password" not in data):
             raise web.HTTPBadRequest
 
         email = data["email"]

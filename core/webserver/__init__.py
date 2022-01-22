@@ -80,7 +80,7 @@ class Webserver:
         _LOGGER.info(f"Webserver is listening on {site._host}:{site._port}")
 
     async def init_auth(self):
-        auth_database = AuthDatabase(self.core, self.core.config.data_dir)
+        auth_database = AuthDatabase(self.core)
 
         # setup auth
         self.core.authorization = Authorization(self.core, self.app)

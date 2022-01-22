@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 HTTP_OK = 200
 HTTP_CREATED = 201
 HTTP_ACCEPTED = 202

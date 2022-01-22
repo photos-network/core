@@ -9,7 +9,8 @@ from aiohttp import web
 
 from core.addons.api.dto.details import Details
 from core.addons.api.dto.location import Location
-from core.addons.api.dto.photo import PhotoDetailsResponse, PhotoEncoder, PhotoResponse
+from core.addons.api.dto.photo import (PhotoDetailsResponse, PhotoEncoder,
+                                       PhotoResponse)
 from core.addons.api.dto.photo_response import PhotosResponse
 from core.base import Session
 from core.core import ApplicationCore

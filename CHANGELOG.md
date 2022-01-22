@@ -1,3 +1,11 @@
+## [0.4.0] - 2021-12-11
+### Added
+- system port to image response
+
+### Changed
+- return with `HTTPUnauthorized` instead of `HTTPForbidden`
+
+
 ## [0.3.0] - 2021-10-03
 ### Added
 - Enrich photo list metadata

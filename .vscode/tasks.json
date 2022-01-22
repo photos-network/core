@@ -2,6 +2,17 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Photos.network Core",
+      "type": "shell",
+      "command": "core --debug -c config",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Pytest",
       "type": "shell",
       "command": "pytest --timeout=10 tests",

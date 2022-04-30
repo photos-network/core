@@ -4,7 +4,7 @@
     {
       "label": "Photos.network Core",
       "type": "shell",
-      "command": "core --debug -c config",
+      "command": "python3 server.py",
       "group": "test",
       "presentation": {
         "reveal": "always",

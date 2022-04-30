@@ -25,18 +25,10 @@ class Authorization:
 
         self.app.router.add_get(path=URL_API + "/users", handler=self.get_users_handler)
         self.app.router.add_get(path=URL_API + "/user/", handler=self.me_user_handler)
-        self.app.router.add_get(
-            path=URL_API + "/user/{userId}", handler=self.get_user_handler
-        )
-        self.app.router.add_post(
-            path=URL_API + "/user/", handler=self.create_user_handler
-        )
-        self.app.router.add_patch(
-            path=URL_API + "/user/{userId}", handler=self.update_user_handler
-        )
-        self.app.router.add_delete(
-            path=URL_API + "/user/{userId}", handler=self.delete_user_handler
-        )
+        self.app.router.add_get(path=URL_API + "/user/{userId}", handler=self.get_user_handler)
+        self.app.router.add_post(path=URL_API + "/user/", handler=self.create_user_handler)
+        self.app.router.add_patch(path=URL_API + "/user/{userId}", handler=self.update_user_handler)
+        self.app.router.add_delete(path=URL_API + "/user/{userId}", handler=self.delete_user_handler)
 
         Base.metadata.create_all(engine)
 
@@ -149,18 +141,18 @@ class Authorization:
 
         if "firstname" in data:
             Session.query(User).filter(User.id == loggedInUser).update(
-                {User.firstname: data["firstname"]},
+                {User.firstname: str(data["firstname"])},
                 synchronize_session=False,
             )
 
         if "lastname" in data:
             Session.query(User).filter(User.id == loggedInUser).update(
-                {User.lastname: data["lastname"]},
+                {User.lastname: str(data["lastname"])},
                 synchronize_session=False,
             )
 
         if "password" in data:
-            hashed = sha256_crypt.hash(data["password"])
+            hashed = sha256_crypt.hash(str(data["password"]))
             Session.query(User).filter(User.id == loggedInUser).update(
                 {User.password: hashed},
                 synchronize_session=False,
@@ -178,9 +170,7 @@ class Authorization:
         if loggedInUser != userId:
             # admin users can delete other users
             try:
-                await self.core.authentication.check_permission(
-                    request, "admin.users:write"
-                )
+                await self.core.authentication.check_permission(request, "admin.users:write")
             except web.HTTPUnauthorized:
                 _LOGGER.error(
                     f"attempt to change a different user! Authenticated user: {loggedInUser}, user to change: {userId}"
@@ -206,7 +196,7 @@ class Authorization:
         await self.core.authentication.check_permission(request, "admin.users:write")
 
         data = await request.json()
-        if ("email" not in data or "lastname" not in data or "firstname" not in data or "password" not in data):
+        if "email" not in data or "lastname" not in data or "firstname" not in data or "password" not in data:
             raise web.HTTPBadRequest
 
         email = data["email"]
@@ -224,9 +214,7 @@ class Authorization:
             return web.json_response(status=400, data=data)
 
         hashed = sha256_crypt.hash(password)
-        user = User(
-            email=email, password=hashed, lastname=lastname, firstname=firstname
-        )
+        user = User(email=email, password=hashed, lastname=lastname, firstname=firstname)
         Session.add(user)
         Session.commit()
 

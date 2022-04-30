@@ -70,14 +70,7 @@ class Config:
             "addons": self.addons,
             "config_dir": self.config_dir,
             "data_dir": self.data_dir,
-            "clients": [
-                {
-                    "name": "Frontend",
-                    "client_id": "d37c098d-ac25-4a96-b462-c1ca05f45952",
-                    "client_secret": "AYgD5Y2DV7bbWupYW7WmYQ",
-                    "redirect_uris": [f"http://{self.internal_url}:3000/callback"],
-                }
-            ],
+            "clients": [],
         }
 
 

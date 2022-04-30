@@ -1,5 +1,5 @@
 {
-  "name": "Photos.network Core",
+  "name": "Photos.network core",
   "build": {
     "dockerfile": "Dockerfile.dev",
     "context": ".."
@@ -9,15 +9,22 @@
   ],
   "postCreateCommand": "mkdir -p config && pip3 install -r requirements_test.txt",
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],
-  "extensions": ["ms-python.python"],
+  "extensions": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "esbenp.prettier-vscode"
+  ],
+  "remoteUser": "vscode",
   "settings": {
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
     "python.pythonPath": "/usr/local/bin/python",
+    "python.languageServer": "Pylance",
     "python.linting.lintOnSave": true,
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,
+    "python.linting.pylintPath": "/usr/local/py-utils/bin/pylint",
     "python.linting.flake8Enabled": true,
     "python.linting.flake8Path": "/usr/local/bin/flake8",
     "python.linting.flake8Args": [
@@ -26,8 +33,11 @@
     "python.testing.pytestEnabled": true,
     "python.testing.pytestPath": "/usr/local/bin/pytest",
     "python.formatting.provider": "black",
-    "python.formatting.blackArgs": ["--line-length", "120"],
+    "python.formatting.blackArgs": [
+      "--line-length",
+      "120"
+    ],
+    "python.formatting.blackPath": "/usr/local/py-utils/bin/black",
     "files.trimTrailingWhitespace": true,
-    "terminal.integrated.shell.linux": "/bin/bash"
   }
 }

@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.10
 LABEL "description"="Photos.network core system"
 LABEL "version"="0.4.0"
 LABEL "maintainer"="github.com/photos-network"

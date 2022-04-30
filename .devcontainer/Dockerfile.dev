@@ -1,4 +1,12 @@
-FROM python:3.9
+FROM mcr.microsoft.com/vscode/devcontainers/python:3.10
+
+# Install zsh
+ARG INSTALL_ZSH="true"
+
+# setup non-root user
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
 
 WORKDIR /workspaces
 
@@ -9,5 +17,3 @@ RUN pip3 --disable-pip-version-check --no-cache-dir install -r requirements_test
 
 # Install core
 RUN python3 setup.py install
-
-EXPOSE 7777

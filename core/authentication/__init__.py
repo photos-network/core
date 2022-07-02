@@ -80,17 +80,8 @@ class Authentication:
         try:
             _LOGGER.debug(f"GET /oauth/authorize  from: {request.host}")
 
-            response_type = request.query.get("response_type")
+            # validate required param `client_id`
             client_id = request.query.get("client_id")
-
-            # validate required params
-            if response_type is None or client_id is None:
-                _LOGGER.warning("The response is missing a response_type or client_id.")
-                data = """{
-                    "error": "invalid_request",
-                    "error_description": "The request is missing a required parameter"
-                    }"""
-                return web.json_response(json.loads(data))
 
             # check if client is known
             if not any(client.client_id == client_id for client in self.auth_clients):
@@ -99,7 +90,18 @@ class Authentication:
                     "error":"unauthorized_client",
                     "error_description":"The client is not authorized to request an authorization code using this method."
                     }"""
-                return web.json_response(json.loads(data))
+                return web.json_response(status=412, data=json.loads(data))
+
+            response_type = request.query.get("response_type")
+
+            # validate required param `response_type`
+            if response_type is None or client_id is None:
+                _LOGGER.warning("The response is missing a response_type or client_id.")
+                data = """{
+                    "error": "invalid_request",
+                    "error_description": "The request is missing a required parameter"
+                    }"""
+                return web.json_response(status=422, data=json.loads(data))
 
             # validate response_type
             if response_type != "code":
@@ -108,7 +110,7 @@ class Authentication:
                     "error":"unsupported_response_type",
                     "error_description":"The request is using an invalid response_type"
                     }"""
-                return web.json_response(json.loads(data))
+                return web.json_response(status=422, data=json.loads(data))
 
             redirect_uri = request.query.get("redirect_uri")
 
@@ -124,7 +126,7 @@ class Authentication:
                     "error":"unauthorized_client",
                     "error_description":"The redirect_uri is unknown"
                     }"""
-                return web.json_response(json.loads(data))
+                return web.json_response(status=422, data=json.loads(data))
 
             scope = request.query.get("scope")
             requested_scopes = scope.split(" ")
@@ -156,7 +158,7 @@ class Authentication:
                         "error":"invalid_scope",
                         "error_description":"The requested scope is invalid, unknown, or malformed."
                     }"""
-                    return web.json_response(json.loads(data))
+                    return web.json_response(status=422, data=json.loads(data))
 
             # persist state to preventing cross-site request forgery [Section 10.12](https://tools.ietf.org/html/rfc6749#section-10.12)
             # state = request.query.get("state")
@@ -223,7 +225,7 @@ class Authentication:
                 "error":"server_error",
                 "error_description":"The authorization server encountered an unexpected condition that prevented it from fulfilling the request."
                 }"""
-            return web.json_response(json.loads(data))
+            return web.json_response(status=422, data=json.loads(data))
 
     async def authorization_endpoint_post(self, request: web.Request) -> web.StreamResponse:
         """
@@ -385,7 +387,7 @@ class Authentication:
         refresh_token = data["refresh_token"]
 
         # check if client_id and client_secret are provided as request parameters or HTTP Basic auth header
-        if "client_id" in data and "client_secret" in data:
+        if "client_id" in data:
             # handle request parameters
             client_id = data["client_id"]
             client_secret = data["client_secret"]

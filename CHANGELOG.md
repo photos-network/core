@@ -1,3 +1,10 @@
+## [0.5.0] - 2022-07-07
+### Added
+- generate random client credentials to fallback configuration
+
+### Changed
+- renamed configuration file to `core_configuration.json`
+
 ## [0.4.0] - 2021-12-11
 ### Added
 - system port to image response
@@ -30,3 +37,10 @@
 - integrated oauth authorization server
 - dynamic addon loading with dedicated setup step
 - async file logging
+
+[0.5.0]: https://github.com/photos-network/core/compare/Release/v0.4.0...Release/v0.5.0
+[0.4.0]: https://github.com/photos-network/core/compare/Release/v0.3.0...Release/v0.4.0
+[0.3.0]: https://github.com/photos-network/core/compare/Release/v0.2.1...Release/v0.3.0
+[0.2.1]: https://github.com/photos-network/core/compare/Release/v0.2.0...Release/v0.2.1
+[0.2.0]: https://github.com/photos-network/core/compare/Release/v0.0.1...Release/v0.2.0
+[0.0.1]: https://github.com/photos-network/core/releases/tag/Release/v0.0.1

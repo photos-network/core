@@ -49,7 +49,7 @@ setup(
         "core": ["addons/**/*.py", "addons/**/model/**", "addons/**/dto/**"],
     },
     install_requires=[
-        "async_timeout>=3.0.1,<4.0",
+        "async_timeout>=4.0.1,<5.0",
         "aiohttp>=3.7.0,<4.0",
         "aiohttp_cors>=0.7.0",
         "aiohttp-jinja2>=1.4.2",

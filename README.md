@@ -63,20 +63,12 @@ python3 setup.py install
 
 ---
 
-## Run
-
-```shell
-python3 ./venv/bin/core
-```
-
-
 ## Release
-build the docker image by running:
-```
-docker build -t photosnetwork/core:0.3.0 .
-```                            
+Update the version in `core/const.py` and `Dockerfile` before creating a new image.
 
-publish the docker image:
-```
-docker push photosnetwork/core:0.3.0
-```
+To support multiple architectures, we need to create and use or own builder.
+```shell
+docker buildx create --name multiarchitecturebuilder
+docker buildx use multiarchitecturebuilder
+docker buildx build --platform linux/arm64,linux/amd64 --tag photosnetwork/core:latest --push .
+```                            

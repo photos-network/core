@@ -20,6 +20,7 @@ from core.authorization import Authorization
 from core.base import Base, engine
 from core.configs import Config
 from core.persistency.persistency import PersistencyManager
+from core.utils import generate_random_client_id, generate_random_client_secret
 from core.utils.timeout import TimeoutManager
 from core.webserver import Webserver
 
@@ -176,9 +177,7 @@ class ApplicationCore:
         await asyncio.sleep(0)
 
         if self.state != CoreState.starting:
-            _LOGGER.warning(
-                "Photos.network startup has been interrupted. Its state may be inconsistent"
-            )
+            _LOGGER.warning("Photos.network startup has been interrupted. Its state may be inconsistent")
             return
 
         self.state = CoreState.running
@@ -203,9 +202,7 @@ class ApplicationCore:
 
             all_requirements_fulfilled = addon.install_requirements()
             if not all_requirements_fulfilled:
-                _LOGGER.error(
-                    f"setup addon '{addon.domain}' failed. Not all requirements installed!"
-                )
+                _LOGGER.error(f"setup addon '{addon.domain}' failed. Not all requirements installed!")
 
             if all_requirements_fulfilled:
                 addon_setup_successful = await addon.async_setup_addon()
@@ -234,16 +231,27 @@ class ApplicationCore:
 
     async def _load_config(self) -> dict:
         """Load configuration from file and return as dict."""
-        config_file = os.path.join(self.config.config_dir, "configuration.json")
+        config_file = os.path.join(self.config.config_dir, "core_configuration.json")
 
         if not os.path.exists(config_file):
             with open(file=config_file, mode="w+", encoding="utf-8") as file:
                 hostname = socket.gethostname()
 
+                clientId = generate_random_client_id()
+                clientSecret = generate_random_client_secret()
+
                 output = {
                     "internal_url": socket.gethostbyname(hostname),
-                    "external_url": "external.url.com",
+                    "external_url": "photos.external.com",
                     "data_dir": "data",
+                    "clients": [
+                        {
+                            "name": "Frontend",
+                            "client_id": clientId,
+                            "client_secret": clientSecret,
+                            "redirect_uris": ["http://127.0.0.1:7778/callback"],
+                        }
+                    ],
                     "addons": [{"name": "api"}],
                 }
                 json.dump(output, file, indent=2)
@@ -283,9 +291,7 @@ class ApplicationCore:
                         redirect_uris=client["redirect_uris"],
                     )
                 )
-            _LOGGER.info(
-                f"added {len(self.config.clients)} auth clients to core config."
-            )
+            _LOGGER.info(f"added {len(self.config.clients)} auth clients to core config.")
 
         return conf_dict
 

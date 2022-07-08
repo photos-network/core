@@ -65,3 +65,6 @@ docs/build
 
 # data directory
 data/
+
+# config directory
+config/

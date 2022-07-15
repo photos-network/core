@@ -1,9 +1,15 @@
+## [0.5.1] - 2022-07-07
+### Removed
+- unused client_secret from oauth calls
+
+
 ## [0.5.0] - 2022-07-07
 ### Added
 - generate random client credentials to fallback configuration
 
 ### Changed
 - renamed configuration file to `core_configuration.json`
+
 
 ## [0.4.0] - 2021-12-11
 ### Added
@@ -38,6 +44,7 @@
 - dynamic addon loading with dedicated setup step
 - async file logging
 
+[0.5.1]: https://github.com/photos-network/core/compare/Release/v0.5.0...Release/v0.5.1
 [0.5.0]: https://github.com/photos-network/core/compare/Release/v0.4.0...Release/v0.5.0
 [0.4.0]: https://github.com/photos-network/core/compare/Release/v0.3.0...Release/v0.4.0
 [0.3.0]: https://github.com/photos-network/core/compare/Release/v0.2.1...Release/v0.3.0

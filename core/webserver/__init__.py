@@ -38,9 +38,9 @@ class Webserver:
             self.app, loader=jinja2.FileSystemLoader("core/webserver/templates")
         )
 
+        self.app.middlewares.append(self.headers_middleware)
         self.app.middlewares.append(self.ban_middleware)
         self.app.middlewares.append(self.auth_middleware)
-        self.app.middlewares.append(self.headers_middleware)
 
     def register_request(self, view):
         """

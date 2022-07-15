@@ -65,7 +65,6 @@ class Authentication:
         return web.Response(status=200)
 
     async def protected_handler(self, request: web.Request) -> web.StreamResponse:
-        _LOGGER.warning("GET /protected")
         await self.check_permission(request, "library:read")
 
         return web.json_response({"Core": CORE_VERSION})
@@ -390,7 +389,6 @@ class Authentication:
         if "client_id" in data:
             # handle request parameters
             client_id = data["client_id"]
-            client_secret = data["client_secret"]
         elif hdrs.AUTHORIZATION in request.headers:
             # handle basic headers
             auth_type, auth_val = request.headers.get(hdrs.AUTHORIZATION).split(" ", 1)
@@ -400,7 +398,8 @@ class Authentication:
             # TODO: split auth_val in client_id and client_secret
             _LOGGER.error(f"split token into client_id and client_secret: {auth_val}")
             client_id = ""
-            client_secret = ""
+        else:
+            client_id = ""
 
         registered_auth_client = next(
             filter(lambda client: client.client_id == client_id, self.auth_clients),
@@ -408,11 +407,6 @@ class Authentication:
         )
 
         _LOGGER.debug(f"client_id: {client_id}, {registered_auth_client}")
-
-        if not registered_auth_client.client_secret == client_secret:
-            _LOGGER.error("client_id does not match with client_secret")
-            data = {"error": "invalid_client"}
-            return web.json_response(data)
 
         access_token, refresh_token = await self.auth_database.renew_tokens(client_id, refresh_token)
 

@@ -238,6 +238,6 @@ class Authorization:
 
     async def check_scope(self, scope: str):
         # TODO: check if requested scope has been granted by the user when creating the current token
-        _LOGGER.warning(f"check_scope({scope})")
+        _LOGGER.warning(f"check_scope({scope}) is not implemented yer!")
 
         # raise web.HTTPUnauthorized()

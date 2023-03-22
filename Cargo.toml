@@ -1,0 +1,46 @@
+[package]
+name = "photos-network_core"
+version = "0.1.0"
+authors = ["Photos network developers <info@photos.network>"]
+edition = "2021"
+
+description = "The core system of photos.network an free and open-source project (FOSS) for a self-hosted photo management."
+documentation = "https://developers.photos.network/"
+readme = "README.md"
+
+repository = "https://github.com/photos-network/core"
+
+publish = false
+
+
+[dependencies.photos_network_plugin]
+version = "0.2.0"
+path = "../plugin_interface"
+
+
+[dependencies]
+abi_stable = "0.11.1"
+core_extensions = { version = "1.5.2", default_features = false, features = ["std"] }
+serde = "1.0.157"
+serde_json = { version = "1.0.79", features = ["raw_value"] }
+smallvec = "1.8.0"
+
+
+anyhow = "1.0.70"
+axum = { version = "0.6.2", features = ["ws"] }
+
+futures = "0.3.25"
+futures-channel = "0.3.25"
+futures-util = "0.3.25"
+rumqttc = "0.20.0"
+
+tokio = { version = "1.24.1", features = ["full"] }
+tokio-stream = { version = "0.1.11", features = ["net"] }
+tokio-util = { version = "0.7.4", features = ["rt"] }
+
+tower = { version = "0.4.13", features = ["util"] }
+tower-http = { version = "0.4.0", features = ["fs", "trace"] }
+
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3", features = ["registry", "fmt", "std", "json"] }
+tracing-appender = "0.2.2"

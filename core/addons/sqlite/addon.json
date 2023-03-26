@@ -1,7 +1,0 @@
-{
-  "domain": "sqlite",
-  "name": "store image meta data in a sqlite database",
-  "type": "storage",
-  "requirements": [],
-  "core": "0.1.0"
-}

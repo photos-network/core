@@ -1,8 +1,0 @@
-{
-  "domain": "metadata",
-  "name": "Read file metadata like exif",
-  "requirements": [
-    "exif==1.3.5"
-  ],
-  "core": "0.1.0"
-}

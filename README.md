@@ -26,7 +26,9 @@ It is responsible for main tasks e.g.:
 
 ## Development
 
-Always use [PEP 484: Type Hints](https://www.python.org/dev/peps/pep-0484/) in your syntax.
+The core is written in [Rust](https://rust-lang.org/) and highly customizably by using a Plugin-system.
+
+Plugins are realized by **dynamic loading** by using [abi_stable_crates](https://github.com/rodrimati1992/abi_stable_crates)
 
 ---
 
@@ -44,31 +46,3 @@ The fastest start into development can be archived by using [Visual Studio Code]
 ![VS Code with devcontainers](vscode.gif)
 
 ---
-
-### Manual Environment
-
-Prepare an environment by running:
-
-```shell
-python3 -m venv .venv
-source .venv/bin/activate
-pip3 install -r requirements_test.txt
-```
-
-After the environment is build, install the core:
-
-```shell
-python3 setup.py install
-```
-
----
-
-## Release
-Update the version in `core/const.py` and `Dockerfile` before creating a new image.
-
-To support multiple architectures, we need to create and use or own builder.
-```shell
-docker buildx create --name multiarchitecturebuilder
-docker buildx use multiarchitecturebuilder
-docker buildx build --platform linux/arm64,linux/amd64 --tag photosnetwork/core:latest --push .
-```                            

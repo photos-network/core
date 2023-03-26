@@ -1,0 +1,15 @@
+version: '3.3'
+
+services:
+  frontend:
+    image: 'rust:1.66.1'
+    volumes:
+      - ./target/debug:/usr/src/app:rw
+    environment:
+      - USER=vscode
+    ports:
+      - 7777:7777
+    restart: 'no'
+    working_dir: /usr/src/app
+
+    command: bash -c "./core"

@@ -1,0 +1,1 @@
+/Users/stuermer/workspace/github/photos-network/plugin_metadata/target/debug/libplugin_metadata.dylib: /Users/stuermer/workspace/github/photos-network/plugin_interface/src/lib.rs /Users/stuermer/workspace/github/photos-network/plugin_metadata/src/lib.rs

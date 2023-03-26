@@ -1,6 +1,9 @@
 {
-  "recommendations": [
-    "esbenp.prettier-vscode",
-    "ms-python.python"
-  ]
+    "recommendations": [
+      "rust-lang.rust-analyzer",
+      "tamasfe.even-better-toml",
+      "serayuzgur.crates",
+      "rangav.vscode-thunder-client",
+      "usernamehw.errorlens",
+    ],
 }

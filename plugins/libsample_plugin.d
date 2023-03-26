@@ -1,1 +1,0 @@
-/Users/stuermer/workspace/github/photos-network/sample_plugin/target/debug/libsample_plugin.dylib: /Users/stuermer/workspace/github/photos-network/plugin_interface/src/lib.rs /Users/stuermer/workspace/github/photos-network/sample_plugin/src/lib.rs

@@ -7,25 +7,25 @@ use std::path::{PathBuf};
 use abi_stable::{
     library::{lib_header_from_path, LibrarySuffix, RawLibrary},
 };
-use abi_stable::external_types::crossbeam_channel;
-use abi_stable::std_types::{RErr, ROk};
+
 use anyhow::Result;
 use core_extensions::SelfOps;
-use photos_network_plugin::{PluginFactory_Ref, PluginId, Plugin_TO};
-use tracing::{debug, info, warn};
-use crate::config::{Configuration};
+use photos_network_plugin::{PluginFactory_Ref, PluginId};
+use tracing::{debug, info, error};
+use crate::{config::{Configuration}, ApplicationState};
 
-pub struct PluginManager {
+pub struct PluginManager<'a> {
     config: Configuration,
     path: String,
+    state: &'a mut ApplicationState,
 }
 
-impl PluginManager {
-    pub async fn new(config: Configuration, path: String) -> Result<Self> {
-        Ok(Self { config, path })
+impl<'a> PluginManager<'a> {
+    pub fn new(config: Configuration, path: String, state: &'a mut ApplicationState) -> Result<Self> {
+        Ok(Self { config, path, state })
     }
 
-    pub async fn init(self) -> Result<()> {
+    pub async fn init<'b>(&mut self) -> Result<()> {        
         info!("Found {} plugin(s) in the configuration.", self.config.plugins.len());
 
         for configured_plugin in &self.config.plugins {
@@ -42,34 +42,24 @@ impl PluginManager {
                 let header = lib_header_from_path(&plugin_path)?;
                 let res = header.init_root_module::<PluginFactory_Ref>();
 
-                match res {
-                    Ok(plugin_factory) => {
-                        info!("Loading {}({}) plugin was successful.", configured_plugin.domain, header.version_strings().version);
-
-                        let plugin_constructor = plugin_factory.new();
-
-                        // TODO: learn crossbeam
-                        let (sender, _receiver) = crossbeam_channel::unbounded();
-                        let plugin = match plugin_constructor(sender.clone(), PluginId::from("test")) {
-                            ROk(x) => x,
-                            RErr(e) => {
-                                // TODO: handle errors
-                                // plugin_new_errs.push((plugin_id.clone(), e));
-                                continue;
-                            }
-                        };
-
-                        // TODO: persist plugin in app state?
-                        // plugins.push(plugin);
-                    }
+                let root_module = match res {
+                    Ok(x) => x,
                     Err(e) => {
-                        warn!("Loading {} plugin was failed. [{}]", configured_plugin.domain, e);
+                        error!("Could not init plugin! {}", e);
                         continue;
                     }
                 };
+        
+        let mut loaded_libraries = Vec::<PluginId>::new();
+                loaded_libraries.push(PluginId::from(base_name.clone()));
+                self.state.plugins.insert(PluginId::from(base_name), root_module);
             }
         }
 
         Ok(())
+    }
+
+    pub async fn trigger_on_init(&self) -> () {
+
     }
 }

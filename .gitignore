@@ -17,3 +17,6 @@ data/
 
 # config directory
 config/
+
+# logs directory
+logs/

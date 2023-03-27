@@ -6,6 +6,8 @@ use std::fs;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 
+use abi_stable::external_types::crossbeam_channel;
+use abi_stable::std_types::RResult::{ROk, RErr};
 use anyhow::{Context, Result};
 use axum::{Json, Router};
 use axum::routing::{get, head};
@@ -13,7 +15,7 @@ use photos_network_plugin::{PluginFactory_Ref, PluginId};
 use serde::{Deserialize, Serialize};
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
-use tracing::info;
+use tracing::{info, error};
 use tracing_subscriber::{
     fmt,
     layer::SubscriberExt,
@@ -58,9 +60,39 @@ pub async fn run() -> Result<()> {
     let config = Configuration::new(CONFIG_PATH).expect("Could not parse configuration!");
 
     // init application state
-    let mut _app_state = ApplicationState::new(config.clone());
+    let mut app_state = ApplicationState::new(config.clone());
 
-    let _plugin_manager = PluginManager::new(config.clone(), PLUGIN_PATH.to_string()).await?.init().await.context("PluginManager: initialization failed!").unwrap();
+    let plugin_manager = PluginManager::new(
+        config.clone(), 
+        PLUGIN_PATH.to_string(),
+        &mut app_state
+    );
+
+    plugin_manager?.init().await.context("PluginManager: initialization failed!");
+    //plugin_manager?.trigger_on_init(); // ERROR: use of moved value: `plugin_manager` value used here after move
+
+    
+    // trigger `on_core_init` on all loaded plugins
+    for (plugin_id, factory) in app_state.plugins {
+        info!("plugin {} found in AppState.", plugin_id);
+        
+        let plugin_constructor = factory.new();
+
+        let (sender, receiver) = crossbeam_channel::unbounded();
+
+        let plugin = match plugin_constructor(sender.clone(), plugin_id.clone()) {
+            ROk(x) => x,
+            RErr(e) => {
+                // TODO: handle error
+                error!("Not able to trigger plugin constructor for {}", plugin_id);
+                //plugin_new_errs.push((plugin_id.clone(), e));
+                continue;
+            }
+        };
+
+        plugin.on_core_init();
+    }
+
 
     let router = Router::new()
         .nest_service("/assets", ServeDir::new("src/api/static"))

@@ -115,7 +115,7 @@ pub async fn run() -> Result<()> {
     }
         
     // TODO: add routes lazy (e.g. from plugin)
-    router = app_state.router.unwrap().route("/test", get( || async { "It's working!" } ));
+    router = app_state.router.unwrap().route("/test", get( || async { "Test from within plugin" } ));
         
 
     // start server with all routes

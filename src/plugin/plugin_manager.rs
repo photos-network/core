@@ -6,6 +6,7 @@ use abi_stable::{
 };
 
 use anyhow::Result;
+use axum::routing::get;
 use core_extensions::SelfOps;
 use photos_network_plugin::{PluginFactory_Ref, PluginId};
 use tracing::{debug, info, error};
@@ -56,7 +57,8 @@ impl<'a> PluginManager<'a> {
         Ok(())
     }
 
-    pub async fn trigger_on_init(&self) -> () {
-
+    pub async fn trigger_on_init(&mut self) -> () {
+        // self.state.router.as_mut().unwrap().route("/foo", get( || async { "It's working!" } ));
+        // ERROR: move occurs because value has type `Router`, which does not implement the `Copy` trait
     }
 }

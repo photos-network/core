@@ -8,7 +8,7 @@ use std::net::SocketAddr;
 
 use abi_stable::external_types::crossbeam_channel;
 use abi_stable::std_types::RResult::{ROk, RErr};
-use anyhow::{Context, Result};
+use anyhow::Result;
 use axum::{Json, Router};
 use axum::routing::{get, head};
 use photos_network_plugin::{PluginFactory_Ref, PluginId};
@@ -22,7 +22,7 @@ use tracing_subscriber::{
 };
 
 use config::Configuration;
-use plugin::PluginManager;
+use plugin::plugin_manager::PluginManager;
 
 pub mod config;
 pub mod plugin;
@@ -62,29 +62,50 @@ pub async fn run() -> Result<()> {
     // init application state
     let mut app_state = ApplicationState::new(config.clone());
 
-    let plugin_manager = PluginManager::new(
+
+
+    let mut router = Router::new()
+        // favicon
+        .nest_service("/assets", ServeDir::new("src/api/static"))
+        // health check
+        .route("/", get(status))
+        .route("/", head(status))
+        // oauth 2
+        .nest("/oauth", api::authentication::AuthManager::routes())
+        .layer(TraceLayer::new_for_http())
+        
+        // TODO: share app state with routes
+        // .with_state(Arc::new(app_state))
+        ;
+    app_state.router = Some(router);
+
+
+
+    let mut plugin_manager = PluginManager::new(
         config.clone(), 
         PLUGIN_PATH.to_string(),
         &mut app_state
-    );
+    )?;
 
-    plugin_manager?.init().await.context("PluginManager: initialization failed!");
-    //plugin_manager?.trigger_on_init(); // ERROR: use of moved value: `plugin_manager` value used here after move
+    match plugin_manager.init().await {
+        Ok(_) => info!("PluginManager: initialization succed."),
+        Err(e) => error!("PluginManager: initialization failed! {}", e)
+    }
+    plugin_manager.trigger_on_init().await;
 
-    
     // trigger `on_core_init` on all loaded plugins
     for (plugin_id, factory) in app_state.plugins {
         info!("plugin {} found in AppState.", plugin_id);
         
         let plugin_constructor = factory.new();
 
-        let (sender, receiver) = crossbeam_channel::unbounded();
+        let (sender, _receiver) = crossbeam_channel::unbounded();
 
         let plugin = match plugin_constructor(sender.clone(), plugin_id.clone()) {
             ROk(x) => x,
-            RErr(e) => {
+            RErr(_) => {
                 // TODO: handle error
-                error!("Not able to trigger plugin constructor for {}", plugin_id);
+                error!("Not able to trigger plugin constructor for '{}'!", plugin_id);
                 //plugin_new_errs.push((plugin_id.clone(), e));
                 continue;
             }
@@ -92,25 +113,12 @@ pub async fn run() -> Result<()> {
 
         plugin.on_core_init();
     }
-
-
-    let router = Router::new()
-        .nest_service("/assets", ServeDir::new("src/api/static"))
-        .route("/", get(status))
-        .route("/", head(status))
-        .nest("/oauth", api::authentication::AuthManager::routes())
-        .layer(TraceLayer::new_for_http())
         
-        // TODO: share app state with routes
-        // .with_state(Arc::new(app_state))
-        ;
-        
-        
-        // TODO: add routes lazy (e.g. from plugin)
-        // app_state.router = Some(router);
-        // router.route("/test", get( || async { "It's working!" } ));
+    // TODO: add routes lazy (e.g. from plugin)
+    router = app_state.router.unwrap().route("/test", get( || async { "It's working!" } ));
         
 
+    // start server with all routes
     let addr: SocketAddr = SocketAddr::from(([0, 0, 0, 0], 7777));
     tracing::debug!("listening on {}", addr);
     axum::Server::bind(&addr)

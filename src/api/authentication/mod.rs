@@ -6,6 +6,10 @@ use axum::{
 
 use oxide_auth_axum::OAuthRequest;
 
+/**
+ * Autentication Manager is handling access requests via OAuth
+ * by validating the identity of users.
+ */
 pub(crate) struct AuthManager {
 
 }

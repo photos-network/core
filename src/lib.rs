@@ -71,7 +71,7 @@ pub async fn run() -> Result<()> {
         .route("/", get(status))
         .route("/", head(status))
         // oauth 2
-        .nest("/oauth", api::authentication::AuthManager::routes())
+        .nest("/oauth", api::authentication::AutenticationManager::routes())
         .layer(TraceLayer::new_for_http())
         
         // TODO: share app state with routes

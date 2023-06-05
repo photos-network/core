@@ -33,7 +33,7 @@
     "python.formatting.blackArgs": ["--line-length", "120"],
     "[python]": {
         "editor.tabSize": 4,
-        "editor.formatOnSave": true
+        "editor.formatOnSave": false
     },
     "python.terminal.activateEnvInCurrentTerminal": true,
     "python.testing.unittestEnabled": false,

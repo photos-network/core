@@ -1,3 +1,8 @@
+## [0.5.2] - 2023-06-04
+### Added
+- compression to photos requests
+
+
 ## [0.5.1] - 2022-07-07
 ### Removed
 - unused client_secret from oauth calls
@@ -44,6 +49,7 @@
 - dynamic addon loading with dedicated setup step
 - async file logging
 
+[0.5.2]: https://github.com/photos-network/core/compare/Release/v0.5.1...Release/v0.5.2
 [0.5.1]: https://github.com/photos-network/core/compare/Release/v0.5.0...Release/v0.5.1
 [0.5.0]: https://github.com/photos-network/core/compare/Release/v0.4.0...Release/v0.5.0
 [0.4.0]: https://github.com/photos-network/core/compare/Release/v0.3.0...Release/v0.4.0

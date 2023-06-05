@@ -102,9 +102,8 @@ class PhotosView(RequestView):
         response = PhotosResponse(
             offset=offset, limit=limit, size=len(results), results=results
         )
-        return web.Response(
-            text=json.dumps(response, cls=PhotoEncoder), content_type="application/json"
-        )
+
+        return self.json(result=response, encoder=PhotoEncoder)
 
 
 class PhotoDetailsView(RequestView):

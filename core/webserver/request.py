@@ -27,6 +27,17 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_callback", False) is True
 
 
+class ComplexEncoder(json.JSONEncoder):
+    """Encoder for complex classes."""
+
+    def default(self, o):
+        """Encode all properties."""
+        if isinstance(o, complex):
+            return [o.real, o.imag]
+        # Let the base class default method raise the TypeError.
+        return json.JSONEncoder.default(self, o)
+
+
 class RequestView:
     """Base request."""
 
@@ -40,10 +51,11 @@ class RequestView:
         result: Any,
         status_code: int = HTTP_OK,
         headers: Optional[LooseHeaders] = None,
+        encoder: json.JSONEncoder = ComplexEncoder,
     ) -> web.Response:
         """Return a JSON response."""
         try:
-            msg = json.dumps(result, cls=ComplexEncoder, allow_nan=False).encode(
+            msg = json.dumps(result, cls=encoder, allow_nan=False).encode(
                 "UTF-8"
             )
         except (ValueError, TypeError) as err:
@@ -87,17 +99,6 @@ class RequestView:
 
             for url in urls:
                 routes.append(router.add_route(method, url, handler))
-
-
-class ComplexEncoder(json.JSONEncoder):
-    """Encoder for complex classes."""
-
-    def default(self, o):
-        """Encode all properties."""
-        if isinstance(o, complex):
-            return [o.real, o.imag]
-        # Let the base class default method raise the TypeError.
-        return json.JSONEncoder.default(self, o)
 
 
 def request_handler_factory(

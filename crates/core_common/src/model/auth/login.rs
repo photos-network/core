@@ -15,15 +15,29 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use core::start_server;
-use std::process;
+ use crate::sensitive::Sensitive;
 
-/// the `#[tokio::main]` macro initializes a runtime instance and executes the main in it.
-/// See: https://tokio.rs/tokio/tutorial/hello-tokio#async-main-function
-#[tokio::main]
-async fn main() {
-    if let Err(e) = start_server().await {
-        eprintln!("error: {:#}", e);
-        process::exit(1);
-    }
+//! Login request
+//!
+//! Provides an abstraction over a vlue for sensitive data like passwords.
+//! It is not printing its value to logs or tracing
+//! 
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct Login {
+  pub username_or_email: Sensitive<String>,
+  pub password: Sensitive<String>,
+  pub totp_2fa_token: Option<String>,
+}
+
+//! Login response
+//! 
+//!  * `jwt` - None if email verification is enabled.
+//!  * `verify_email_sent` - Indicates if an email verification is needed.
+//!  
+#[skip_serializing_none]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LoginResponse {
+  pub jwt: Option<Sensitive<String>>,
+  pub registration_created: bool,
+  pub verify_email_sent: bool,
 }

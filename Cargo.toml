@@ -1,16 +1,48 @@
-[package]
-name = "photos-network_core"
-version = "0.1.0"
+# define keys that can be inherited by members of the workspace
+[workspace.package]
 authors = ["Photos network developers <info@photos.network>"]
+description = "A privacy first **photo storage and sharing service** in the fediverse."
+version = "0.6.0"
+homepage = "https://photos.network/"
+documentation = "https://developers.photos.network/"
+repository = "https://github.com/photos-network/core"
+readme = "README.md"
+license = "AGPL-3.0"
 edition = "2021"
 
-description = "The core system of photos.network an free and open-source project (FOSS) for a self-hosted photo management."
-documentation = "https://developers.photos.network/"
-readme = "README.md"
+[package]
+name = "core"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+license.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+include = ["src/**/*", "LICENSE.md", "README.md", "CHANGELOG.md"]
 
-repository = "https://github.com/photos-network/core"
 
-publish = false
+[workspace]
+members = [
+    "crates/core_common",
+    "crates/core_photos",
+    "crates/core_activity_pub",
+]
+
+# define dependencies to be inherited by members of the workspace
+[workspace.dependencies]
+core_common = { path = "./crates/core_common" }
+core_photos = { path = "./crates/core_photos" }
+core_activity_pub = { path = "./crates/core_activity_pub" }
+activitypub_federation = "~0.4.0"
+serde = "~1.0.157"
+
+# core_api = { version = "=0.1.0", path = "./crates/core_api" }
+# core_api_crud = { version = "=0.1.0", path = "./crates/api_crud" }
+# core_apub = { version = "=0.1.0", path = "./crates/core_activity_pub" }
+
+
+
 
 
 [dependencies.photos_network_plugin]
@@ -19,6 +51,17 @@ path = "../plugin_interface"
 
 
 [dependencies]
+# core_api = { workspace = true }
+core_common = { workspace = true }
+core_photos = { workspace = true }
+core_activity_pub = { workspace = true }
+# core_api_crud = { workspace = true }
+
+
+
+
+
+
 abi_stable = "0.11.1"
 core_extensions = { version = "1.5.2", default_features = false, features = ["std"] }
 serde = "1.0.157"
@@ -34,7 +77,7 @@ oxide-auth-axum = "0.3.0"
 futures = "0.3.25"
 futures-channel = "0.3.25"
 futures-util = "0.3.25"
-rumqttc = "0.20.0"
+rumqttc = "0.21.0"
 
 tokio = { version = "1.24.1", features = ["full"] }
 tokio-stream = { version = "0.1.11", features = ["net"] }

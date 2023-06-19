@@ -15,15 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use core::start_server;
-use std::process;
 
-/// the `#[tokio::main]` macro initializes a runtime instance and executes the main in it.
-/// See: https://tokio.rs/tokio/tutorial/hello-tokio#async-main-function
-#[tokio::main]
-async fn main() {
-    if let Err(e) = start_server().await {
-        eprintln!("error: {:#}", e);
-        process::exit(1);
-    }
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Person {
+    id: ObjectId<DbUser>,
+    #[serde(rename = "type")]
+    kind: PersonType,
+    preferred_username: String,
+    name: String,
+    inbox: Url,
+    outbox: Url,
+    public_key: PublicKey,
 }

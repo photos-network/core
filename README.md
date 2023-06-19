@@ -6,7 +6,7 @@
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/photos-network/core/check%20code%20quality)
 
 
-[Photos.network](https://photos.network) is an open source project for self hosted photo management.
+[Photos.network](https://photos.network) is a privacy first photo storage and sharing service for fediverse.
 Its core features are:
 
 - Share photos with friends, family or public

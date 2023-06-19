@@ -6,7 +6,7 @@ use abi_stable::{
 };
 
 use anyhow::Result;
-use axum::routing::get;
+
 use core_extensions::SelfOps;
 use photos_network_plugin::{PluginFactory_Ref, PluginId};
 use tracing::{debug, info, error};
@@ -27,14 +27,14 @@ impl<'a> PluginManager<'a> {
         info!("Found {} plugin(s) in the configuration.", self.config.plugins.len());
 
         for configured_plugin in &self.config.plugins {
-            info!("Addon '{}' found in the configuration", configured_plugin.domain);
+            info!("Addon '{}' found in the configuration", configured_plugin.plugin_domain());
 
-            let base_name = configured_plugin.domain.clone();
+            let base_name = configured_plugin.plugin_domain().clone();
             let plugin_dir: PathBuf = self.path.clone().into_::<PathBuf>();
             let plugin_path: PathBuf = RawLibrary::path_in_directory(&plugin_dir, &base_name, LibrarySuffix::NoSuffix);
 
             if plugin_path.exists() {
-                debug!("Addon '{}' also found in the `plugins` directory", configured_plugin.domain);
+                debug!("Addon '{}' also found in the `plugins` directory", configured_plugin.plugin_domain());
 
                 debug!("Try to load plugin...");
                 let header = lib_header_from_path(&plugin_path)?;

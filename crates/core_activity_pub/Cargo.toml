@@ -1,0 +1,20 @@
+[package]
+name = "core_activity_pub"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+readme.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[lib]
+name = "core_activity_pub"
+path = "src/lib.rs"
+doctest = false
+
+[dependencies]
+core_common = { workspace = true }
+activitypub_federation = { workspace = true }

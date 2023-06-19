@@ -1,6 +1,7 @@
 ## [0.6.0] - 2023-03-26
 ### Changed
-- Ruse rewrite
+- Rust rewrite
+- License changed to AGPL
 
 
 ## [0.5.1] - 2022-07-07

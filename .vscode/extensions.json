@@ -6,5 +6,7 @@
       "rangav.vscode-thunder-client",
       "usernamehw.errorlens",
       "dracula-theme.theme-dracula",
+      "vadimcn.vscode-lldb",
+      "ms-vscode.cpptools",
     ],
 }

@@ -7,30 +7,33 @@
 
 
 [Photos.network](https://photos.network) is a privacy first photo storage and sharing service for fediverse.
+
 Its core features are:
 
-- Share photos with friends, family or public
+- Upload photos and videos without resolution or quality constraints
 - Filter / Search photos by attributes like location or date
-- Group photos by objects like people of objects
+- Group photos by their content like people or objects
+- Share photos with friends, family or public
+
 
 ## Core
 
-This repository contains the core system of the project.
+This repository contains the **core** system of the project.
 It is responsible for main tasks e.g.:
 
 - **Authentication** (validate the identity of users)
 - **Authorization** (handle access privileges of resources like photos or albums)
-- **Add-on Handling** (managing add-ons)
+- **Plugin Handling** (extend the feature set by plugins)
 - **Persistency** (read / write data)
 - **Task Processing** (keep track of running tasks)
+
+
 
 ## Development
 
 The core is written in [Rust](https://rust-lang.org/) and highly customizably by using a Plugin-system.
 
-Plugins are realized by **dynamic loading** by using [abi_stable_crates](https://github.com/rodrimati1992/abi_stable_crates)
 
----
 
 ### Visual Studio Code
 
@@ -44,5 +47,3 @@ The fastest start into development can be archived by using [Visual Studio Code]
 6. Launch **Photos.network** from the `RUN` window.
 
 ![VS Code with devcontainers](vscode.gif)
-
----

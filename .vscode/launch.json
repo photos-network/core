@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Photos.network (OSX)",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceRoot}/target/debug/core",
+      "args": [],
+      "cwd": "${workspaceRoot}"
+    },
+    {
+      "name": "Photos.network (Windows)",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceRoot}/target/debug/core.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceRoot}",
+      "environment": [],
+      "externalConsole": true
+    }
+  ]
+}

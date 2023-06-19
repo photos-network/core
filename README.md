@@ -35,6 +35,19 @@ The core is written in [Rust](https://rust-lang.org/) and highly customizably by
 
 
 
+### Roadmap (MvP)
+
+ - Authenticate (either via openID or fediverse identity)
+ - Manage photos (upload, download, delete)
+ - Metadata (size, resolution)
+ - *EXIF (orientation, image taken timestamp, last modified, camera)
+ - *RAW (image support for RAW-images)
+ - *Resize (create low-resolutions / thumbnails)
+ - *Deep learning (image recognition, Reinforcement learning)
+ - *Plugin System (extract features into plugins)
+
+
+
 ### Visual Studio Code
 
 The fastest start into development can be archived by using [Visual Studio Code](https://code.visualstudio.com/) and [Docker](https://www.docker.com/get-started).

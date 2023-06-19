@@ -13,4 +13,5 @@
     "./crates/core_photos/Cargo.toml"
   ],
   "rust-analyzer.showUnlinkedFileNotification": false,
+  "debug.allowBreakpointsEverywhere": true
 }

@@ -1,16 +1,13 @@
+use std::path::PathBuf;
 
-use std::path::{PathBuf};
-
-use abi_stable::{
-    library::{lib_header_from_path, LibrarySuffix, RawLibrary},
-};
+use abi_stable::library::{lib_header_from_path, LibrarySuffix, RawLibrary};
 
 use anyhow::Result;
 
+use crate::{config::Configuration, ApplicationState};
 use core_extensions::SelfOps;
 use photos_network_plugin::{PluginFactory_Ref, PluginId};
-use tracing::{debug, info, error};
-use crate::{config::{Configuration}, ApplicationState};
+use tracing::{debug, error, info};
 
 pub struct PluginManager<'a> {
     config: Configuration,
@@ -19,22 +16,40 @@ pub struct PluginManager<'a> {
 }
 
 impl<'a> PluginManager<'a> {
-    pub fn new(config: Configuration, path: String, state: &'a mut ApplicationState) -> Result<Self> {
-        Ok(Self { config, path, state })
+    pub fn new(
+        config: Configuration,
+        path: String,
+        state: &'a mut ApplicationState,
+    ) -> Result<Self> {
+        Ok(Self {
+            config,
+            path,
+            state,
+        })
     }
 
-    pub async fn init<'b>(&mut self) -> Result<()> {        
-        info!("Found {} plugin(s) in the configuration.", self.config.plugins.len());
+    pub async fn init<'b>(&mut self) -> Result<()> {
+        info!(
+            "Found {} plugin(s) in the configuration.",
+            self.config.plugins.len()
+        );
 
         for configured_plugin in &self.config.plugins {
-            info!("Addon '{}' found in the configuration", configured_plugin.plugin_domain());
+            info!(
+                "Addon '{}' found in the configuration",
+                configured_plugin.plugin_domain()
+            );
 
             let base_name = configured_plugin.plugin_domain().clone();
             let plugin_dir: PathBuf = self.path.clone().into_::<PathBuf>();
-            let plugin_path: PathBuf = RawLibrary::path_in_directory(&plugin_dir, &base_name, LibrarySuffix::NoSuffix);
+            let plugin_path: PathBuf =
+                RawLibrary::path_in_directory(&plugin_dir, &base_name, LibrarySuffix::NoSuffix);
 
             if plugin_path.exists() {
-                debug!("Addon '{}' also found in the `plugins` directory", configured_plugin.plugin_domain());
+                debug!(
+                    "Addon '{}' also found in the `plugins` directory",
+                    configured_plugin.plugin_domain()
+                );
 
                 debug!("Try to load plugin...");
                 let header = lib_header_from_path(&plugin_path)?;
@@ -47,10 +62,12 @@ impl<'a> PluginManager<'a> {
                         continue;
                     }
                 };
-        
-        let mut loaded_libraries = Vec::<PluginId>::new();
+
+                let mut loaded_libraries = Vec::<PluginId>::new();
                 loaded_libraries.push(PluginId::from(base_name.clone()));
-                self.state.plugins.insert(PluginId::from(base_name), root_module);
+                self.state
+                    .plugins
+                    .insert(PluginId::from(base_name), root_module);
             }
         }
 

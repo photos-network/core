@@ -1,40 +1,37 @@
 /* Photos.network · A privacy first photo storage and sharing service for fediverse.
  * Copyright (C) 2020 Photos network developers
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 //! This is the main entry point of the Photos.network core application.
 //!
-use std::fs;
 use std::collections::HashMap;
+use std::fs;
 use std::net::SocketAddr;
 
 use abi_stable::external_types::crossbeam_channel;
-use abi_stable::std_types::RResult::{ROk, RErr};
+use abi_stable::std_types::RResult::{RErr, ROk};
 use anyhow::Result;
-use axum::{Json, Router};
 use axum::routing::{get, head};
+use axum::{Json, Router};
 use photos_network_plugin::{PluginFactory_Ref, PluginId};
 use serde::{Deserialize, Serialize};
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
-use tracing::{info, error};
-use tracing_subscriber::{
-    fmt,
-    layer::SubscriberExt,
-};
+use tracing::{error, info};
+use tracing_subscriber::{fmt, layer::SubscriberExt};
 
 use config::Configuration;
 use plugin::plugin_manager::PluginManager;
@@ -45,11 +42,9 @@ pub mod api {
     pub mod authentication;
 }
 
-
 const CONFIG_PATH: &str = "./config/configuration.json";
 const PLUGIN_PATH: &str = "./plugins";
 const LOGGING_PATH: &str = "./logs";
-
 
 /// extract the server start into lib.rs for better testability
 pub async fn start_server() -> Result<()> {
@@ -63,8 +58,13 @@ pub async fn start_server() -> Result<()> {
             .with_target(false)
             .finish()
             // add additional writers
-            .with(fmt::Layer::default().with_ansi(false).with_writer(file_writer))
-    ).expect("Unable to set global tracing subscriber");
+            .with(
+                fmt::Layer::default()
+                    .with_ansi(false)
+                    .with_writer(file_writer),
+            ),
+    )
+    .expect("Unable to set global tracing subscriber");
 
     info!("Photos.network core is starting...");
 
@@ -78,8 +78,6 @@ pub async fn start_server() -> Result<()> {
     // init application state
     let mut app_state = ApplicationState::new(config.clone());
 
-
-
     let mut router = Router::new()
         // favicon
         .nest_service("/assets", ServeDir::new("src/api/static"))
@@ -89,30 +87,25 @@ pub async fn start_server() -> Result<()> {
         // oauth 2
         .nest("/oauth", api::authentication::AutenticationManager::routes())
         .layer(TraceLayer::new_for_http())
-        
+
         // TODO: share app state with routes
         // .with_state(Arc::new(app_state))
         ;
     app_state.router = Some(router);
 
-
-
-    let mut plugin_manager = PluginManager::new(
-        config.clone(), 
-        PLUGIN_PATH.to_string(),
-        &mut app_state
-    )?;
+    let mut plugin_manager =
+        PluginManager::new(config.clone(), PLUGIN_PATH.to_string(), &mut app_state)?;
 
     match plugin_manager.init().await {
         Ok(_) => info!("PluginManager: initialization succed."),
-        Err(e) => error!("PluginManager: initialization failed! {}", e)
+        Err(e) => error!("PluginManager: initialization failed! {}", e),
     }
     plugin_manager.trigger_on_init().await;
 
     // trigger `on_core_init` on all loaded plugins
     for (plugin_id, factory) in app_state.plugins {
         info!("plugin {} found in AppState.", plugin_id);
-        
+
         let plugin_constructor = factory.new();
 
         let (sender, _receiver) = crossbeam_channel::unbounded();
@@ -121,7 +114,10 @@ pub async fn start_server() -> Result<()> {
             ROk(x) => x,
             RErr(_) => {
                 // TODO: handle error
-                error!("Not able to trigger plugin constructor for '{}'!", plugin_id);
+                error!(
+                    "Not able to trigger plugin constructor for '{}'!",
+                    plugin_id
+                );
                 //plugin_new_errs.push((plugin_id.clone(), e));
                 continue;
             }
@@ -129,10 +125,12 @@ pub async fn start_server() -> Result<()> {
 
         plugin.on_core_init();
     }
-        
+
     // TODO: add routes lazy (e.g. from plugin)
-    router = app_state.router.unwrap().route("/test", get( || async { "Test from within plugin" } ));
-        
+    router = app_state
+        .router
+        .unwrap()
+        .route("/test", get(|| async { "Test from within plugin" }));
 
     // start server with all routes
     let addr: SocketAddr = SocketAddr::from(([0, 0, 0, 0], 7777));
@@ -144,7 +142,6 @@ pub async fn start_server() -> Result<()> {
 
     Ok(())
 }
-
 
 pub struct ApplicationState {
     pub config: Configuration,
@@ -162,12 +159,13 @@ impl ApplicationState {
     }
 }
 
-
 async fn status() -> Json<Status> {
     // TODO: get app state
 
     // TODO: print loaded plugins from appState
-    let status = Status { message: String::from("API running") };
+    let status = Status {
+        message: String::from("API running"),
+    };
     Json(status)
 }
 

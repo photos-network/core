@@ -1,5 +1,5 @@
 use axum::{
-    routing::{ get, post },
+    routing::{get, post},
     Router,
 };
 
@@ -15,9 +15,7 @@ use requests::authorization_requests::authorization_endpoint_get;
  * Autentication Manager is handling access requests via OAuth
  * by validating the identity of users.
  */
-pub(crate) struct AutenticationManager {
-
-}
+pub(crate) struct AutenticationManager {}
 
 impl AutenticationManager {
     pub fn routes<S>() -> Router<S>
@@ -26,10 +24,9 @@ impl AutenticationManager {
     {
         Router::new()
             .route("/authorize", get(authorization_endpoint_get))
-            
-            .route("/token", post( || async { "Access token request" } ))
-            .route("/refresh", post( || async { "Access token request" } ))
-            .route("/", post( || async { "Access token request" } ))
+            .route("/token", post(|| async { "Access token request" }))
+            .route("/refresh", post(|| async { "Access token request" }))
+            .route("/", post(|| async { "Access token request" }))
     }
 }
 

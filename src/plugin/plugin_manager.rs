@@ -36,22 +36,22 @@ impl<'a> PluginManager<'a> {
 
         for configured_plugin in &self.config.plugins {
             info!(
-                "Addon '{}' found in the configuration",
-                configured_plugin.plugin_domain()
+                "Plugin '{}' found in the configuration file.",
+                configured_plugin.name
             );
 
-            let base_name = configured_plugin.plugin_domain().clone();
+            let mut base_name = String::from("plugin_").to_owned();
+            let plugin_name = configured_plugin.name.to_lowercase().to_owned();
+            base_name.push_str(&plugin_name);
             let plugin_dir: PathBuf = self.path.clone().into_::<PathBuf>();
+        
             let plugin_path: PathBuf =
                 RawLibrary::path_in_directory(&plugin_dir, &base_name, LibrarySuffix::NoSuffix);
 
             if plugin_path.exists() {
-                debug!(
-                    "Addon '{}' also found in the `plugins` directory",
-                    configured_plugin.plugin_domain()
-                );
+                debug!("Plugin '{}' also found in the `plugins` directory", plugin_name);
 
-                debug!("Try to load plugin...");
+                debug!("Try to load plugin '{}'...", plugin_name);
                 let header = lib_header_from_path(&plugin_path)?;
                 let res = header.init_root_module::<PluginFactory_Ref>();
 
@@ -64,10 +64,12 @@ impl<'a> PluginManager<'a> {
                 };
 
                 let mut loaded_libraries = Vec::<PluginId>::new();
-                loaded_libraries.push(PluginId::from(base_name.clone()));
+                loaded_libraries.push(PluginId::from(plugin_name.clone()));
+
+                // TODO: insert loaded plugin instead?
                 self.state
                     .plugins
-                    .insert(PluginId::from(base_name), root_module);
+                    .insert(PluginId::from(plugin_name), root_module);
             }
         }
 

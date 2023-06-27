@@ -50,7 +50,7 @@ Atomic commits will make it easier to track down regressions. Also, it enables t
 
 ## 🐛 How to report a bug
 
-> If you find a security vulnerability, do NOT open an issue. Email [benjamin@stuermer.pro] instead.
+> If you find a security vulnerability, do NOT open an issue. Email [security@photos.network](mailto:security@photos.network) instead. See [SECURITY.md](./SECURITY.md) for details.
 
 1. Open the [issues tab](https://github.com/photos-network/core/issues) on github
 2. Click on [New issue](https://github.com/photos-network/core/issues/new/choose)

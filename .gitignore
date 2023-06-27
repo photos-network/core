@@ -13,10 +13,10 @@ target/
 .idea/
 
 # data directory
-data/
+/data
 
 # config directory
-config/
+/config
 
 # logs directory
-logs/
+/logs

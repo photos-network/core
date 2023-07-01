@@ -33,7 +33,7 @@ use tower_http::trace::TraceLayer;
 use tracing::{error, info, debug};
 use tracing_subscriber::{fmt, layer::SubscriberExt};
 
-use config::Configuration;
+use config::configuration::Configuration;
 use plugin::plugin_manager::PluginManager;
 
 pub mod config;
@@ -46,7 +46,7 @@ const CONFIG_PATH: &str = "./config/configuration.json";
 const PLUGIN_PATH: &str = "./plugins";
 const LOGGING_PATH: &str = "./logs";
 
-/// extract the server start into lib.rs for better testability
+/// server start extracted from main for testability
 pub async fn start_server() -> Result<()> {
     // enable logging
     let file_appender = tracing_appender::rolling::daily(LOGGING_PATH, "core");
@@ -68,13 +68,17 @@ pub async fn start_server() -> Result<()> {
 
     info!("Photos.network core is starting...");
 
+
     // create mandatory application directories if necessary
     fs::create_dir_all("data")?;
     fs::create_dir_all("config")?;
     fs::create_dir_all("plugins")?;
 
+
     // read config file
     let config = Configuration::new(CONFIG_PATH).expect("Could not parse configuration!");
+    debug!("Configuration: {}", config);
+
 
     // init application state
     let mut app_state = ApplicationState::new(config.clone());
@@ -94,6 +98,7 @@ pub async fn start_server() -> Result<()> {
         ;
     app_state.router = Some(router);
 
+
     // initialize plugin manager
     let mut plugin_manager = PluginManager::new(config.clone(), PLUGIN_PATH.to_string(), &mut app_state)?;
 
@@ -102,6 +107,7 @@ pub async fn start_server() -> Result<()> {
         Err(e) => error!("PluginManager: initialization failed! {}", e),
     }
     plugin_manager.trigger_on_init().await;
+
 
     // trigger `on_core_init` on all loaded plugins
     for (plugin_id, factory) in app_state.plugins {
@@ -127,11 +133,13 @@ pub async fn start_server() -> Result<()> {
         plugin.on_core_init();
     }
 
+
     // TODO: add routes lazy (e.g. from plugin)
     router = app_state
         .router
         .unwrap()
         .route("/test", get(|| async { "Test from within plugin" }));
+
 
     // start server with all routes
     let addr: SocketAddr = SocketAddr::from(([0, 0, 0, 0], 7777));

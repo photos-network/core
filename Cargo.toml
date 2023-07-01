@@ -32,6 +32,7 @@ members = [
 # define dependencies to be inherited by members of the workspace
 [workspace.dependencies]
 core_common = { path = "./crates/core_common" }
+# core_oauth = { path = "./crates/core_oauth" }
 core_photos = { path = "./crates/core_photos" }
 core_activity_pub = { path = "./crates/core_activity_pub" }
 activitypub_federation = "~0.4.0"
@@ -54,6 +55,7 @@ path = "../plugin_interface"
 # core_api = { workspace = true }
 core_common = { workspace = true }
 core_photos = { workspace = true }
+# core_oauth = { workspace = true }
 core_activity_pub = { workspace = true }
 # core_api_crud = { workspace = true }
 

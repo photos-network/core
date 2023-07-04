@@ -26,7 +26,7 @@ use abi_stable::std_types::RResult::{RErr, ROk};
 use anyhow::Result;
 use axum::routing::{get, head};
 use axum::{Json, Router};
-use photos_network_plugin::{PluginFactory_Ref, PluginId};
+use photos_network_plugin::{PluginFactoryRef, PluginId};
 use serde::{Deserialize, Serialize};
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
@@ -148,7 +148,7 @@ pub async fn start_server() -> Result<()> {
 
 pub struct ApplicationState {
     pub config: Configuration,
-    pub plugins: HashMap<PluginId, PluginFactory_Ref>,
+    pub plugins: HashMap<PluginId, PluginFactoryRef>,
     pub router: Option<Router>,
 }
 

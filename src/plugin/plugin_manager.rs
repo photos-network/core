@@ -23,7 +23,7 @@ use anyhow::Result;
 
 use crate::{config::configuration::Configuration, ApplicationState};
 use core_extensions::SelfOps;
-use photos_network_plugin::{PluginFactory_Ref, PluginId};
+use photos_network_plugin::{PluginFactoryRef, PluginId};
 use tracing::{debug, error, info};
 
 pub struct PluginManager<'a> {
@@ -73,7 +73,7 @@ impl<'a> PluginManager<'a> {
 
                 debug!("Try to load plugin '{}'...", plugin_name);
                 let header = lib_header_from_path(&plugin_path)?;
-                let res = header.init_root_module::<PluginFactory_Ref>();
+                let res = header.init_root_module::<PluginFactoryRef>();
 
                 let root_module = match res {
                     Ok(x) => x,
@@ -83,8 +83,7 @@ impl<'a> PluginManager<'a> {
                     }
                 };
 
-                let mut loaded_libraries = Vec::<PluginId>::new();
-                loaded_libraries.push(PluginId::from(plugin_name.clone()));
+                let mut _loaded_libraries = vec![PluginId::from(plugin_name.clone())];
 
                 // TODO: insert loaded plugin instead?
                 self.state
@@ -96,7 +95,7 @@ impl<'a> PluginManager<'a> {
         Ok(())
     }
 
-    pub async fn trigger_on_init(&mut self) -> () {
+    pub async fn trigger_on_init(&mut self) {
         // self.state.router.as_mut().unwrap().route("/foo", get( || async { "It's working!" } ));
         // ERROR: move occurs because value has type `Router`, which does not implement the `Copy` trait
     }

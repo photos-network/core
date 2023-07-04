@@ -38,7 +38,7 @@ pub trait Plugin {
 ///
 #[repr(C)]
 #[derive(StableAbi)]
-#[sabi(kind(Prefix(prefix_ref = PluginFactory_Ref)))]
+#[sabi(kind(Prefix(prefix_ref = PluginFactoryRef)))]
 #[sabi(missing_field(panic))]
 pub struct PluginFactory {
     /// Constructs the plugin.
@@ -46,8 +46,8 @@ pub struct PluginFactory {
     pub new: extern "C" fn(RSender<PluginCommand>, PluginId) -> RResult<PluginType, Error>,
 }
 
-impl RootModule for PluginFactory_Ref {
-    declare_root_module_statics! {PluginFactory_Ref}
+impl RootModule for PluginFactoryRef {
+    declare_root_module_statics! {PluginFactoryRef}
     const BASE_NAME: &'static str = "plugin";
     const NAME: &'static str = "plugin";
     const VERSION_STRINGS: VersionStrings = package_version_strings!();

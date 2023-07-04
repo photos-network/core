@@ -1,26 +1,20 @@
-use abi_stable::std_types::string;
-
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use tracing::debug;
 
 use axum::{
-    extract::{FromRef, Query, State},
     http::{
-        header::{self, HeaderMap, HeaderName},
-        StatusCode, Uri,
+        header::{self},
+        StatusCode,
     },
     response::IntoResponse,
-    routing::{get, post},
-    Json, Router,
+    Json,
 };
-use oxide_auth_axum::{OAuthRequest, OAuthResponse, WebError};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct Error {
     message: String,
 }
 
-///!
 /// Authorization Request
 /// See 4.1.1: https://tools.ietf.org/html/rfc6749#section-4.1.1
 ///

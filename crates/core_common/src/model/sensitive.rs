@@ -41,7 +41,7 @@ impl<T> Sensitive<T> {
     }
 }
 
-///! overrides the standard debug programmer-facing representation to prevent the value from leaking.
+// overrides the standard debug programmer-facing representation to prevent the value from leaking.
 impl<T> std::fmt::Debug for Sensitive<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("[********]").finish()

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- #[allow(dead_code)]
+#[allow(dead_code)]
 enum DataAccessError {
     NotFound,
     #[allow(dead_code)]

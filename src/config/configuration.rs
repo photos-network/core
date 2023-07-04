@@ -16,13 +16,12 @@
  */
 
 //! This defines the app configuration
-use std::{fs, fmt};
+use std::{fmt, fs};
 
 use serde::Deserialize;
 use tracing::info;
 
 use super::{client::OAuthClientConfig, plugin::Plugin};
-
 
 #[derive(Debug, PartialEq, Deserialize, Clone)]
 pub struct Configuration {
@@ -36,8 +35,9 @@ impl Configuration {
     pub fn new(path: &str) -> Option<Self> {
         info!("Load configuration file {}", path);
         let data = fs::read_to_string(path).expect("Unable to read configuration file!");
-        let config: Configuration = serde_json::from_str(&data).expect("Configuration file could not be parsed as JSON!");
-        
+        let config: Configuration =
+            serde_json::from_str(&data).expect("Configuration file could not be parsed as JSON!");
+
         Some(config)
     }
 }
@@ -50,26 +50,29 @@ impl fmt::Display for Configuration {
         write!(f, "{{")?;
         write!(f, "\n\tinternal: {}", self.internal_url)?;
         write!(f, "\n\texternal: {}", self.external_url)?;
-        
+
         // clients
         write!(f, "\n\tclients: [ ")?;
         for (count, v) in clients.iter().enumerate() {
-            if count != 0 { write!(f, ", ")?; }
+            if count != 0 {
+                write!(f, ", ")?;
+            }
             write!(f, "\n\t\t{}", v)?;
         }
         write!(f, "\n\t] ")?;
-        
+
         // plugins
         write!(f, "\n\tplugins: [ ")?;
         for (count, v) in plugins.iter().enumerate() {
-            if count != 0 { write!(f, ", ")?; }
+            if count != 0 {
+                write!(f, ", ")?;
+            }
             write!(f, "\n\t\t{}", v)?;
         }
         write!(f, "\n\t]")?;
         write!(f, "\n}}")
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -106,26 +109,28 @@ mod tests {
         let mut config = Map::new();
         config.insert("property1".to_string(), serde_json::Value::Null);
         config.insert("property2".to_string(), serde_json::Value::Bool(true));
-        config.insert("property3".to_string(), serde_json::Value::String("aBc".into()));
-        config.insert("property4".to_string(), serde_json::Value::Number(42.into()));
-        
+        config.insert(
+            "property3".to_string(),
+            serde_json::Value::String("aBc".into()),
+        );
+        config.insert(
+            "property4".to_string(),
+            serde_json::Value::Number(42.into()),
+        );
+
         let data = Configuration {
             internal_url: "192.168.0.1".into(),
             external_url: "demo.photos.network".into(),
-            clients: vec![
-                OAuthClientConfig {
-                    name: "Client".into(),
-                    client_id: "clientId".into(),
-                    client_secret: "clientSecret".into(),
-                    redirect_uris: vec![]
-                }
-            ],
-            plugins: vec![
-                Plugin {
-                    name: "Plugin".into(),
-                    config: Some(config),
-                }
-            ]
+            clients: vec![OAuthClientConfig {
+                name: "Client".into(),
+                client_id: "clientId".into(),
+                client_secret: "clientSecret".into(),
+                redirect_uris: vec![],
+            }],
+            plugins: vec![Plugin {
+                name: "Plugin".into(),
+                config: Some(config),
+            }],
         };
 
         assert_eq!(data, serde_json::from_str(json).unwrap());

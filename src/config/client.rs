@@ -25,13 +25,12 @@ pub struct OAuthClientConfig {
     pub name: String,
     pub client_id: String,
     pub client_secret: String,
-    pub redirect_uris: Vec<String>
+    pub redirect_uris: Vec<String>,
 }
 
 impl fmt::Display for OAuthClientConfig {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, 
-            "{}, redirect: {:?}", self.name, self.redirect_uris)
+        write!(f, "{}, redirect: {:?}", self.name, self.redirect_uris)
     }
 }
 
@@ -60,8 +59,8 @@ mod tests {
             redirect_uris: vec![
                 "https://demo.photos.network/callback".into(),
                 "http://127.0.0.1:7777/callback".into(),
-                "photosapp://authenticate".into()
-            ]
+                "photosapp://authenticate".into(),
+            ],
         };
 
         assert_eq!(data, serde_json::from_str(json).unwrap());
@@ -81,7 +80,7 @@ mod tests {
             name: "Client".into(),
             client_id: "clientId".into(),
             client_secret: "clientSecret".into(),
-            redirect_uris: vec![]
+            redirect_uris: vec![],
         };
 
         assert_eq!(data, serde_json::from_str(json).unwrap());

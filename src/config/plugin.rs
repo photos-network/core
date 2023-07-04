@@ -18,13 +18,13 @@
 //! This describes a plugin with a key-value pair configuration
 use std::fmt;
 
-use serde::{Deserialize};
+use serde::Deserialize;
 use serde_json::Map;
 
 #[derive(Debug, PartialEq, Deserialize, Clone)]
 pub struct Plugin {
     pub name: String,
-    pub config: Option<Map<String, serde_json::Value>>
+    pub config: Option<Map<String, serde_json::Value>>,
 }
 
 impl fmt::Display for Plugin {
@@ -53,8 +53,14 @@ mod tests {
         let mut config = Map::new();
         config.insert("property1".to_string(), serde_json::Value::Null);
         config.insert("property2".to_string(), serde_json::Value::Bool(true));
-        config.insert("property3".to_string(), serde_json::Value::String("aBc".into()));
-        config.insert("property4".to_string(), serde_json::Value::Number(42.into()));
+        config.insert(
+            "property3".to_string(),
+            serde_json::Value::String("aBc".into()),
+        );
+        config.insert(
+            "property4".to_string(),
+            serde_json::Value::Number(42.into()),
+        );
 
         let data = Plugin {
             name: "Plugin".into(),

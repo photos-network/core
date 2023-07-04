@@ -30,7 +30,7 @@ use photos_network_plugin::{PluginFactory_Ref, PluginId};
 use serde::{Deserialize, Serialize};
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
-use tracing::{error, info, debug};
+use tracing::{debug, error, info};
 use tracing_subscriber::{fmt, layer::SubscriberExt};
 
 use config::configuration::Configuration;
@@ -68,17 +68,14 @@ pub async fn start_server() -> Result<()> {
 
     info!("Photos.network core is starting...");
 
-
     // create mandatory application directories if necessary
     fs::create_dir_all("data")?;
     fs::create_dir_all("config")?;
     fs::create_dir_all("plugins")?;
 
-
     // read config file
     let config = Configuration::new(CONFIG_PATH).expect("Could not parse configuration!");
     debug!("Configuration: {}", config);
-
 
     // init application state
     let mut app_state = ApplicationState::new(config.clone());
@@ -98,16 +95,15 @@ pub async fn start_server() -> Result<()> {
         ;
     app_state.router = Some(router);
 
-
     // initialize plugin manager
-    let mut plugin_manager = PluginManager::new(config.clone(), PLUGIN_PATH.to_string(), &mut app_state)?;
+    let mut plugin_manager =
+        PluginManager::new(config.clone(), PLUGIN_PATH.to_string(), &mut app_state)?;
 
     match plugin_manager.init().await {
         Ok(_) => info!("PluginManager: initialization succed."),
         Err(e) => error!("PluginManager: initialization failed! {}", e),
     }
     plugin_manager.trigger_on_init().await;
-
 
     // trigger `on_core_init` on all loaded plugins
     for (plugin_id, factory) in app_state.plugins {
@@ -133,13 +129,11 @@ pub async fn start_server() -> Result<()> {
         plugin.on_core_init();
     }
 
-
     // TODO: add routes lazy (e.g. from plugin)
     router = app_state
         .router
         .unwrap()
         .route("/test", get(|| async { "Test from within plugin" }));
-
 
     // start server with all routes
     let addr: SocketAddr = SocketAddr::from(([0, 0, 0, 0], 7777));

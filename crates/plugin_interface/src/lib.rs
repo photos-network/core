@@ -11,7 +11,7 @@ use abi_stable::{
     external_types::crossbeam_channel::RSender,
     library::RootModule,
     package_version_strings, sabi_trait,
-    sabi_types::{VersionStrings},
+    sabi_types::VersionStrings,
     std_types::{RBox, RResult, RString},
     StableAbi,
 };
@@ -52,8 +52,6 @@ impl RootModule for PluginFactory_Ref {
     const NAME: &'static str = "plugin";
     const VERSION_STRINGS: VersionStrings = package_version_strings!();
 }
-
-
 
 #[repr(u8)]
 #[derive(Debug, StableAbi)]

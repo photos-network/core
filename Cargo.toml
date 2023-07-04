@@ -27,6 +27,7 @@ members = [
     "crates/core_common",
     "crates/core_photos",
     "crates/core_activity_pub",
+    "crates/plugin_interface"
 ]
 
 # define dependencies to be inherited by members of the workspace
@@ -48,7 +49,7 @@ serde = "~1.0.157"
 
 [dependencies.photos_network_plugin]
 version = "0.2.0"
-path = "../plugin_interface"
+path = "./crates/plugin_interface"
 
 
 [dependencies]

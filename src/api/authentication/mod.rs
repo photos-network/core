@@ -3,7 +3,6 @@ use axum::{
     Router,
 };
 
-use oxide_auth_axum::OAuthRequest;
 
 mod requests {
     pub mod authorization_requests;
@@ -30,4 +29,3 @@ impl AutenticationManager {
     }
 }
 
-pub struct Authorize(pub OAuthRequest);

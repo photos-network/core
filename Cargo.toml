@@ -25,6 +25,7 @@ include = ["src/**/*", "LICENSE.md", "README.md", "CHANGELOG.md"]
 [workspace]
 members = [
     "crates/core_common",
+    "crates/core_oauth",
     "crates/core_photos",
     "crates/core_activity_pub",
     "crates/plugin_interface"
@@ -33,11 +34,19 @@ members = [
 # define dependencies to be inherited by members of the workspace
 [workspace.dependencies]
 core_common = { path = "./crates/core_common" }
-# core_oauth = { path = "./crates/core_oauth" }
+core_oauth = { path = "./crates/core_oauth" }
 core_photos = { path = "./crates/core_photos" }
 core_activity_pub = { path = "./crates/core_activity_pub" }
 activitypub_federation = "~0.4.0"
 serde = "~1.0.157"
+axum = { version = "0.6.2", features = ["ws", "headers"] }
+chrono = { version = "0.4.26", features = ["serde"] }
+uuid = { version = "1.3.4", features = ["serde", "v4"] }
+tower-http = { version = "0.4.1", features = ["tracing", "trace"] }
+
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3", features = ["registry", "fmt", "std", "json"] }
+tracing-appender = "0.2.2"
 
 # core_api = { version = "=0.1.0", path = "./crates/core_api" }
 # core_api_crud = { version = "=0.1.0", path = "./crates/api_crud" }
@@ -56,7 +65,7 @@ path = "./crates/plugin_interface"
 # core_api = { workspace = true }
 core_common = { workspace = true }
 core_photos = { workspace = true }
-# core_oauth = { workspace = true }
+core_oauth = { workspace = true }
 core_activity_pub = { workspace = true }
 # core_api_crud = { workspace = true }
 
@@ -74,8 +83,13 @@ smallvec = "1.8.0"
 
 anyhow = "1.0.70"
 axum = { version = "0.6.2", features = ["ws"] }
-oxide-auth = "0.5"
-oxide-auth-axum = "0.3.0"
+
+tracing.workspace = true
+tracing-subscriber.workspace = true
+tracing-appender.workspace = true
+
+# oxide-auth = "0.5"
+# oxide-auth-axum = "0.3.0"
 
 futures = "0.3.25"
 futures-channel = "0.3.25"
@@ -89,9 +103,6 @@ tokio-util = { version = "0.7.4", features = ["rt"] }
 tower = { version = "0.4.13", features = ["util"] }
 tower-http = { version = "0.4.0", features = ["fs", "trace"] }
 
-tracing = "0.1.37"
-tracing-subscriber = { version = "0.3", features = ["registry", "fmt", "std", "json"] }
-tracing-appender = "0.2.2"
 
 [dev-dependencies]
 pretty_assertions = "1.3.0"

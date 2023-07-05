@@ -1,0 +1,33 @@
+[package]
+name = "core_oauth"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+readme.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[lib]
+name = "core_auth"
+path = "src/lib.rs"
+doctest = false
+
+[dependencies]
+core_common = { workspace = true }
+openidconnect = { version = "3.2.0", features = ["accept-rfc3339-timestamps", "accept-string-booleans"] }
+axum = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+chrono.workspace = true
+uuid.workspace = true
+rsa = "0.9.2"
+thiserror = "1.0.40"
+miette = "5.9.0"
+url = { version = "2.4.0", features = ["serde"] }
+dioxus = "0.3.2"
+dioxus-ssr = "0.3.0"
+tower-http.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true

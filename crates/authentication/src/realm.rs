@@ -56,7 +56,7 @@ impl Realm {
                 .as_ref()
                 .join(name)
                 .with_extension("pem"),
-        )?;
+        ).expect(&format!("key ({}) not found in directory ({})!", name, realm_keys_base_path.as_ref().display()));
         let mut realm_key_str = String::new();
         realm_key_file
             .read_to_string(&mut realm_key_str)
@@ -70,9 +70,9 @@ impl Realm {
             provider_metadata: CoreProviderMetadata::new(
                 // Parameters required by the OpenID Connect Discovery spec.
                 IssuerUrl::new(format!("{}://{}", scheme, domain))?,
-                AuthUrl::new(format!("{}://{}/authorize", scheme, domain))?,
+                AuthUrl::new(format!("{}://{}/oidc/authorize", scheme, domain))?,
                 // Use the JsonWebKeySet struct to serve the JWK Set at this URL.
-                JsonWebKeySetUrl::new(format!("{}://{}/jwk", scheme, domain))?,
+                JsonWebKeySetUrl::new(format!("{}://{}/oidc/jwk", scheme, domain))?,
                 // Supported response types (flows).
                 vec![
                     // Recommended: support the code flow.
@@ -94,12 +94,12 @@ impl Realm {
             )
             // Specify the token endpoint (required for the code flow).
             .set_token_endpoint(Some(TokenUrl::new(format!(
-                "{}://{}/token",
+                "{}://{}/oidc/token",
                 scheme, domain
             ))?))
             // Recommended: support the UserInfo endpoint.
             .set_userinfo_endpoint(Some(UserInfoUrl::new(format!(
-                "{}://{}/userinfo",
+                "{}://{}/oidc/userinfo",
                 scheme, domain
             ))?))
             // Recommended: specify the supported scopes.
@@ -107,6 +107,14 @@ impl Realm {
                 openidconnect::Scope::new("openid".to_string()),
                 openidconnect::Scope::new("email".to_string()),
                 openidconnect::Scope::new("profile".to_string()),
+                openidconnect::Scope::new("library.read".to_string()),
+                openidconnect::Scope::new("library.append".to_string()),
+                openidconnect::Scope::new("library.edit".to_string()),
+                openidconnect::Scope::new("library.write".to_string()),
+                openidconnect::Scope::new("library.share".to_string()),
+                openidconnect::Scope::new("admin.users:read".to_string()),
+                openidconnect::Scope::new("admin.users:invite".to_string()),
+                openidconnect::Scope::new("admin.users:write".to_string()),
             ]))
             // Recommended: specify the supported ID token claims.
             .set_claims_supported(Some(vec![

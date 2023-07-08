@@ -17,9 +17,34 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Client {
-    pub(crate) id: String,
-    pub(crate) secret: Option<String>,
-    pub(crate) redirect_uri: String,
+use std::path::{Path, PathBuf};
+
+use crate::client::Client;
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ServerConfig {
+    pub listen_addr: String,
+    pub domain: String,
+    pub use_ssl: bool,
+    pub realm_keys_base_path: PathBuf,
+    pub realms: Vec<ConfigRealm>,
+}
+
+impl Default for ServerConfig {
+    fn default() -> Self {
+        Self {
+            listen_addr: String::from("127.0.0.1:7777"),
+            domain: String::from("localhost:7777"),
+            use_ssl: false,
+            realm_keys_base_path: Path::new("keys").to_path_buf(),
+            realms: vec![],
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ConfigRealm {
+    pub name: String,
+    pub domain: Option<String>,
+    pub clients: Vec<Client>,
 }

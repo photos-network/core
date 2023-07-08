@@ -15,8 +15,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::sync::{Arc, RwLock};
-
 use crate::client::Client;
 use crate::config::ServerConfig;
 use crate::error::Error;
@@ -28,8 +26,6 @@ pub struct ServerState {
     pub realms: Vec<Realm>,
     pub master_realm: Realm,
 }
-
-type SharedState = Arc<RwLock<ServerState>>;
 
 impl ServerState {
     pub fn new(config: ServerConfig) -> Result<Self, Error> {
@@ -57,7 +53,7 @@ impl ServerState {
                 vec![Client {
                     id: String::from("master_client"),
                     secret: None,
-                    redirect_uri: String::from("/callback"),
+                    redirect_uri: String::from("photosapp://authenticate"),
                 }],
                 config.realm_keys_base_path.clone(),
             )?,

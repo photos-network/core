@@ -51,7 +51,7 @@ pub(crate) async fn authorization_handler(
             }
         }
     }
-
+    
     for client in state.read().unwrap().master_realm.clients.iter() {
         if &client.id == &query.client_id {
             state.write().unwrap().master_realm.requests.push(req);
@@ -59,6 +59,6 @@ pub(crate) async fn authorization_handler(
             return Ok(Redirect::to(&realm_login_url));
         }
     }
-
+    
     Err(StatusCode::UNAUTHORIZED)
 }

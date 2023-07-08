@@ -15,16 +15,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use dioxus::prelude::*;
-use miette::Diagnostic;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
-#[allow(dead_code)]
-pub(crate) struct AuthRequest {
-    pub(crate) id: uuid::Uuid,
-    pub(crate) code: Option<String>,
-    pub(crate) created_at: chrono::NaiveDateTime,
-    pub(crate) state: String,
-    pub(crate) code_challenge: String,
-    pub(crate) nonce: String,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Client {
+    pub id: String,
+    pub secret: Option<String>,
+    pub redirect_uri: String,
 }

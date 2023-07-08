@@ -17,7 +17,6 @@
 
 use axum::routing::get;
 use axum::Router;
-use error::Error;
 use handler::{
     authorize::authorization_handler,
     discovery::openid_discover_handler,
@@ -41,25 +40,25 @@ pub mod handler {
     pub mod login;
 }
 
-pub async fn listen(server: ServerState) -> Result<(), Error> {
-    let app = Router::new()
+pub struct OpenIdManager {}
+
+impl OpenIdManager {
+    pub fn routes<S>(server: ServerState) -> Router<S>
+    where
+        S: Send + Sync + 'static + Clone,
+    {
+        Router::new()
         .route(
             "/.well-known/openid-configuration",
             get(openid_discover_handler),
         )
         .route("/jwk", get(openid_jwks_handler))
-        .route("/oauth/authorize", get(authorization_handler))
+        .route("/oidc/authorize", get(authorization_handler))
         .route(
             "/:realm/login",
             get(get_realm_login_form).post(post_realm_login),
         )
         .layer(tower_http::trace::TraceLayer::new_for_http())
-        .with_state(Arc::new(RwLock::new(server.clone())));
-
-    axum::Server::try_bind(&server.addr.parse()?)
-        .map_err(|e| Error::HyperError(e.to_string()))?
-        .serve(app.into_make_service())
-        .await
-        .map_err(|e| Error::HyperError(e.to_string()))?;
-    Ok(())
+        .with_state(Arc::new(RwLock::new(server.clone())))
+    }
 }

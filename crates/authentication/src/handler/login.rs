@@ -33,18 +33,18 @@ fn login_form(cx: Scope) -> Element {
 
 pub(crate) async fn get_realm_login_form(
     axum::extract::Path(realm): axum::extract::Path<String>,
-    Query(query): Query<LoginQuery>,
+    // Query(query): Query<LoginQuery>,
 ) -> Html<String> {
     // create a VirtualDom with the app component
     let mut app = VirtualDom::new(login_form);
     // rebuild the VirtualDom before rendering
     let _ = app.rebuild();
 
-    tracing::debug!(
-        "Rendering form for request_id={} and realm={}",
-        query.request_id,
-        realm
-    );
+    // tracing::debug!(
+    //     "Rendering form for request_id={} and realm={}",
+    //     query.request_id,
+    //     realm
+    // );
 
     // render the VirtualDom to HTML
     Html(dioxus_ssr::render(&app))

@@ -16,7 +16,7 @@
  */
 
 //! Thest the OIDC authorization code flow with PKCE
-//! 
+//!
 //! 1st - [OpenID Connect Discovery](https://server.com/.well-known/openid-configuration)
 //! 2nd - [Authorization](https://server.com/oidc/authorize?)
 //! 3rd - [Token](https://server.com/oidc/token)
@@ -32,7 +32,7 @@ mod common;
 mod tests {
     use super::*;
 
-    // Test if OIDC discovery responds with 200 OK and contains mandatory fields 
+    // Test if OIDC discovery responds with 200 OK and contains mandatory fields
     // e.g. issuer, authorization_endpoint and token_endpoint
     #[tokio::test]
     async fn oidc_discovery_succesful() {

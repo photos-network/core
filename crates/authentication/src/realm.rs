@@ -56,7 +56,12 @@ impl Realm {
                 .as_ref()
                 .join(name)
                 .with_extension("pem"),
-        ).expect(&format!("key ({}) not found in directory ({})!", name, realm_keys_base_path.as_ref().display()));
+        )
+        .expect(&format!(
+            "key ({}) not found in directory ({})!",
+            name,
+            realm_keys_base_path.as_ref().display()
+        ));
         let mut realm_key_str = String::new();
         realm_key_file
             .read_to_string(&mut realm_key_str)

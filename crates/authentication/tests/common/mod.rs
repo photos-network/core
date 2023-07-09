@@ -16,41 +16,39 @@
  */
 
 //! Create a private key file to use for OIDC.
-//! 
-use testdir::testdir;
-use std::path::PathBuf;
-use std::fs::File;
-use std::fs;
-use std::io::Write;
-use rsa::RsaPrivateKey;
-use rand::rngs::OsRng;
-use rsa::pkcs8::LineEnding;
-use rsa::pkcs1::EncodeRsaPrivateKey;
+//!
+use authentication::{config::ServerConfig, state::ServerState, OpenIdManager};
 use axum::Router;
-use authentication::{OpenIdManager, config::ServerConfig, state::ServerState};
+use rand::rngs::OsRng;
+use rsa::pkcs1::EncodeRsaPrivateKey;
+use rsa::pkcs8::LineEnding;
+use rsa::RsaPrivateKey;
+use std::fs;
+use std::fs::File;
+use std::io::Write;
+use std::path::PathBuf;
+use testdir::testdir;
 
 pub fn create_fake_pem(filename: &'static str) -> PathBuf {
     let path: PathBuf = testdir!();
     let keys_base_path = path.join("keys");
     // create keys directory
     fs::create_dir(&keys_base_path).unwrap();
-    
+
     // create a fake private key
     let mut rng = OsRng;
     let bits = 2048;
     let key = RsaPrivateKey::new(&mut rng, bits).expect("failed to generate private key");
     let pem = key.to_pkcs1_pem(LineEnding::LF).unwrap();
-    
+
     // write private key into file
     let mut file: File = File::create(keys_base_path.join(filename)).expect("no file");
-    file.write_all(
-        pem.as_bytes()
-    ).expect("write failed");
+    file.write_all(pem.as_bytes()).expect("write failed");
 
     keys_base_path
 }
 
-pub fn create_router()-> Router {
+pub fn create_router() -> Router {
     let private_key: PathBuf = create_fake_pem("master.pem");
 
     // create server config with fake key

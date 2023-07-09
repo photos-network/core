@@ -57,6 +57,8 @@ pub(crate) async fn post_realm_login(Form(login_form): Form<LoginFormData>) -> H
         login_form.password
     );
 
+    // TODO: validate credentials
+
     Html(String::from("<div>Success</div>"))
 }
 

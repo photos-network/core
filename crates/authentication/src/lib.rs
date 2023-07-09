@@ -48,17 +48,17 @@ impl OpenIdManager {
         S: Send + Sync + 'static + Clone,
     {
         Router::new()
-        .route(
-            "/.well-known/openid-configuration",
-            get(openid_discover_handler),
-        )
-        .route("/jwk", get(openid_jwks_handler))
-        .route("/oidc/authorize", get(authorization_handler))
-        .route(
-            "/:realm/login",
-            get(get_realm_login_form).post(post_realm_login),
-        )
-        .layer(tower_http::trace::TraceLayer::new_for_http())
-        .with_state(Arc::new(RwLock::new(server.clone())))
+            .route(
+                "/.well-known/openid-configuration",
+                get(openid_discover_handler),
+            )
+            .route("/jwk", get(openid_jwks_handler))
+            .route("/oidc/authorize", get(authorization_handler))
+            .route(
+                "/:realm/login",
+                get(get_realm_login_form).post(post_realm_login),
+            )
+            .layer(tower_http::trace::TraceLayer::new_for_http())
+            .with_state(Arc::new(RwLock::new(server.clone())))
     }
 }

@@ -15,11 +15,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use miette::Diagnostic;
-
 use thiserror::Error;
 
-#[derive(Debug, Error, Diagnostic)]
+#[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]
     OpenIDUrlParseError(#[from] openidconnect::url::ParseError),

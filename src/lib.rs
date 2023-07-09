@@ -24,20 +24,20 @@ use std::net::SocketAddr;
 use abi_stable::external_types::crossbeam_channel;
 use abi_stable::std_types::RResult::{RErr, ROk};
 use anyhow::Result;
-use axum::routing::{get, head};
-use axum::{Json, Router};
-use authentication::OpenIdManager;
-use authentication::config::ServerConfig;
-use authentication::state::ServerState;
 use authentication::client::Client;
 use authentication::config::ConfigRealm;
+use authentication::config::ServerConfig;
+use authentication::state::ServerState;
+use authentication::OpenIdManager;
+use axum::routing::{get, head};
+use axum::{Json, Router};
 use photos_network_plugin::{PluginFactoryRef, PluginId};
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
 use tracing::{debug, error, info};
 use tracing_subscriber::{fmt, layer::SubscriberExt};
-use std::path::Path;
 
 use config::configuration::Configuration;
 use plugin::plugin_manager::PluginManager;
@@ -79,29 +79,25 @@ pub async fn start_server() -> Result<()> {
     // read config file
     let config = Configuration::new(CONFIG_PATH).expect("Could not parse configuration!");
     debug!("Configuration: {}", config);
-    
+
     // init application state
     let mut app_state = ApplicationState::new(config.clone());
-    
+
     debug!("ServerConfig...");
     let cfg = ServerConfig {
         listen_addr: String::from("127.0.0.1:7777"),
         domain: String::from("localhost:7777"),
         use_ssl: false,
         realm_keys_base_path: Path::new("keys").to_path_buf(),
-        realms: vec![
-            ConfigRealm {
-                name: String::from("master"),
-                domain: Some(String::from("localhost:7777")),
-                clients: vec![
-                    Client {
-                        id: String::from("mobile-app"),
-                        secret: None,
-                        redirect_uri: String::from("photosapp://authenticate"),
-                    }
-                ]
-            }
-        ],
+        realms: vec![ConfigRealm {
+            name: String::from("master"),
+            domain: Some(String::from("localhost:7777")),
+            clients: vec![Client {
+                id: String::from("mobile-app"),
+                secret: None,
+                redirect_uri: String::from("photosapp://authenticate"),
+            }],
+        }],
     };
     debug!("ServerConfig:");
     let server = ServerState::new(cfg)?;
@@ -113,7 +109,7 @@ pub async fn start_server() -> Result<()> {
         // health check
         .route("/", get(status))
         .route("/", head(status))
-        
+
         // openid
         .nest("/", OpenIdManager::routes(server))
         // oauth 2

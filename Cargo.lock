@@ -51,6 +51,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "activity_pub"
+version = "0.6.0"
+dependencies = [
+ "activitypub_federation",
+ "core_common",
+]
+
+[[package]]
 name = "activitypub_federation"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -764,9 +772,9 @@ name = "core"
 version = "0.6.0"
 dependencies = [
  "abi_stable",
+ "activity_pub",
  "anyhow",
  "axum",
- "core_activity_pub",
  "core_common",
  "core_extensions",
  "core_photos",
@@ -808,14 +816,6 @@ name = "core-foundation-sys"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e496a50fda8aacccc86d7529e2c1e0892dbd0f898a6b5645b5561b89c3210efa"
-
-[[package]]
-name = "core_activity_pub"
-version = "0.6.0"
-dependencies = [
- "activitypub_federation",
- "core_common",
-]
 
 [[package]]
 name = "core_common"

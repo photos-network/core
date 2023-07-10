@@ -8,9 +8,11 @@
     }
   },
   "rust-analyzer.linkedProjects": [
-    "./crates/core_activity_pub/Cargo.toml",
+    "./crates/activity_pub/Cargo.toml",
     "./crates/core_common/Cargo.toml",
-    "./crates/core_photos/Cargo.toml"
+    "./crates/core_photos/Cargo.toml",
+    "./crates/oauth_authentication/Cargo.toml",
+    "./crates/oauth_authorization_server/Cargo.toml"
   ],
   "rust-analyzer.showUnlinkedFileNotification": false,
   "debug.allowBreakpointsEverywhere": true,

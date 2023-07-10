@@ -24,15 +24,17 @@ use std::net::SocketAddr;
 use abi_stable::external_types::crossbeam_channel;
 use abi_stable::std_types::RResult::{RErr, ROk};
 use anyhow::Result;
-use authentication::client::Client;
-use authentication::config::ConfigRealm;
-use authentication::config::ServerConfig;
-use authentication::state::ServerState;
-use authentication::OpenIdManager;
+use oauth_authentication::AuthenticationManager;
+use oauth_authorization_server::client::Client;
+use oauth_authorization_server::config::ConfigRealm;
+use oauth_authorization_server::config::ServerConfig;
+use oauth_authorization_server::state::ServerState;
+use oauth_authorization_server::AuthorizationServerManager;
 use axum::routing::{get, head};
 use axum::{Json, Router};
 use photos_network_plugin::{PluginFactoryRef, PluginId};
 use serde::{Deserialize, Serialize};
+use tokio::task;
 use std::path::Path;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
@@ -83,15 +85,14 @@ pub async fn start_server() -> Result<()> {
     // init application state
     let mut app_state = ApplicationState::new(config.clone());
 
-    debug!("ServerConfig...");
     let cfg = ServerConfig {
-        listen_addr: String::from("127.0.0.1:7777"),
-        domain: String::from("localhost:7777"),
-        use_ssl: false,
-        realm_keys_base_path: Path::new("keys").to_path_buf(),
+        listen_addr: String::from(format!("{}", config.internal_url)),
+        domain: String::from(format!("{}", config.external_url)),
+        use_ssl: true,
+        realm_keys_base_path: Path::new("config").to_path_buf(),
         realms: vec![ConfigRealm {
             name: String::from("master"),
-            domain: Some(String::from("localhost:7777")),
+            domain: Some(String::from(format!("{}", config.external_url))),
             clients: vec![Client {
                 id: String::from("mobile-app"),
                 secret: None,
@@ -99,9 +100,7 @@ pub async fn start_server() -> Result<()> {
             }],
         }],
     };
-    debug!("ServerConfig:");
     let server = ServerState::new(cfg)?;
-    debug!("ServerState:");
 
     let mut router = Router::new()
         // favicon
@@ -110,8 +109,8 @@ pub async fn start_server() -> Result<()> {
         .route("/", get(status))
         .route("/", head(status))
 
-        // openid
-        .nest("/", OpenIdManager::routes(server))
+        // authorization server
+        .nest("/", AuthorizationServerManager::routes(server))
         // oauth 2
         // .nest("/oauth", api::authentication::AutenticationManager::routes())
         .layer(TraceLayer::new_for_http())
@@ -159,15 +158,24 @@ pub async fn start_server() -> Result<()> {
     router = app_state
         .router
         .unwrap()
-        .route("/test", get(|| async { "Test from within plugin" }));
+        .route("/test", get(|| async { "" }));
+
+    // task::spawn_blocking(move || {
+    //     tracing::debug!("setup Authentication Manager...");
+    //     let manager = AuthenticationManager::new();
+    //     let nonce = AuthenticationManager::create_authorization_url(
+    //         manager::client,
+    //         manager::pkce_challenge,
+    //     );
+    // }).await?;
 
     // start server with all routes
     let addr: SocketAddr = SocketAddr::from(([0, 0, 0, 0], 7777));
     tracing::debug!("listening on {}", addr);
     axum::Server::bind(&addr)
-        .serve(router.into_make_service())
-        .await
-        .unwrap();
+    .serve(router.into_make_service())
+    .await
+    .unwrap();
 
     Ok(())
 }

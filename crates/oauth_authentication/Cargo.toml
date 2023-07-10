@@ -1,8 +1,8 @@
 [package]
-name = "authentication"
+name = "oauth_authentication"
+description = "OAuth 2.0 authentication"
 version.workspace = true
 authors.workspace = true
-description.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 repository.workspace = true
@@ -11,7 +11,7 @@ license.workspace = true
 edition.workspace = true
 
 [lib]
-name = "authentication"
+name = "oauth_authentication"
 path = "src/lib.rs"
 doctest = false
 
@@ -19,18 +19,7 @@ doctest = false
 # OIDC interfaces
 openidconnect = { version = "3.2.0", features = ["accept-rfc3339-timestamps", "accept-string-booleans"] }
 
-# OIDC Router
-axum = { workspace = true }
-
-# json payload
-serde = { workspace = true, features = ["derive"] }
-
-# time related data in models
-chrono.workspace = true
-uuid.workspace = true
-
-# key signing and cryptographics
-rsa = { version = "0.9.2" }
+anyhow = { workspace = true }
 
 # error handling
 thiserror = "1.0.40"
@@ -38,11 +27,26 @@ thiserror = "1.0.40"
 # URL parsing
 url = { version = "2.4.0", features = ["serde"] }
 
-# Rendering login form
-dioxus = "0.3.2"
-dioxus-ssr = "0.3.0"
 
-tower-http.workspace = true
+
+# OIDC Router
+# axum = { workspace = true }
+
+# json payload
+# serde = { workspace = true, features = ["derive"] }
+
+# time related data in models
+# chrono.workspace = true
+# uuid.workspace = true
+
+# key signing and cryptographics
+# rsa = { version = "0.9.2" }
+
+# Rendering login form
+# dioxus = "0.3.2"
+# dioxus-ssr = "0.3.0"
+
+# tower-http.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 

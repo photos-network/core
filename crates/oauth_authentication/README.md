@@ -1,8 +1,10 @@
-# Authentication
+# OAuth 2.0 Authentication
 
-This crate provides an **Authorization code flow with PKCE** for [Photos.network](https://photos.network).
+This crate offers an **Authorization code flow with PKCE** for [Photos.network](https://photos.network).
 
-Public clients (e.g. native and single-page applications) cannot securely store client secrets. 
+To identify users and granting them access to the applications content, the Open Authorization (OAuth) standard is used so users can login without sharing credentials theirselfs.
+Since public clients (e.g. native mobile applications and single-page applications) cannot securely store client secrets. 
+This application is using [PKCE](https://datatracker.ietf.org/doc/html/rfc7636) so it creates a pair of secrets (Code Verifier & Code Challenge) and send it to the **authorization server** over HTTPS. This way a malicious attacker can only intercept the Authorization Code but can't exchange it for a token without knowing the Code Verifier.
 
 ### Native apps
 Decompiling the app will reveal the Client Secret, which is bound to the app and is the same for all users and devices. Also they make use of a custom URL scheme to capture redirects (e.g., photosapp://) potentially allowing malicious applications to receive an Authorization Code from your Authorization Server.
@@ -10,8 +12,6 @@ Decompiling the app will reveal the Client Secret, which is bound to the app and
 ### Single-page application
 Cannot securely store a Client Secret because their entire source is available to the browser.
 
-
-With [PKCE](https://datatracker.ietf.org/doc/html/rfc7636) an application created pair of secrets (Code Verifier & Code Challenge) is send to the **authorization server** over HTTPS. This way a malicious attacker can only intercept the Authorization Code but can't exchange it for a token without the Code Verifier.
 
 ## Authorization code flow with PKCE
 ```mermaid

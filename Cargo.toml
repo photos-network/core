@@ -24,7 +24,8 @@ include = ["src/**/*", "LICENSE.md", "README.md", "CHANGELOG.md"]
 
 [workspace]
 members = [
-    "crates/authentication",
+    "crates/oauth_authorization_server",
+    "crates/oauth_authentication",
     "crates/core_common",
     "crates/core_photos",
     "crates/core_activity_pub",
@@ -33,7 +34,8 @@ members = [
 
 # define dependencies to be inherited by members of the workspace
 [workspace.dependencies]
-authentication = { path = "./crates/authentication" }
+oauth_authorization_server = { path = "./crates/oauth_authorization_server" }
+oauth_authentication = { path = "./crates/oauth_authentication" }
 core_common = { path = "./crates/core_common" }
 core_photos = { path = "./crates/core_photos" }
 core_activity_pub = { path = "./crates/core_activity_pub" }
@@ -41,7 +43,11 @@ core_activity_pub = { path = "./crates/core_activity_pub" }
 activitypub_federation = "~0.4.0"
 axum = { version = "0.6.2", features = ["ws", "headers"] }
 axum-test = { version = "10.1.0" }
+anyhow = { version = "1.0.71" }
+
 chrono = { version = "0.4.26", features = ["serde"] }
+
+sqlx = "~0.6"
 
 serde = "~1.0.157"
 serde_json = { version = "1.0.79", features = ["raw_value"] }
@@ -70,7 +76,8 @@ path = "./crates/plugin_interface"
 
 
 [dependencies]
-authentication = { workspace = true }
+oauth_authorization_server = { workspace = true }
+oauth_authentication = { workspace = true }
 # core_api = { workspace = true }
 core_common = { workspace = true }
 core_photos = { workspace = true }
@@ -115,4 +122,4 @@ tower-http = { version = "0.4.0", features = ["fs", "trace"] }
 [dev-dependencies]
 pretty_assertions = "1.3.0"
 serde_urlencoded = "0.7.1"
-reqwest = { version = "0.11", default-features = false, features = ["json", "stream", "multipart"] }
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "stream", "multipart"] }

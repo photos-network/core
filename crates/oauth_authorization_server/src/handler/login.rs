@@ -15,7 +15,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use axum::extract::Query;
 use axum::response::Html;
 use axum::Form;
 use dioxus::prelude::*;

@@ -407,32 +407,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1181e1e0d1fce796a03db1ae795d67167da795f9cf4a39c37589e85ef57f26d3"
 
 [[package]]
-name = "authentication"
-version = "0.6.0"
-dependencies = [
- "axum",
- "axum-test",
- "chrono",
- "core_common",
- "dioxus",
- "dioxus-ssr",
- "miette",
- "openidconnect",
- "rand",
- "rsa 0.9.2",
- "serde",
- "serde_json",
- "testdir",
- "thiserror",
- "tokio",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "url",
- "uuid",
-]
-
-[[package]]
 name = "auto-future"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -791,7 +765,6 @@ version = "0.6.0"
 dependencies = [
  "abi_stable",
  "anyhow",
- "authentication",
  "axum",
  "core_activity_pub",
  "core_common",
@@ -800,6 +773,8 @@ dependencies = [
  "futures",
  "futures-channel",
  "futures-util",
+ "oauth_authentication",
+ "oauth_authorization_server",
  "photos_network_plugin",
  "pretty_assertions",
  "reqwest",
@@ -2183,29 +2158,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
-name = "miette"
-version = "5.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a236ff270093b0b67451bc50a509bd1bad302cb1d3c7d37d5efe931238581fa9"
-dependencies = [
- "miette-derive",
- "once_cell",
- "thiserror",
- "unicode-width",
-]
-
-[[package]]
-name = "miette-derive"
-version = "5.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4901771e1d44ddb37964565c654a3223ba41a594d02b8da471cc4464912b5cfa"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.18",
-]
-
-[[package]]
 name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2382,6 +2334,47 @@ dependencies = [
  "sha2",
  "thiserror",
  "url",
+]
+
+[[package]]
+name = "oauth_authentication"
+version = "0.6.0"
+dependencies = [
+ "anyhow",
+ "axum-test",
+ "openidconnect",
+ "rand",
+ "serde_json",
+ "testdir",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+]
+
+[[package]]
+name = "oauth_authorization_server"
+version = "0.6.0"
+dependencies = [
+ "axum",
+ "axum-test",
+ "chrono",
+ "dioxus",
+ "dioxus-ssr",
+ "openidconnect",
+ "rand",
+ "rsa 0.9.2",
+ "serde",
+ "serde_json",
+ "testdir",
+ "thiserror",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "uuid",
 ]
 
 [[package]]
@@ -3868,12 +3861,6 @@ name = "unicode-segmentation"
 version = "1.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1dd624098567895118886609431a7c3b8f516e41d30e0643f03d94592a147e36"
-
-[[package]]
-name = "unicode-width"
-version = "0.1.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0edd1e5b14653f783770bce4a4dabb4a5108a5370a5f5d8cfe8710c361f6c8b"
 
 [[package]]
 name = "untrusted"

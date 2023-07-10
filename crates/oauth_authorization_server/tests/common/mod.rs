@@ -17,7 +17,7 @@
 
 //! Create a private key file to use for OIDC.
 //!
-use authentication::{config::ServerConfig, state::ServerState, OpenIdManager};
+use oauth_authorization_server::{config::ServerConfig, state::ServerState, AuthorizationServerManager};
 use axum::Router;
 use rand::rngs::OsRng;
 use rsa::pkcs1::EncodeRsaPrivateKey;
@@ -60,7 +60,7 @@ pub fn create_router() -> Router {
         realms: vec![],
     };
     let server_state = ServerState::new(server_config).expect("no server config!");
-    let router = OpenIdManager::routes(server_state);
+    let router = AuthorizationServerManager::routes(server_state);
 
     router
 }

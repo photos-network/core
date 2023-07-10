@@ -1,0 +1,54 @@
+@host = 127.0.0.1
+@port = 7777
+
+###
+GET http://{{host}}:{{port}}
+
+###
+
+GET http://{{host}}:{{port}}/.well-known/openid-configuration HTTP/1.1
+
+###
+
+GET http://{{host}}:{{port}}/oidc/authorize?response_type=id_token token&client_id=mobile-app&state=12345&code_challenge=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU&code_challenge_method=S256&redirect_uri=photosapp://authenticate&scope=profile&nonce=ABCDE
+
+### 
+GET http://{{host}}:{{port}}/master/login
+
+### 
+POST http://{{host}}:{{port}}/master/login
+content-type: application/x-www-form-urlencoded
+
+username=user
+&password=pass
+
+###
+
+@jwt = ""
+
+// Login User
+POST http://{{host}}:{{port}}/api/v1/users/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "P@ssw0rd"
+}
+
+//Response body
+//{
+//   "id": "1",
+//   "token": "1234567890"
+//}
+
+// script part
+@{
+const pattern = /"token": "(.*)"/;
+jwt = $response.body.match(pattern, $1);
+}
+
+// Twitter Seciton
+
+// GET list of Twitter Users, use jwt parsed from previous call
+GET http://{{host}}:{{port}}/api/v1/twitterusers
+Authorization: {{jwt}}

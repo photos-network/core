@@ -40,9 +40,9 @@ pub mod handler {
     pub mod login;
 }
 
-pub struct OpenIdManager {}
+pub struct AuthorizationServerManager {}
 
-impl OpenIdManager {
+impl AuthorizationServerManager {
     pub fn routes<S>(server: ServerState) -> Router<S>
     where
         S: Send + Sync + 'static + Clone,
@@ -52,8 +52,8 @@ impl OpenIdManager {
                 "/.well-known/openid-configuration",
                 get(openid_discover_handler),
             )
-            .route("/jwk", get(openid_jwks_handler))
             .route("/oidc/authorize", get(authorization_handler))
+            .route("/jwk", get(openid_jwks_handler))
             .route(
                 "/:realm/login",
                 get(get_realm_login_form).post(post_realm_login),

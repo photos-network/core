@@ -59,6 +59,6 @@ impl AuthorizationServerManager {
                 get(get_realm_login_form).post(post_realm_login),
             )
             .layer(tower_http::trace::TraceLayer::new_for_http())
-            .with_state(Arc::new(RwLock::new(server.clone())))
+            .with_state(Arc::new(RwLock::new(server)))
     }
 }

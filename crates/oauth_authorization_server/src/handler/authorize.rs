@@ -44,7 +44,7 @@ pub(crate) async fn authorization_handler(
     };
     for realm in state.write().unwrap().realms.iter_mut() {
         for client in realm.clients.iter() {
-            if &client.id == &query.client_id {
+            if client.id == query.client_id {
                 realm.requests.push(req);
                 let realm_login_url = format!("/{}/login", &realm.name);
                 return Ok(Redirect::to(&realm_login_url));
@@ -53,7 +53,7 @@ pub(crate) async fn authorization_handler(
     }
 
     for client in state.read().unwrap().master_realm.clients.iter() {
-        if &client.id == &query.client_id {
+        if client.id == query.client_id {
             state.write().unwrap().master_realm.requests.push(req);
             let realm_login_url = format!("/{}/login", &state.read().unwrap().master_realm.name);
             return Ok(Redirect::to(&realm_login_url));

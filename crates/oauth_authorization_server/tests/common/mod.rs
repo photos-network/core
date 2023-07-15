@@ -17,8 +17,10 @@
 
 //! Create a private key file to use for OIDC.
 //!
-use oauth_authorization_server::{config::ServerConfig, state::ServerState, AuthorizationServerManager};
 use axum::Router;
+use oauth_authorization_server::{
+    config::ServerConfig, state::ServerState, AuthorizationServerManager,
+};
 use rand::rngs::OsRng;
 use rsa::pkcs1::EncodeRsaPrivateKey;
 use rsa::pkcs8::LineEnding;

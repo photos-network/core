@@ -24,17 +24,16 @@ use std::net::SocketAddr;
 use abi_stable::external_types::crossbeam_channel;
 use abi_stable::std_types::RResult::{RErr, ROk};
 use anyhow::Result;
-use oauth_authentication::AuthenticationManager;
+use axum::routing::{get, head};
+use axum::{Json, Router};
+use media::api::router::MediaApi;
 use oauth_authorization_server::client::Client;
 use oauth_authorization_server::config::ConfigRealm;
 use oauth_authorization_server::config::ServerConfig;
 use oauth_authorization_server::state::ServerState;
 use oauth_authorization_server::AuthorizationServerManager;
-use axum::routing::{get, head};
-use axum::{Json, Router};
 use photos_network_plugin::{PluginFactoryRef, PluginId};
 use serde::{Deserialize, Serialize};
-use tokio::task;
 use std::path::Path;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
@@ -111,6 +110,7 @@ pub async fn start_server() -> Result<()> {
 
         // authorization server
         .nest("/", AuthorizationServerManager::routes(server))
+        .nest("/api", MediaApi::routes())
         // oauth 2
         // .nest("/oauth", api::authentication::AutenticationManager::routes())
         .layer(TraceLayer::new_for_http())
@@ -173,9 +173,9 @@ pub async fn start_server() -> Result<()> {
     let addr: SocketAddr = SocketAddr::from(([0, 0, 0, 0], 7777));
     tracing::debug!("listening on {}", addr);
     axum::Server::bind(&addr)
-    .serve(router.into_make_service())
-    .await
-    .unwrap();
+        .serve(router.into_make_service())
+        .await
+        .unwrap();
 
     Ok(())
 }

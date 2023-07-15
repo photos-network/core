@@ -27,7 +27,7 @@ members = [
     "crates/oauth_authorization_server",
     "crates/oauth_authentication",
     "crates/core_common",
-    "crates/core_photos",
+    "crates/media",
     "crates/activity_pub",
     "crates/plugin_interface"
 ]
@@ -37,7 +37,7 @@ members = [
 oauth_authorization_server = { path = "./crates/oauth_authorization_server" }
 oauth_authentication = { path = "./crates/oauth_authentication" }
 core_common = { path = "./crates/core_common" }
-core_photos = { path = "./crates/core_photos" }
+media = { path = "./crates/media" }
 activity_pub = { path = "./crates/activity_pub" }
 
 activitypub_federation = "~0.4.0"
@@ -80,7 +80,7 @@ oauth_authorization_server = { workspace = true }
 oauth_authentication = { workspace = true }
 # core_api = { workspace = true }
 core_common = { workspace = true }
-core_photos = { workspace = true }
+media = { workspace = true }
 activity_pub = { workspace = true }
 # core_api_crud = { workspace = true }
 

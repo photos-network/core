@@ -18,3 +18,10 @@
 pub mod data {
     pub mod error;
 }
+
+pub mod api {
+    pub mod handler {
+        pub mod file_handler;
+    }
+    pub mod router;
+}

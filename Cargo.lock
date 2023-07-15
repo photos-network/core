@@ -777,10 +777,10 @@ dependencies = [
  "axum",
  "core_common",
  "core_extensions",
- "core_photos",
  "futures",
  "futures-channel",
  "futures-util",
+ "media",
  "oauth_authentication",
  "oauth_authorization_server",
  "photos_network_plugin",
@@ -838,13 +838,6 @@ name = "core_extensions_proc_macros"
 version = "1.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "69f3b219d28b6e3b4ac87bc1fc522e0803ab22e055da177bff0068c4150c61a6"
-
-[[package]]
-name = "core_photos"
-version = "0.6.0"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "cpufeatures"
@@ -2150,6 +2143,15 @@ name = "matchit"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b87248edafb776e59e6ee64a79086f65890d3510f2c656c000bf2a7e8a0aea40"
+
+[[package]]
+name = "media"
+version = "0.6.0"
+dependencies = [
+ "axum",
+ "serde",
+ "tower-http",
+]
 
 [[package]]
 name = "memchr"

@@ -27,7 +27,7 @@ pub(crate) async fn openid_jwks_handler(
     TypedHeader(host): TypedHeader<Host>,
 ) -> Json<CoreJsonWebKeySet> {
     for realm in state.read().unwrap().realms.iter() {
-        if &realm.domain == host.hostname() {
+        if realm.domain == host.hostname() {
             return Json(realm.jwks.clone());
         }
     }

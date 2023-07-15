@@ -27,7 +27,7 @@ pub(crate) async fn openid_discover_handler(
     TypedHeader(host): TypedHeader<Host>,
 ) -> Json<CoreProviderMetadata> {
     for realm in state.read().unwrap().realms.iter() {
-        if &realm.domain == host.hostname() {
+        if realm.domain == host.hostname() {
             return Json(realm.provider_metadata.clone());
         }
     }

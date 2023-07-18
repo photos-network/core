@@ -15,8 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use crate::api::handler::list_media_items_handler::list_media_items_handler;
+use crate::api::handler::create_media_item_handler::create_media_item_handler;
 use crate::api::handler::file_handler::file_handler;
-use axum::routing::{get, patch, post};
+use axum::routing::{get, patch, post, delete};
 use axum::Router;
 
 pub struct MediaApi {}
@@ -27,14 +29,35 @@ impl MediaApi {
         S: Send + Sync + 'static + Clone,
     {
         Router::new()
-            // list owned and shared items
-            .route("/photos", get(file_handler))
+            // Returns a list of owned and shared photos for current user
+            // 200 Ok
+            // 401 Unauthorized - Requesting user is unauthenticated
+            // 403 Forbidden
+            // 500 Internal Server Error
+            .route("/media", get(list_media_items_handler))
+
+            // Creates one or multiple items
+            // 201 - Created
+            // 400 Bad Request - The request body was malformed or a field violated its constraints. 
+            // 401 Unauthorized - You are unauthenticated
+            // 403 Forbidden - You are authenticated but have no permission to manage the target user.
+            // 500 Internal Server Error
+            .route("/media", post(create_media_item_handler))
+
             // get metadata of a specific item
-            .route("/photos/:entity_id", get(file_handler))
-            // update the given media item owned by the user
-            .route("/photos/:entity_id", patch(file_handler))
-            // creates one or multiple media items
-            .route("/photos", post(file_handler))
+            // 200 - Ok
+            // 400 Bad Request - The request body was malformed or a field violated its constraints. 
+            // 401 Unauthorized - You are unauthenticated
+            // 403 Forbidden - You are authenticated but have no permission to manage the target user.
+            // 500 Internal Server Error
+            .route("/media/:media_id", get(file_handler))
+
+            // update the given item owned by the user
+            .route("/media/:media_id", patch(file_handler))
+
+            // delete the given item owned by the user
+            .route("/media/:media_id", delete(file_handler))
+
             // list owned and shared albums
             .route("/albums", get(file_handler))
             // create new album
@@ -47,6 +70,7 @@ impl MediaApi {
             .route("/albums/:entity_id/share", patch(file_handler))
             // unshares the given album
             .route("/albums/:entity_id/unshare", patch(file_handler))
+            
             .layer(tower_http::trace::TraceLayer::new_for_http())
     }
 }

@@ -15,13 +15,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod data {
-    pub mod error;
-}
+pub mod data;
 
 pub mod api {
     pub mod handler {
         pub mod file_handler;
+        pub mod list_media_items_handler;
+        pub mod create_media_item_handler;
     }
     pub mod router;
 }

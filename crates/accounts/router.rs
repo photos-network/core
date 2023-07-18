@@ -53,6 +53,7 @@ impl AccountsApi {
             // 401 Unauthorized - Requesting user is unauthenticated
             // 404 Not Found - The requested resource does not exist.
             .route("/users/:user_id/profile", get(list_photos_handler))
+
             // Update a single account when `admin.users:write` scope is present
             // 200 - OK
             // 400 Bad Request - The request body was malformed or a field violated its constraints. 

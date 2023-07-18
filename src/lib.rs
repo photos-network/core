@@ -110,7 +110,7 @@ pub async fn start_server() -> Result<()> {
 
         // authorization server
         .nest("/", AuthorizationServerManager::routes(server))
-        .nest("/api", MediaApi::routes())
+        .nest("/", MediaApi::routes())
         // oauth 2
         // .nest("/oauth", api::authentication::AutenticationManager::routes())
         .layer(TraceLayer::new_for_http())

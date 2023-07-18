@@ -15,26 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/// MockPhotosRepositoryTrait is created by automock macro
-#[cfg_attr(test, automock)]
-#[async_trait]
-trait MediaRepositoryTrait {
-    /// Gets a list of media items from the DB filted by user_id
-    async fn get_media_items_for_user(&self, user_id: &str) -> Result<Vec<MediaItem>, DataAccessError>;
-}
+use std::time::Instant;
 
-struct MediaRepository();
-
-#[async_trait]
-impl MediaRepositoryTrait for MediaRepository {
-    async fn get_media_items_for_user(&self, user_id: &str) -> Result<Vec<MediaItem>, DataAccessError> {
-    }
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    async fn get_media_items_for_user_success(#[case] uri: &'static str, #[case] expected_filter: &'static str);
+pub struct File {
+    pub uuid: &'static str,
+    pub filename: &'static str,
+    pub filesize: f64,
+    pub last_modified: Option<Instant>,
+    pub is_missing: bool,
 }

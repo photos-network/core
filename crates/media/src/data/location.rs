@@ -15,25 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::time::Instant;
-
-#[derive(Default, Serialize)]
-#[cfg_attr(test, derive(Deserialize, Eq, PartialEq, Debug, Copy, Clone, Default))]
-pub struct Photo {
-    pub uuid: &'static str,
-    pub path: &'static str,
-    pub filename: &'static str,
-    pub date_added: Instant,
-    pub date_taken: Option<Instant>,
-    pub date_modified: Option<Instant>,
-    pub file_is_missing: bool,
-    pub owner: &'static str,
-}
-
-impl Photo {
-    fn new() -> Self {
-        Photo {
-            file_is_missing: true
-        }
-    }
+pub struct Location {
+    pub latitude: f64,
+    pub longitude: f64
 }

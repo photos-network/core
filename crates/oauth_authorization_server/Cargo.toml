@@ -39,8 +39,8 @@ thiserror = "1.0.40"
 url = { version = "2.4.0", features = ["serde"] }
 
 # Rendering login form
-dioxus = "0.3.2"
-dioxus-ssr = "0.3.0"
+# dioxus = "0.3.2"
+# dioxus-ssr = "0.3.0"
 
 tower-http.workspace = true
 tracing.workspace = true

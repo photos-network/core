@@ -2,7 +2,7 @@ version: '3.3'
 
 services:
   frontend:
-    image: 'rust:1.66.1'
+    image: 'rust:1.66.1-slim'
     volumes:
       - ./target/debug:/usr/src/app:rw
     environment:
@@ -12,4 +12,4 @@ services:
     restart: 'no'
     working_dir: /usr/src/app
 
-    command: bash -c "./core"
+    command: bash -c "/usr/src/app/core"

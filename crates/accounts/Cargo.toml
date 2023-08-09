@@ -1,8 +1,8 @@
 [package]
-name = "core_common"
+name = "accounts"
+description = "Manages all accounts in the database."
 version.workspace = true
 authors.workspace = true
-description.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 repository.workspace = true
@@ -11,9 +11,22 @@ license.workspace = true
 edition.workspace = true
 
 [lib]
-name = "core_common"
+name = "accounts"
 path = "src/lib.rs"
 doctest = false
 
 [dependencies]
+# serialization
 serde = { workspace = true, features = ["derive"] }
+
+# Router
+axum = { workspace = true }
+tower-http.workspace = true
+
+# persistency
+sea-orm = { workspace = true }
+log = "0.4.19"
+
+# testing
+mockall = { workspace = true }
+rstest = { workspace = true }

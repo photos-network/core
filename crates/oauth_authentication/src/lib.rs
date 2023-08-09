@@ -15,6 +15,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+//! This crate offers an **Authorization code flow with PKCE** in a [Photos.network](https://photos.network) core application.
+//! 
+//! To identify users and granting them access to the applications content, the Open Authorization (OAuth) standard is used so users can login without sharing credentials theirselfs.
+//!
+use axum::Router;
 use anyhow::{anyhow, Ok};
 use openidconnect::core::{
     CoreAuthenticationFlow, CoreClient, CoreProviderMetadata, CoreResponseType, CoreUserInfoClaims,
@@ -84,10 +89,18 @@ pub struct AuthenticationManager {
     pub pkce_verifier: PkceCodeVerifier,
 }
 
+impl AuthenticationManager {
+    pub fn routes<S>() -> Router<S>
+    where
+        S: Send + Sync + 'static + Clone,
+    {
+        Router::new()
+            .layer(tower_http::trace::TraceLayer::new_for_http())
+    }
+}
+
 #[derive(Debug, Error)]
 enum AuthError {
-    #[error("{0}")]
-    HyperError(String),
 }
 
 impl AuthenticationManager {
@@ -157,7 +170,7 @@ impl AuthenticationManager {
     ) -> Result<Nonce> {
         let nonce = Nonce::new_random;
         // Generate the full authorization URL.
-        let (auth_url, csrf_token, nonce) = client
+        let (auth_url, _csrf_token, nonce) = client
             .authorize_url(
                 CoreAuthenticationFlow::AuthorizationCode,
                 CsrfToken::new_random,
@@ -257,7 +270,7 @@ impl AuthenticationManager {
         // The user_info request uses the AccessToken returned in the token response. To parse custom
         // claims, use UserInfoClaims directly (with the desired type parameters) rather than using the
         // CoreUserInfoClaims type alias.
-        let userinfo: CoreUserInfoClaims = client
+        let _userinfo: CoreUserInfoClaims = client
             .user_info(token_response.access_token().to_owned(), None)
             .map_err(|err| anyhow!("No user info endpoint: {:?}", err))?
             .request(http_client)

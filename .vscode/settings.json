@@ -8,9 +8,10 @@
     }
   },
   "rust-analyzer.linkedProjects": [
+    "./crates/accounts/Cargo.toml",
     "./crates/activity_pub/Cargo.toml",
-    "./crates/core_common/Cargo.toml",
-    "./crates/core_photos/Cargo.toml",
+    "./crates/common/Cargo.toml",
+    "./crates/media/Cargo.toml",
     "./crates/oauth_authentication/Cargo.toml",
     "./crates/oauth_authorization_server/Cargo.toml"
   ],

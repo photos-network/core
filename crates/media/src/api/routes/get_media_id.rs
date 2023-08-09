@@ -1,9 +1,9 @@
-//! Returns the binary of a given entity
+//! Returns a specific owned or shared media item for current user
 //!
 
 use axum::http::StatusCode;
 
-pub(crate) async fn file_handler() -> std::result::Result<String, StatusCode> {
+pub(crate) async fn get_media_id() -> std::result::Result<String, StatusCode> {
     // TODO: parse params  max-with / max-height   =wmax-width-hmax-height  (=w2048-h1024)
     // -wmax-width   (preserving the aspect ratio)
     // -hmax-height  (preserving the aspect ratio)

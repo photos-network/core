@@ -1,8 +1,8 @@
 [package]
-name = "media"
-description = "Manages all media items in the database and on filesystem."
+name = "common"
 version.workspace = true
 authors.workspace = true
+description.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 repository.workspace = true
@@ -11,22 +11,9 @@ license.workspace = true
 edition.workspace = true
 
 [lib]
-name = "media"
+name = "common"
 path = "src/lib.rs"
 doctest = false
 
 [dependencies]
-# serialization
 serde = { workspace = true, features = ["derive"] }
-
-# Router
-axum = { workspace = true }
-tower-http.workspace = true
-
-# persistency
-sea-orm = { workspace = true }
-log = "0.4.19"
-
-# testing
-mockall = { workspace = true }
-rstest = { workspace = true }

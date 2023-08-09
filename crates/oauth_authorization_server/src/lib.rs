@@ -15,6 +15,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+//! This crate offers an **OAuth Authorization Server** for [Photos.network](https://photos.network) core application.
+//! 
 use axum::routing::get;
 use axum::Router;
 use handler::{

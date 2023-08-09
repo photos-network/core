@@ -15,30 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use axum::routing::get;
+use axum::routing::{get, patch};
 use axum::Router;
-use handler::{
-    authorize::authorization_handler,
-    discovery::openid_discover_handler,
-    jwks::openid_jwks_handler,
-    login::{get_realm_login_form, post_realm_login},
-};
-use state::ServerState;
-use std::sync::{Arc, RwLock};
 
-pub mod client;
-pub mod config;
-pub mod error;
-pub mod query;
-pub mod realm;
-pub mod request;
-pub mod state;
-pub mod handler {
-    pub mod authorize;
-    pub mod discovery;
-    pub mod jwks;
-    pub mod login;
-}
+use super::routes::get_user_id_profile::get_user_id_profile;
 
 pub struct AccountsApi {}
 
@@ -52,7 +32,7 @@ impl AccountsApi {
             // 200 OK
             // 401 Unauthorized - Requesting user is unauthenticated
             // 404 Not Found - The requested resource does not exist.
-            .route("/users/:user_id/profile", get(list_photos_handler))
+            .route("/users/:user_id/profile", get(get_user_id_profile))
 
             // Update a single account when `admin.users:write` scope is present
             // 200 - OK
@@ -60,21 +40,21 @@ impl AccountsApi {
             // 401 Unauthorized - You are unauthenticated
             // 403 Forbidden - You are authenticated but have no permission to manage the target user.
             // 404 Not Found - The requested resource does not exist.
-            .route("/users/:user_id/profile", patch(list_photos_handler))
+            .route("/users/:user_id/profile", patch(get_user_id_profile))
             
             // Disable a single account by ID when `admin.users:write` scope is present
             // 204 No Content - Account was disabled successful
             // 401 Unauthorized - You are unauthenticated
             // 403 Forbidden - You are authenticated but have no permission to manage the target user.
             // 404 Not Found - The requested resource does not exist.
-            .route("/users/:user_id/disable", patch(list_photos_handler))
+            .route("/users/:user_id/disable", patch(get_user_id_profile))
 
             // Enable a single account by ID when `admin.users:write` scope is present
             // 204 No Content - Account was enabled successful
             // 401 Unauthorized - You are unauthenticated
             // 403 Forbidden - You are authenticated but have no permission to manage the target user.
             // 404 Not Found - The requested resource does not exist.
-            .route("/users/:user_id/enabled", patch(list_photos_handler))
+            .route("/users/:user_id/enabled", patch(get_user_id_profile))
 
             .layer(tower_http::trace::TraceLayer::new_for_http())
     }

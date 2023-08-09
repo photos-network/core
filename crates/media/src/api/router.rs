@@ -15,11 +15,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::api::handler::list_media_items_handler::list_media_items_handler;
-use crate::api::handler::create_media_item_handler::create_media_item_handler;
-use crate::api::handler::file_handler::file_handler;
 use axum::routing::{get, patch, post, delete};
 use axum::Router;
+
+use super::routes::delete_media_id::delete_media_id;
+use super::routes::get_albums::get_albums;
+use super::routes::get_albums_id::get_albums_id;
+use super::routes::get_media::get_media;
+use super::routes::get_media_id::get_media_id;
+use super::routes::patch_albums_id::patch_albums_id;
+use super::routes::patch_albums_id_share::patch_albums_id_share;
+use super::routes::patch_albums_id_unshare::patch_albums_id_unshare;
+use super::routes::patch_media_id::patch_media_id;
+use super::routes::post_albums::post_albums;
+use super::routes::post_media::post_media;
+use super::routes::post_media_id::post_media_id;
 
 pub struct MediaApi {}
 
@@ -29,47 +39,50 @@ impl MediaApi {
         S: Send + Sync + 'static + Clone,
     {
         Router::new()
-            // Returns a list of owned and shared photos for current user
+            // Returns a list of owned media items for current user
             // 200 Ok
             // 401 Unauthorized - Requesting user is unauthenticated
             // 403 Forbidden
             // 500 Internal Server Error
-            .route("/media", get(list_media_items_handler))
+            .route("/media", get(get_media))
 
-            // Creates one or multiple items
+            // Creates a new media item to aggregate related files for current user
             // 201 - Created
             // 400 Bad Request - The request body was malformed or a field violated its constraints. 
             // 401 Unauthorized - You are unauthenticated
             // 403 Forbidden - You are authenticated but have no permission to manage the target user.
             // 500 Internal Server Error
-            .route("/media", post(create_media_item_handler))
+            .route("/media", post(post_media))
 
-            // get metadata of a specific item
+            // Returns a specific owned or shared media item for current user
             // 200 - Ok
             // 400 Bad Request - The request body was malformed or a field violated its constraints. 
             // 401 Unauthorized - You are unauthenticated
             // 403 Forbidden - You are authenticated but have no permission to manage the target user.
             // 500 Internal Server Error
-            .route("/media/:media_id", get(file_handler))
+            .route("/media/:media_id", get(get_media_id))
 
-            // update the given item owned by the user
-            .route("/media/:media_id", patch(file_handler))
+            // Add files for a specific media item
+            .route("/media/:media_id", post(post_media_id))
 
-            // delete the given item owned by the user
-            .route("/media/:media_id", delete(file_handler))
+            // Updates fields from a specific media item for current user
+            .route("/media/:media_id", patch(patch_media_id))
+
+            // Deletes the given item owned by the user
+            .route("/media/:media_id", delete(delete_media_id))
 
             // list owned and shared albums
-            .route("/albums", get(file_handler))
+            .route("/albums", get(get_albums))
             // create new album
-            .route("/albums", post(file_handler))
+            .route("/albums", post(post_albums))
             // get metadata of a specific owned or shared album
-            .route("/albums/:entity_id", get(file_handler))
+            .route("/albums/:entity_id", get(get_albums_id))
             // updates the given album owned by the user
-            .route("/albums/:entity_id", patch(file_handler))
+            .route("/albums/:entity_id", patch(patch_albums_id))
             // shares the given album
-            .route("/albums/:entity_id/share", patch(file_handler))
+            .route("/albums/:entity_id/share", patch(patch_albums_id_share))
             // unshares the given album
-            .route("/albums/:entity_id/unshare", patch(file_handler))
+            .route("/albums/:entity_id/unshare", patch(patch_albums_id_unshare))
             
             .layer(tower_http::trace::TraceLayer::new_for_http())
     }

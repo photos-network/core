@@ -29,17 +29,36 @@ It is responsible for main tasks e.g.:
 
 
 
-## Development
+## 🧪 Development
 
 The core is written in [Rust](https://rust-lang.org/) and highly customizably by using a Plugin-system.
 
 
+#### 📄 Documentation
 
-### Roadmap (MvP)
+With the nightly version of `cargo doc` an additional index-page will be created.
+```shell
+$ RUSTDOCFLAGS="--enable-index-page -Zunstable-options" cargo +nightly doc --all --no-deps --document-private-items --all-features
+```
 
- - Authenticate (either via openID or fediverse identity)
- - Manage photos (upload, download, delete)
- - Metadata (size, resolution)
+#### 🔬 Testing
+
+With the following command, an continuous check on all files is done in the background and will trigger `cargo test` on each file change.
+
+```shell
+$ cargo test --workspace --all-targets
+```
+
+
+
+### 📜 Roadmap (MvP)
+
+ - Authenticate via openID
+ - Create a new media item
+ - Upload one or multiple photos
+ - Download a list of owned media items
+ - Download the original photo from a specific media item
+ - *Metadata (size, resolution)
  - *EXIF (orientation, image taken timestamp, last modified, camera)
  - *RAW (image support for RAW-images)
  - *Resize (create low-resolutions / thumbnails)

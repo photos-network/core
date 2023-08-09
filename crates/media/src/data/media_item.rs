@@ -17,11 +17,10 @@
 
 use std::time::Instant;
 
-use serde::Serialize;
-use serde::Deserialize;
+use super::exif_info::ExifInformation;
+use super::file::File;
+use super::location::Location;
 
-
-#[derive(Serialize, Deserialize)]
 pub struct MediaItem {
     pub uuid: &'static str,
     pub name: &'static str,
@@ -34,13 +33,17 @@ pub struct MediaItem {
 }
 
 impl MediaItem {
+    #[warn(dead_code)]
     fn new(name: &'static str) -> Self {
         MediaItem {
-            uuid: ,
+            uuid: "",
             name: name,
             date_added: Instant::now(),
-
+            date_taken: None,
+            location: None,
+            details: None,
+            tags: None,
+            references: None
         }
     }
 }
-

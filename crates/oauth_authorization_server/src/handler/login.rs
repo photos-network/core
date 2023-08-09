@@ -17,27 +17,16 @@
 
 use axum::response::Html;
 use axum::Form;
-use dioxus::prelude::*;
 
 use serde::Deserialize;
 
-fn login_form(cx: Scope) -> Element {
-    cx.render(rsx!(form {
-        method: "post",
-        input {"type":"text", id:"username", name: "username"},
-        input {"type":"password", id:"password", name: "password"},
-        input {"type": "submit", id: "submit", value: "Submit"}
-    }))
-}
 
 pub(crate) async fn get_realm_login_form(
-    axum::extract::Path(realm): axum::extract::Path<String>,
+    axum::extract::Path(_realm): axum::extract::Path<String>,
     // Query(query): Query<LoginQuery>,
 ) -> Html<String> {
     // create a VirtualDom with the app component
-    let mut app = VirtualDom::new(login_form);
     // rebuild the VirtualDom before rendering
-    let _ = app.rebuild();
 
     // tracing::debug!(
     //     "Rendering form for request_id={} and realm={}",
@@ -46,7 +35,8 @@ pub(crate) async fn get_realm_login_form(
     // );
 
     // render the VirtualDom to HTML
-    Html(dioxus_ssr::render(&app))
+    // Html(dioxus_ssr::render(&app))
+    Html("Login".to_string())
 }
 
 pub(crate) async fn post_realm_login(Form(login_form): Form<LoginFormData>) -> Html<String> {
@@ -63,7 +53,7 @@ pub(crate) async fn post_realm_login(Form(login_form): Form<LoginFormData>) -> H
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct LoginQuery {
-    request_id: String,
+    _request_id: String,
 }
 
 #[derive(Debug, Deserialize)]

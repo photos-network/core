@@ -15,15 +15,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! This crate handles all media item related tasks in [Photos.network](https://photos.network) core application.
+//! This crate offers shared data models for [Photos.network](https://photos.network) core application.
 //! 
-//! * Providing an REST API to list, add or update items
-//! * Reading and Writing files to the filesystem
-//! * Persisting additional metadata in a database
-//!
-
-pub mod api;
-
-pub mod data;
-
-pub mod repository;
+pub mod model {
+    pub mod sensitive;
+}

@@ -15,14 +15,25 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! This is the main entry point of the Photos.network core application.
-//!
+//! Photos.network · A privacy first photo storage and sharing service.
+//! 
+//! The core application is responsible for main tasks like:
+//!  * Authentication (validate the identity of users)
+//!  * Authorization (handle access privileges of resources like photos or albums)
+//!  * Plugins (manage and trigger plugins)
+//!  * Persistency (read / write data)
+//!  * Task Processing (keep track of running tasks)
+//! 
+//! See also the following crates
+//!  * [Authentication](../oauth_authentication/index.html)
+
 use std::collections::HashMap;
 use std::fs;
 use std::net::SocketAddr;
 
 use abi_stable::external_types::crossbeam_channel;
 use abi_stable::std_types::RResult::{RErr, ROk};
+use accounts::api::router::AccountsApi;
 use anyhow::Result;
 use axum::routing::{get, head};
 use axum::{Json, Router};
@@ -32,11 +43,13 @@ use oauth_authorization_server::config::ConfigRealm;
 use oauth_authorization_server::config::ServerConfig;
 use oauth_authorization_server::state::ServerState;
 use oauth_authorization_server::AuthorizationServerManager;
+use oauth_authentication::AuthenticationManager;
 use photos_network_plugin::{PluginFactoryRef, PluginId};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
+use tower_http::cors::CorsLayer;
 use tracing::{debug, error, info};
 use tracing_subscriber::{fmt, layer::SubscriberExt};
 
@@ -46,11 +59,11 @@ use plugin::plugin_manager::PluginManager;
 pub mod config;
 pub mod plugin;
 
-const CONFIG_PATH: &str = "./config/configuration.json";
+const CONFIG_PATH: &str = "./config/core.json";
 const PLUGIN_PATH: &str = "./plugins";
 const LOGGING_PATH: &str = "./logs";
 
-/// server start extracted from main for testability
+/// starts the core applications server, reading the user configuration, connecting to databases and spinning up the REST API.
 pub async fn start_server() -> Result<()> {
     // enable logging
     let file_appender = tracing_appender::rolling::daily(LOGGING_PATH, "core");
@@ -100,20 +113,31 @@ pub async fn start_server() -> Result<()> {
         }],
     };
     let server = ServerState::new(cfg)?;
+    
 
     let mut router = Router::new()
         // favicon
         .nest_service("/assets", ServeDir::new("src/api/static"))
+
         // health check
         .route("/", get(status))
         .route("/", head(status))
 
-        // authorization server
-        .nest("/", AuthorizationServerManager::routes(server))
+        // Media items
         .nest("/", MediaApi::routes())
-        // oauth 2
-        // .nest("/oauth", api::authentication::AutenticationManager::routes())
+
+        // OAuth 2.0 Authentication
+        .nest("/", AuthenticationManager::routes())
+
+        // OAuth Authorization Server
+        .nest("/", AuthorizationServerManager::routes(server))
+        
+        // Account management
+        .nest("/", AccountsApi::routes())
         .layer(TraceLayer::new_for_http())
+        // grant all CORS OPTIONS requests
+        .layer(CorsLayer::very_permissive())
+
 
         // TODO: share app state with routes
         // .with_state(Arc::new(app_state))
@@ -180,6 +204,7 @@ pub async fn start_server() -> Result<()> {
     Ok(())
 }
 
+/// Aggregates the applications configuration, its loaded plugins and the router for all REST APIs
 pub struct ApplicationState {
     pub config: Configuration,
     pub plugins: HashMap<PluginId, PluginFactoryRef>,

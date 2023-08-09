@@ -16,5 +16,5 @@ path = "src/lib.rs"
 doctest = false
 
 [dependencies]
-core_common = { workspace = true }
+common = { workspace = true }
 activitypub_federation = { workspace = true }

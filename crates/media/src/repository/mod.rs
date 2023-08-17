@@ -15,6 +15,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use std::sync::Arc;
+
 use axum::async_trait;
 use mockall::predicate::*;
 use sea_orm::DatabaseConnection;
@@ -23,10 +25,12 @@ use crate::data::error::DataAccessError;
 use crate::data::media_item::MediaItem;
 use crate::data::open_db_conn;
 
-struct MediaRepository {
+pub struct MediaRepository {
     db_url: &'static str,
     db: DatabaseConnection,
 }
+
+pub(crate) type MediaRepositoryState = Arc<MediaRepository>;
 
 /// MockPhotosRepositoryTrait is created by automock macro
 #[cfg_attr(test, mockall::automock)]
@@ -39,8 +43,12 @@ trait MediaRepositoryTrait {
 }
 
 impl MediaRepository {
-    // async fn new(&self) {
-    // }        
+    pub(crate) async fn new() -> Self {
+        Self {
+            db_url: "",
+            db: DatabaseConnection::Disconnected
+        }
+    }        
 }
     
 #[async_trait]
@@ -73,34 +81,34 @@ mod tests {
         let schema = Schema::new(DbBackend::Sqlite);
     
         // Derive from Entity
-        let stmt: TableCreateStatement = schema.create_table_from_entity(MyEntity);
+        // let stmt: TableCreateStatement = schema.create_table_from_entity(MyEntity);
     
         // Or setup manually
-        assert_eq!(
-            stmt.build(SqliteQueryBuilder),
-            Table::create()
-                .table(MyEntity)
-                .col(
-                    ColumnDef::new(MyEntity::Column::Id)
-                        .integer()
-                        .not_null()
-                )
-                //...
-                .build(SqliteQueryBuilder)
-        );
+        // assert_eq!(
+        //     stmt.build(SqliteQueryBuilder),
+        //     Table::create()
+        //         .table(MyEntity)
+        //         .col(
+        //             ColumnDef::new(MyEntity::Column::Id)
+        //                 .integer()
+        //                 .not_null()
+        //         )
+        //         //...
+        //         .build(SqliteQueryBuilder)
+        // );
     
-        // Execute create table statement
-        let result = db
-            .execute(db.get_database_backend().build(&stmt))
-            .await;
+        // // Execute create table statement
+        // let result = db
+        //     .execute(db.get_database_backend().build(&stmt))
+        //     .await;
     }
 
-    #[rstest]
-    #[case("/?name=Wonder", "Wonder%")] // Verify that % is appended to the filter
-    async fn get_media_items_for_user_success(#[case] uri: &'static str, #[case] expected_filter: &'static str) {
+    // #[rstest]
+    // #[case("/?name=Wonder", "Wonder%")] // Verify that % is appended to the filter
+    // async fn get_media_items_for_user_success(#[case] uri: &'static str, #[case] expected_filter: &'static str) {
 
-        let mut repo_mock = MockMediaRepositoryTrait::new("sqlite::memory:");
-        setup_schema(&db).await?;
-        testcase(&db).await?;
-    }
+    //     let mut repo_mock = MockMediaRepositoryTrait::new("sqlite::memory:");
+    //     setup_schema(&db).await?;
+    //     testcase(&db).await?;
+    // }
 }

@@ -18,10 +18,11 @@ doctest = false
 [dependencies]
 # serialization
 serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 
 # Router
 axum = { workspace = true }
-tower-http.workspace = true
+tower-http = { workspace = true }
 
 # persistency
 sea-orm = { workspace = true }
@@ -30,3 +31,6 @@ log = "0.4.19"
 # testing
 mockall = { workspace = true }
 rstest = { workspace = true }
+tokio = { workspace = true }
+tower = { workspace = true, features = ["util"] }
+hyper = { workspace = true, features = ["full"] }

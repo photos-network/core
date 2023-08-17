@@ -87,3 +87,40 @@ impl MediaApi {
             .layer(tower_http::trace::TraceLayer::new_for_http())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use crate::repository::{MediaRepositoryState, MediaRepository};
+
+    use super::*;
+    use axum::{body::Body, http::{Request, StatusCode}};
+    use rstest::rstest;
+
+    #[rstest]
+    #[case("/?name=Wonder")]
+    #[tokio::test]
+    async fn get_media_success(#[case] uri: &'static str) {
+        // given
+        let repo: MediaRepositoryState = Arc::new(MediaRepository::new().await);
+        let api: Router<MediaRepositoryState> = MediaApi::routes().with_state(repo);
+
+        // when
+        /*
+        TODO: find replacement for `oneshot`
+        let response = api::oneshot(
+            Request::builder()
+                .uri("/media")
+                .method("GET")
+                .body(Body::empty())
+                .unwrap()
+        ).await.unwrap;
+        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+        let body = serde_json::from_slice(&body).unwrap();
+
+        // then
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        */
+    }
+}

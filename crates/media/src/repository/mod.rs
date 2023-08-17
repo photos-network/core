@@ -26,16 +26,20 @@ use crate::data::media_item::MediaItem;
 use crate::data::open_db_conn;
 
 pub struct MediaRepository {
+    #[allow(dead_code)]
     db_url: &'static str,
+    #[allow(dead_code)]
     db: DatabaseConnection,
 }
 
+#[allow(dead_code)]
 pub(crate) type MediaRepositoryState = Arc<MediaRepository>;
 
 /// MockPhotosRepositoryTrait is created by automock macro
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
 trait MediaRepositoryTrait {
+    #[allow(dead_code)]
     async fn new(db_url: &'static str) -> Self;
     
     // Gets a list of media items from the DB filted by user_id
@@ -43,6 +47,7 @@ trait MediaRepositoryTrait {
 }
 
 impl MediaRepository {
+    #[allow(dead_code)]
     pub(crate) async fn new() -> Self {
         Self {
             db_url: "",
@@ -68,47 +73,4 @@ impl MediaRepositoryTrait for MediaRepository {
 
         Err(DataAccessError::OtherError)
     }
-}
-
-
-#[cfg(test)]
-mod tests {
-    use sea_orm::{DbConn, Schema, DbBackend, sea_query::TableCreateStatement};
-
-    use super::*;
-
-    async fn setup_schema(db: &DbConn) {
-        let schema = Schema::new(DbBackend::Sqlite);
-    
-        // Derive from Entity
-        // let stmt: TableCreateStatement = schema.create_table_from_entity(MyEntity);
-    
-        // Or setup manually
-        // assert_eq!(
-        //     stmt.build(SqliteQueryBuilder),
-        //     Table::create()
-        //         .table(MyEntity)
-        //         .col(
-        //             ColumnDef::new(MyEntity::Column::Id)
-        //                 .integer()
-        //                 .not_null()
-        //         )
-        //         //...
-        //         .build(SqliteQueryBuilder)
-        // );
-    
-        // // Execute create table statement
-        // let result = db
-        //     .execute(db.get_database_backend().build(&stmt))
-        //     .await;
-    }
-
-    // #[rstest]
-    // #[case("/?name=Wonder", "Wonder%")] // Verify that % is appended to the filter
-    // async fn get_media_items_for_user_success(#[case] uri: &'static str, #[case] expected_filter: &'static str) {
-
-    //     let mut repo_mock = MockMediaRepositoryTrait::new("sqlite::memory:");
-    //     setup_schema(&db).await?;
-    //     testcase(&db).await?;
-    // }
 }

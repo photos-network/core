@@ -50,7 +50,7 @@ anyhow = { version = "1.0.72" }
 chrono = { version = "0.4.26", features = ["serde"] }
 
 hyper = { version = "0.14", features = ["full"] }
-
+mime = { version = "0.3" }
 mockall = { version = "0.11.4" }
 
 rstest = { version = "0.18.1" }

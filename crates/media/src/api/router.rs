@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use axum::routing::{get, patch, post, delete};
+use axum::routing::{delete, get, patch, post};
 use axum::Router;
 
 use super::routes::delete_media_id::delete_media_id;
@@ -45,32 +45,26 @@ impl MediaApi {
             // 403 Forbidden
             // 500 Internal Server Error
             .route("/media", get(get_media))
-
             // Creates a new media item to aggregate related files for current user
             // 201 - Created
-            // 400 Bad Request - The request body was malformed or a field violated its constraints. 
+            // 400 Bad Request - The request body was malformed or a field violated its constraints.
             // 401 Unauthorized - You are unauthenticated
             // 403 Forbidden - You are authenticated but have no permission to manage the target user.
             // 500 Internal Server Error
             .route("/media", post(post_media))
-
             // Returns a specific owned or shared media item for current user
             // 200 - Ok
-            // 400 Bad Request - The request body was malformed or a field violated its constraints. 
+            // 400 Bad Request - The request body was malformed or a field violated its constraints.
             // 401 Unauthorized - You are unauthenticated
             // 403 Forbidden - You are authenticated but have no permission to manage the target user.
             // 500 Internal Server Error
             .route("/media/:media_id", get(get_media_id))
-
             // Add files for a specific media item
             .route("/media/:media_id", post(post_media_id))
-
             // Updates fields from a specific media item for current user
             .route("/media/:media_id", patch(patch_media_id))
-
             // Deletes the given item owned by the user
             .route("/media/:media_id", delete(delete_media_id))
-
             // list owned and shared albums
             .route("/albums", get(get_albums))
             // create new album
@@ -83,44 +77,95 @@ impl MediaApi {
             .route("/albums/:entity_id/share", patch(patch_albums_id_share))
             // unshares the given album
             .route("/albums/:entity_id/unshare", patch(patch_albums_id_unshare))
-            
             .layer(tower_http::trace::TraceLayer::new_for_http())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
-    use crate::repository::{MediaRepositoryState, MediaRepository};
-
     use super::*;
-    use axum::{body::Body, http::{Request, StatusCode}};
-    use rstest::rstest;
+    use axum::{
+        body::Body,
+        http::{self, Request, StatusCode},
+    };
+    use serde_json::json;
+    use tower::ServiceExt;
 
-    #[rstest]
-    #[case("/?name=Wonder")]
     #[tokio::test]
-    async fn get_media_success(#[case] uri: &'static str) {
+    async fn get_media_with_query_success() {
         // given
-        let repo: MediaRepositoryState = Arc::new(MediaRepository::new().await);
-        let api: Router<MediaRepositoryState> = MediaApi::routes().with_state(repo);
+        let app = Router::new().nest("/", MediaApi::routes());
 
         // when
-        /*
-        TODO: find replacement for `oneshot`
-        let response = api::oneshot(
-            Request::builder()
-                .uri("/media")
-                .method("GET")
-                .body(Body::empty())
-                .unwrap()
-        ).await.unwrap;
-        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-        let body = serde_json::from_slice(&body).unwrap();
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/media?limit=100000&offset=1")
+                    .method("GET")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
 
         // then
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
-        */
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+        let body: String = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(body, "list media items. limit=100000, offset=1");
+    }
+
+    #[tokio::test]
+    async fn get_media_without_query_success() {
+        // given
+        let app = Router::new().nest("/", MediaApi::routes());
+
+        // when
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/media")
+                    .method("GET")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        // then
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+        let body: String = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(body, "list media items. limit=1000, offset=0");
+    }
+
+    // TODO: re-enable test
+    // #[tokio::test]
+    async fn post_media_success() {
+        // given
+        let app = Router::new().nest("/", MediaApi::routes());
+
+        // when
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/media")
+                    .method("POST")
+                    .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
+                    // add multipart file to body
+                    .body(Body::from(
+                        serde_json::to_vec(&json!([1, 2, 3, 4])).unwrap(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        // then
+        assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
     }
 }

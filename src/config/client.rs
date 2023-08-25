@@ -30,7 +30,7 @@ pub struct OAuthClientConfig {
 
 impl fmt::Display for OAuthClientConfig {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}, redirect: {:?}", self.name, self.redirect_uris)
+        write!(f, "{}, redirects: {:?}", self.name, self.redirect_uris)
     }
 }
 

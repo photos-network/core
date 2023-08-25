@@ -1,24 +1,17 @@
 //! Creates a new media item to aggregate related files for current user
-//! 
-
+//!
 use axum::http::StatusCode;
-use axum::extract::Multipart;
+use common::model::auth::user::User;
+use log::debug;
+use tracing::error;
 
-pub(crate) async fn post_media(mut multipart: Multipart) -> std::result::Result<String, StatusCode> {
-    while let Some(field) = multipart.next_field().await.unwrap() {
-        let name = field.name().unwrap().to_string();
-        let file_name = field.file_name().unwrap().to_string();
-        let content_type = field.content_type().unwrap().to_string();
-        let data = field.bytes().await.unwrap();
+pub(crate) async fn post_media(user: User) -> std::result::Result<String, StatusCode> {
+    error!("POST /media user={}", user);
 
-        println!(
-            "Length of `{}` (`{}`: `{}`) is {} bytes",
-            name,
-            file_name,
-            content_type,
-            data.len()
-        );
-    }
-    // TODO: read authentication header
+    let id = uuid::Uuid::new_v4();
+    debug!("add media with id {} into database", id);
+    // TODO: check if media already exists for user
+
+    // TODO: add item in database for user
     Err(StatusCode::NOT_IMPLEMENTED)
 }

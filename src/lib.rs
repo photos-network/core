@@ -52,6 +52,7 @@ use tower_http::trace::TraceLayer;
 use tower_http::cors::CorsLayer;
 use tracing::{debug, error, info};
 use tracing_subscriber::{fmt, layer::SubscriberExt};
+use axum::extract::DefaultBodyLimit;
 
 use config::configuration::Configuration;
 use plugin::plugin_manager::PluginManager;
@@ -137,6 +138,9 @@ pub async fn start_server() -> Result<()> {
         .layer(TraceLayer::new_for_http())
         // grant all CORS OPTIONS requests
         .layer(CorsLayer::very_permissive())
+
+        // allow to receive bodies larger than the default limit of 2MB
+        .layer(DefaultBodyLimit::disable())
 
 
         // TODO: share app state with routes

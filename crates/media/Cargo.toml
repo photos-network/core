@@ -16,6 +16,9 @@ path = "src/lib.rs"
 doctest = false
 
 [dependencies]
+common = { path = "../common" }
+
+tracing = { workspace = true }
 # serialization
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
@@ -28,6 +31,10 @@ mime = { workspace = true }
 # persistency
 sea-orm = { workspace = true }
 log = "0.4.19"
+
+
+uuid = { workspace = true, features = ["serde"] }
+
 
 # testing
 mockall = { workspace = true }

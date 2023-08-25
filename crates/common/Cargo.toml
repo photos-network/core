@@ -16,4 +16,9 @@ path = "src/lib.rs"
 doctest = false
 
 [dependencies]
+async-trait = { workspace = true }
+axum = { workspace = true }
+http = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
+time = { workspace = true }
+uuid = { workspace = true, features = ["serde"] }

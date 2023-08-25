@@ -16,7 +16,8 @@
  */
 
 //! This crate offers shared data models for [Photos.network](https://photos.network) core application.
-//! 
+//!
 pub mod model {
+    pub mod auth;
     pub mod sensitive;
 }

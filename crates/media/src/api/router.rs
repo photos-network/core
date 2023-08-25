@@ -102,6 +102,7 @@ mod tests {
                 Request::builder()
                     .uri("/media?limit=100000&offset=1")
                     .method("GET")
+                    .header("Authorization", "FakeAuth")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -128,6 +129,7 @@ mod tests {
                 Request::builder()
                     .uri("/media")
                     .method("GET")
+                    .header("Authorization", "FakeAuth")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -145,6 +147,7 @@ mod tests {
 
     // TODO: re-enable test
     // #[tokio::test]
+    #[allow(dead_code)]
     async fn post_media_success() {
         // given
         let app = Router::new().nest("/", MediaApi::routes());

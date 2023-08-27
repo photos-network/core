@@ -20,7 +20,6 @@ use axum::Form;
 
 use serde::Deserialize;
 
-
 pub(crate) async fn get_realm_login_form(
     axum::extract::Path(_realm): axum::extract::Path<String>,
     // Query(query): Query<LoginQuery>,

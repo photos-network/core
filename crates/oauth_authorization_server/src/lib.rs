@@ -16,7 +16,7 @@
  */
 
 //! This crate offers an **OAuth Authorization Server** for [Photos.network](https://photos.network) core application.
-//! 
+//!
 use axum::routing::get;
 use axum::Router;
 use handler::{

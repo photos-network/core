@@ -15,4 +15,4 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 //! This crate provides the [ActivityPub](https://www.w3.org/TR/activitypub/) implementation for [Photos.network](https://photos.network).
-//! 
+//!

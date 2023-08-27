@@ -14,7 +14,5 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-//! This crate handles all account related tasks in [Photos.network](https://photos.network) core application.
-//!
-pub mod api;
+pub mod optuser;
+pub mod user;

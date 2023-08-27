@@ -16,14 +16,14 @@
  */
 
 //! Photos.network · A privacy first photo storage and sharing service.
-//! 
+//!
 //! The core application is responsible for main tasks like:
 //!  * Authentication (validate the identity of users)
 //!  * Authorization (handle access privileges of resources like photos or albums)
 //!  * Plugins (manage and trigger plugins)
 //!  * Persistency (read / write data)
 //!  * Task Processing (keep track of running tasks)
-//! 
+//!
 //! See also the following crates
 //!  * [Authentication](../oauth_authentication/index.html)
 
@@ -35,24 +35,24 @@ use abi_stable::external_types::crossbeam_channel;
 use abi_stable::std_types::RResult::{RErr, ROk};
 use accounts::api::router::AccountsApi;
 use anyhow::Result;
+use axum::extract::DefaultBodyLimit;
 use axum::routing::{get, head};
 use axum::{Json, Router};
 use media::api::router::MediaApi;
+use oauth_authentication::AuthenticationManager;
 use oauth_authorization_server::client::Client;
 use oauth_authorization_server::config::ConfigRealm;
 use oauth_authorization_server::config::ServerConfig;
 use oauth_authorization_server::state::ServerState;
 use oauth_authorization_server::AuthorizationServerManager;
-use oauth_authentication::AuthenticationManager;
 use photos_network_plugin::{PluginFactoryRef, PluginId};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
+use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
-use tower_http::cors::CorsLayer;
 use tracing::{debug, error, info};
 use tracing_subscriber::{fmt, layer::SubscriberExt};
-use axum::extract::DefaultBodyLimit;
 
 use config::configuration::Configuration;
 use plugin::plugin_manager::PluginManager;
@@ -114,7 +114,6 @@ pub async fn start_server() -> Result<()> {
         }],
     };
     let server = ServerState::new(cfg)?;
-    
 
     let mut router = Router::new()
         // favicon
@@ -132,7 +131,7 @@ pub async fn start_server() -> Result<()> {
 
         // OAuth Authorization Server
         .nest("/", AuthorizationServerManager::routes(server))
-        
+
         // Account management
         .nest("/", AccountsApi::routes())
         .layer(TraceLayer::new_for_http())

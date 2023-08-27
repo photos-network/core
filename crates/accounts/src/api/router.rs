@@ -33,29 +33,25 @@ impl AccountsApi {
             // 401 Unauthorized - Requesting user is unauthenticated
             // 404 Not Found - The requested resource does not exist.
             .route("/users/:user_id/profile", get(get_user_id_profile))
-
             // Update a single account when `admin.users:write` scope is present
             // 200 - OK
-            // 400 Bad Request - The request body was malformed or a field violated its constraints. 
+            // 400 Bad Request - The request body was malformed or a field violated its constraints.
             // 401 Unauthorized - You are unauthenticated
             // 403 Forbidden - You are authenticated but have no permission to manage the target user.
             // 404 Not Found - The requested resource does not exist.
             .route("/users/:user_id/profile", patch(get_user_id_profile))
-            
             // Disable a single account by ID when `admin.users:write` scope is present
             // 204 No Content - Account was disabled successful
             // 401 Unauthorized - You are unauthenticated
             // 403 Forbidden - You are authenticated but have no permission to manage the target user.
             // 404 Not Found - The requested resource does not exist.
             .route("/users/:user_id/disable", patch(get_user_id_profile))
-
             // Enable a single account by ID when `admin.users:write` scope is present
             // 204 No Content - Account was enabled successful
             // 401 Unauthorized - You are unauthenticated
             // 403 Forbidden - You are authenticated but have no permission to manage the target user.
             // 404 Not Found - The requested resource does not exist.
             .route("/users/:user_id/enabled", patch(get_user_id_profile))
-
             .layer(tower_http::trace::TraceLayer::new_for_http())
     }
 }

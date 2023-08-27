@@ -1,16 +1,15 @@
 use std::time::Duration;
 
-use sea_orm::{Database, DatabaseConnection, ConnectOptions, DbErr};
 use log::LevelFilter;
+use sea_orm::{ConnectOptions, Database, DatabaseConnection, DbErr};
 
 pub mod error;
+pub mod exif_info;
 pub mod file;
 pub mod location;
 pub mod media_item;
-pub mod exif_info;
 
 pub async fn open_db_conn(db_url: String) -> std::result::Result<DatabaseConnection, DbErr> {
-
     let mut opt = ConnectOptions::new(db_url);
     opt.max_connections(100)
         .min_connections(5)
@@ -20,7 +19,7 @@ pub async fn open_db_conn(db_url: String) -> std::result::Result<DatabaseConnect
         .max_lifetime(Duration::from_secs(8))
         .sqlx_logging(true)
         .sqlx_logging_level(LevelFilter::Info);
-        // .set_schema_search_path("my_schema".into()); // Setting default PostgreSQL schema
+    // .set_schema_search_path("my_schema".into()); // Setting default PostgreSQL schema
 
     let db = Database::connect(opt).await?;
 

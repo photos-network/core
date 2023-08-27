@@ -16,11 +16,11 @@
  */
 
 //! This crate offers an **Authorization code flow with PKCE** in a [Photos.network](https://photos.network) core application.
-//! 
+//!
 //! To identify users and granting them access to the applications content, the Open Authorization (OAuth) standard is used so users can login without sharing credentials theirselfs.
 //!
-use axum::Router;
 use anyhow::{anyhow, Ok};
+use axum::Router;
 use openidconnect::core::{
     CoreAuthenticationFlow, CoreClient, CoreProviderMetadata, CoreResponseType, CoreUserInfoClaims,
 };
@@ -94,14 +94,12 @@ impl AuthenticationManager {
     where
         S: Send + Sync + 'static + Clone,
     {
-        Router::new()
-            .layer(tower_http::trace::TraceLayer::new_for_http())
+        Router::new().layer(tower_http::trace::TraceLayer::new_for_http())
     }
 }
 
 #[derive(Debug, Error)]
-enum AuthError {
-}
+enum AuthError {}
 
 impl AuthenticationManager {
     pub fn new() -> Result<Self, anyhow::Error> {

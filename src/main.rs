@@ -18,7 +18,6 @@
 use core::start_server;
 use std::process;
 
-
 /// the `#[tokio::main]` macro initializes a runtime instance and executes the main in it.
 /// See: https://tokio.rs/tokio/tutorial/hello-tokio#async-main-function
 #[tokio::main]

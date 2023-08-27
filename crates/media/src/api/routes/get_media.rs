@@ -1,6 +1,7 @@
 //! Returns a list of owned media items for current user
 //!
 use axum::{extract::Query, http::StatusCode, Json};
+use common::http::extractors::{self, optuser::OptionalUser};
 use common::model::auth::user::User;
 use serde::{Deserialize, Serialize};
 use std::result::Result;
@@ -12,10 +13,10 @@ pub(crate) struct MediaListQuery {
 }
 
 pub(crate) async fn get_media(
-    user: User,
+    user: OptionalUser,
     Query(query): Query<MediaListQuery>,
 ) -> Result<Json<String>, StatusCode> {
-    tracing::error!("GET /media user={}", user);
+    //tracing::error!("GET /media user={}", user);
     // TODO: check auth header
     // TODO: read list from persistency
     // TODO: return list
@@ -40,7 +41,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn get_media_unauthorized_should_fail() {
+    async fn get_media_unauthorized_should_not_fail() {
         // given
         let app = Router::new().nest("/", MediaApi::routes());
 
@@ -57,6 +58,6 @@ mod tests {
             .unwrap();
 
         // then
-        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+        assert_eq!(response.status(), StatusCode::OK);
     }
 }

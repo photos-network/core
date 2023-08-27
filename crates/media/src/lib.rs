@@ -16,7 +16,7 @@
  */
 
 //! This crate handles all media item related tasks in [Photos.network](https://photos.network) core application.
-//! 
+//!
 //! * Providing an REST API to list, add or update items
 //! * Reading and Writing files to the filesystem
 //! * Persisting additional metadata in a database

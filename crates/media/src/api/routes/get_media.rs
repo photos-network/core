@@ -1,10 +1,13 @@
 //! Returns a list of owned media items for current user
 //!
+use axum::extract::State;
 use axum::{extract::Query, http::StatusCode, Json};
-use common::http::extractors::{self, optuser::OptionalUser};
 use common::model::auth::user::User;
 use serde::{Deserialize, Serialize};
 use std::result::Result;
+use tracing::error;
+
+use crate::repository::repository::MediaRepositoryState;
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct MediaListQuery {
@@ -13,9 +16,19 @@ pub(crate) struct MediaListQuery {
 }
 
 pub(crate) async fn get_media(
-    user: OptionalUser,
+    State(repo): State<MediaRepositoryState>,
+    user: User,
     Query(query): Query<MediaListQuery>,
 ) -> Result<Json<String>, StatusCode> {
+    let items = repo.get_media_items_for_user(user.uuid).await;
+    match items {
+        Ok(i) => {
+            error!("Found {} items for user.", i.len());
+        }
+        Err(_) => {
+            error!("Failed to get media items!");
+        }
+    }
     //tracing::error!("GET /media user={}", user);
     // TODO: check auth header
     // TODO: read list from persistency
@@ -23,8 +36,8 @@ pub(crate) async fn get_media(
     Ok(Json(
         format!(
             "list media items. limit={}, offset={}",
-            query.limit.unwrap_or_else(|| 1000),
-            query.offset.unwrap_or_else(|| 0)
+            query.limit.unwrap_or(1000),
+            query.offset.unwrap_or(0)
         )
         .to_owned(),
     ))
@@ -58,6 +71,6 @@ mod tests {
             .unwrap();
 
         // then
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     }
 }

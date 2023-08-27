@@ -15,8 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use std::sync::Arc;
+
 use axum::routing::{delete, get, patch, post};
 use axum::Router;
+
+use crate::repository::repository::{MediaRepository, MediaRepositoryState};
 
 use super::routes::delete_media_id::delete_media_id;
 use super::routes::get_albums::get_albums;
@@ -38,6 +42,11 @@ impl MediaApi {
     where
         S: Send + Sync + 'static + Clone,
     {
+        let media_repository: MediaRepositoryState = Arc::new(MediaRepository {
+            db_url: "",
+            db: sea_orm::DatabaseConnection::Disconnected,
+        });
+
         Router::new()
             // Returns a list of owned media items for current user
             // 200 Ok
@@ -56,8 +65,7 @@ impl MediaApi {
             // 200 - Ok
             // 400 Bad Request - The request body was malformed or a field violated its constraints.
             // 401 Unauthorized - You are unauthenticated
-            // 403 Forbidden - You are authenticated but have no permission to manage the target user.
-            // 500 Internal Server Error
+            // 403 Forbidden - You are authenticated but have no permission to manage the target user.            // 500 Internal Server Error
             .route("/media/:media_id", get(get_media_id))
             // Add files for a specific media item
             .route("/media/:media_id", post(post_media_id))
@@ -78,6 +86,7 @@ impl MediaApi {
             // unshares the given album
             .route("/albums/:entity_id/unshare", patch(patch_albums_id_unshare))
             .layer(tower_http::trace::TraceLayer::new_for_http())
+            .with_state(media_repository)
     }
 }
 

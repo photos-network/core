@@ -37,7 +37,7 @@ impl MediaItem {
     fn new(name: &'static str) -> Self {
         MediaItem {
             uuid: "",
-            name: name,
+            name,
             date_added: Instant::now(),
             date_taken: None,
             location: None,

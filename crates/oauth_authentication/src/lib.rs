@@ -38,6 +38,7 @@ use thiserror::Error;
 use openidconnect::{OAuth2TokenResponse, TokenResponse};
 
 pub struct AuthenticationManager {
+    #[allow(clippy::type_complexity)]
     pub client: openidconnect::Client<
         openidconnect::EmptyAdditionalClaims,
         openidconnect::core::CoreAuthDisplay,
@@ -68,6 +69,7 @@ pub struct AuthenticationManager {
         openidconnect::core::CoreRevocableToken,
         openidconnect::StandardErrorResponse<openidconnect::RevocationErrorResponseType>,
     >,
+    #[allow(clippy::type_complexity)]
     pub provider_metadata: ProviderMetadata<
         EmptyAdditionalProviderMetadata,
         openidconnect::core::CoreAuthDisplay,
@@ -105,7 +107,7 @@ impl AuthenticationManager {
     pub fn new() -> Result<Self, anyhow::Error> {
         tracing::error!("run setup");
 
-        let foo = CoreProviderMetadata::discover(
+        let provider_metadata = CoreProviderMetadata::discover(
             &IssuerUrl::new("https://accounts.google.com".to_string())?,
             http_client,
         )?;
@@ -115,9 +117,9 @@ impl AuthenticationManager {
             PkceCodeChallenge::new_random_sha256();
 
         Ok(Self {
-            provider_metadata: foo.clone(),
+            provider_metadata: provider_metadata.clone(),
             client: CoreClient::from_provider_metadata(
-                foo,
+                provider_metadata,
                 ClientId::new(
                     "953760225864-77il4losuech1dtsea36tmma2e8bko3h.apps.googleusercontent.com"
                         .to_string(),
@@ -133,6 +135,7 @@ impl AuthenticationManager {
         })
     }
 
+    #[allow(clippy::type_complexity)]
     pub fn create_authorization_url(
         client: openidconnect::Client<
             openidconnect::EmptyAdditionalClaims,
@@ -188,6 +191,7 @@ impl AuthenticationManager {
         Ok(nonce)
     }
 
+    #[allow(clippy::type_complexity)]
     pub fn exchange_code(
         client: openidconnect::Client<
             openidconnect::EmptyAdditionalClaims,

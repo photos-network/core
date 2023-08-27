@@ -21,7 +21,7 @@ use uuid::Uuid;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct User {
-    uuid: Uuid,
+    pub uuid: Uuid,
     email: String,
     password: Option<String>,
     lastname: Option<String>,

@@ -32,6 +32,7 @@ where
 {
     type Rejection = String;
 
+    #[allow(clippy::bind_instead_of_map)]
     async fn from_request_parts(parts: &mut Parts, _: &S) -> Result<Self, Self::Rejection> {
         parts
             .headers

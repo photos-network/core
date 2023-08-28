@@ -35,6 +35,7 @@ members = [
 
 # define dependencies to be inherited by members of the workspace
 [workspace.dependencies]
+# local crates
 accounts = { path = "./crates/accounts" }
 activity_pub = { path = "./crates/activity_pub" }
 common = { path = "./crates/common" }
@@ -42,13 +43,20 @@ media = { path = "./crates/media" }
 oauth_authorization_server = { path = "./crates/oauth_authorization_server" }
 oauth_authentication = { path = "./crates/oauth_authentication" }
 
+# 3rd party dependencies
+abi_stable = { version = "0.11.1" }
 activitypub_federation = "0.4.6"
 async-trait = { version = "0.1.73" }
 axum = { version = "0.6.20", features = ["ws", "headers"] }
 axum-test = { version = "12.1.0" }
 anyhow = { version = "1.0.72" }
 
+core_extensions = { version = "1.5.2", default_features = false, features = ["std"] }
 chrono = { version = "0.4.26", features = ["serde"] }
+
+futures = "0.3.25"
+futures-channel = "0.3.25"
+futures-util = "0.3.25"
 
 http = { version = "0.2.9" }
 hyper = { version = "0.14", features = ["full"] }
@@ -56,13 +64,18 @@ mime = { version = "0.3" }
 mockall = { version = "0.11.4" }
 
 rstest = { version = "0.18.1" }
+rumqttc = { version = "0.22.0" }
 
 sea-orm = { version = "0.12.2", features = [ "runtime-tokio-rustls", "debug-print", "mock" ] }
-serde = "1.0.183"
+serde = { version = "1.0.183" }
 serde_json = { version = "1.0.104", features = ["raw_value"] }
+smallvec = "1.8.0"
+sqlx = { version = "0.7.1" }
 
 time = { version = "0.3.27" }
 tokio = { version = "1.30.0", features = ["full"] }
+tokio-stream = { version = "0.1.11", features = ["net"] }
+tokio-util = { version = "0.7.4", features = ["rt"] }
 tower = { version = "0.4.13", features = ["util"] }
 tower-http = { version = "0.4.3", features = ["fs", "tracing", "trace", "cors"] }
 tracing = "0.1.37"
@@ -70,60 +83,49 @@ tracing-subscriber = { version = "0.3.17", features = ["registry", "fmt", "std",
 tracing-appender = "0.2.2"
 
 uuid = { version = "1.4.1", features = ["serde", "v4"] }
-# core_api = { version = "=0.1.0", path = "./crates/core_api" }
-# core_api_crud = { version = "=0.1.0", path = "./crates/api_crud" }
-# core_apub = { version = "=0.1.0", path = "./crates/activity_pub" }
-
-
-
-
-
 
 [dependencies.photos_network_plugin]
 version = "0.2.0"
 path = "./crates/plugin_interface"
 
+
+
 [dependencies]
-accounts = { workspace = true }
-activity_pub = { workspace = true }
-common = { workspace = true }
-media = { workspace = true }
-oauth_authentication = { workspace = true }
-oauth_authorization_server = { workspace = true }
+# local crates
+accounts.workspace = true
+activity_pub.workspace = true
+common.workspace = true
+media.workspace = true
+oauth_authentication.workspace = true
+oauth_authorization_server.workspace = true
 
 
+# Plugin
+abi_stable.workspace = true
+core_extensions.workspace = true
 
-
-
-
-abi_stable = "0.11.1"
-core_extensions = { version = "1.5.2", default_features = false, features = ["std"] }
-serde = "1.0.157"
+# de/serialization
+serde.workspace = true
 serde_json.workspace = true
-smallvec = "1.8.0"
 
+# error handling
+anyhow.workspace = true
 
-anyhow = "1.0.70"
-axum = { version = "0.6.2", features = ["ws"] }
+# http
+axum.workspace = true
+tokio.workspace = true
+tower-http.workspace = true
+tokio-stream.workspace = true
+tokio-util.workspace = true
 
+# logging
 tracing.workspace = true
 tracing-subscriber.workspace = true
 tracing-appender.workspace = true
 
-# oxide-auth = "0.5"
-# oxide-auth-axum = "0.3.0"
-
-futures = "0.3.25"
-futures-channel = "0.3.25"
-futures-util = "0.3.25"
-
-rumqttc = "0.22.0"
-
-tokio.workspace = true
-tokio-stream = { version = "0.1.11", features = ["net"] }
-tokio-util = { version = "0.7.4", features = ["rt"] }
-
-tower-http.workspace = true
+# database
+sea-orm.workspace = true
+sqlx.workspace = true
 
 
 [dev-dependencies]

@@ -1,15 +1,33 @@
 version: '3.3'
 
 services:
-  frontend:
+  core:
     image: 'rust:1.66.1-slim'
     volumes:
       - ./target/debug:/usr/src/app:rw
     environment:
-      - USER=vscode
+      - USER=core
     ports:
       - 7777:7777
+    depends_on:
+      - database
     restart: 'no'
     working_dir: /usr/src/app
 
     command: bash -c "/usr/src/app/core"
+
+  database:
+    image: postgres:latest
+    volumes:
+      - ./data/database:/var/lib/postgres/data
+      - ./data/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_PASSWORD=unsecure
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: psql -U postgres -q -d postgres -c "SELECT 'ready';"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s

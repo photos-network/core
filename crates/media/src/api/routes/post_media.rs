@@ -2,8 +2,7 @@
 //!
 use axum::http::StatusCode;
 use common::model::auth::user::User;
-use log::debug;
-use tracing::error;
+use tracing::{debug, error};
 
 pub(crate) async fn post_media(user: User) -> std::result::Result<String, StatusCode> {
     error!("POST /media user={}", user);

@@ -1,0 +1,20 @@
+[package]
+name = "database"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+readme.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[lib]
+name = "database"
+path = "src/lib.rs"
+doctest = false
+
+[dependencies]
+async-trait = { workspace = true }
+sea-orm = { workspace = true, features = ["sqlx-postgres", "runtime-tokio-rustls", "mock"] }

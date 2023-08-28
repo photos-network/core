@@ -27,7 +27,6 @@
 //! See also the following crates
 //!  * [Authentication](../oauth_authentication/index.html)
 
-use core::time::Duration;
 use std::collections::HashMap;
 use std::fs;
 use std::net::SocketAddr;
@@ -48,7 +47,6 @@ use oauth_authorization_server::state::ServerState;
 use oauth_authorization_server::AuthorizationServerManager;
 use photos_network_plugin::{PluginFactoryRef, PluginId};
 use serde::{Deserialize, Serialize};
-use sqlx::postgres::PgPoolOptions;
 use std::path::Path;
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
@@ -101,13 +99,13 @@ pub async fn start_server() -> Result<()> {
     let mut app_state = ApplicationState::new(config.clone());
 
     let cfg = ServerConfig {
-        listen_addr: String::from(format!("{}", config.internal_url)),
-        domain: String::from(format!("{}", config.external_url)),
+        listen_addr: config.internal_url.to_owned(),
+        domain: config.external_url.to_owned(),
         use_ssl: true,
         realm_keys_base_path: Path::new("config").to_path_buf(),
         realms: vec![ConfigRealm {
             name: String::from("master"),
-            domain: Some(String::from(format!("{}", config.external_url))),
+            domain: Some(config.external_url.to_owned()),
             clients: vec![Client {
                 id: String::from("mobile-app"),
                 secret: None,
@@ -116,17 +114,6 @@ pub async fn start_server() -> Result<()> {
         }],
     };
     let server = ServerState::new(cfg)?;
-
-    // TODO: read from config
-    let db_connection_str = std::env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "postgres://postgres:password@localhost".to_string());
-
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .acquire_timeout(Duration::from_secs(3))
-        .connect(&db_connection_str)
-        .await
-        .expect("can't connect to database");
 
     let mut router = Router::new()
         // favicon
@@ -155,7 +142,7 @@ pub async fn start_server() -> Result<()> {
         .layer(DefaultBodyLimit::disable())
 
         // add database connection pool
-        .with_state(pool)
+        //.with_state(pool)
 
 
         // TODO: share app state with routes

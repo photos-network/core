@@ -20,7 +20,7 @@ use std::sync::Arc;
 use axum::routing::{delete, get, patch, post};
 use axum::Router;
 
-use crate::repository::repository::{MediaRepository, MediaRepositoryState};
+use crate::repository::{MediaRepository, MediaRepositoryState};
 
 use super::routes::delete_media_id::delete_media_id;
 use super::routes::get_albums::get_albums;

@@ -55,7 +55,6 @@ name = "accounts"
 version = "0.6.0"
 dependencies = [
  "axum",
- "log",
  "mockall",
  "rstest",
  "sea-orm",
@@ -796,6 +795,8 @@ dependencies = [
  "anyhow",
  "axum",
  "common",
+ "core_extensions",
+ "database",
  "media",
  "oauth_authentication",
  "oauth_authorization_server",
@@ -997,6 +998,14 @@ name = "data-encoding"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2e66c9d817f1720209181c316d28635c050fa304f9c79e47a520882661b7308"
+
+[[package]]
+name = "database"
+version = "0.6.0"
+dependencies = [
+ "async-trait",
+ "sea-orm",
+]
 
 [[package]]
 name = "der"
@@ -1934,7 +1943,6 @@ dependencies = [
  "axum",
  "common",
  "hyper",
- "log",
  "mime",
  "mockall",
  "rstest",
@@ -2194,7 +2202,7 @@ dependencies = [
  "openidconnect",
  "rand",
  "serde_json",
- "testdir 0.8.0",
+ "testdir",
  "thiserror",
  "tokio",
  "tower-http",
@@ -2215,7 +2223,7 @@ dependencies = [
  "rsa",
  "serde",
  "serde_json",
- "testdir 0.7.3",
+ "testdir",
  "thiserror",
  "tokio",
  "tower-http",
@@ -2868,9 +2876,9 @@ dependencies = [
 
 [[package]]
 name = "rstest"
-version = "0.18.1"
+version = "0.18.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b96577ca10cb3eade7b337eb46520108a67ca2818a24d0b63f41fd62bc9651c"
+checksum = "97eeab2f3c0a199bc4be135c36c924b6590b88c377d416494288c14f2db30199"
 dependencies = [
  "futures",
  "futures-timer",
@@ -2880,9 +2888,9 @@ dependencies = [
 
 [[package]]
 name = "rstest_macros"
-version = "0.18.1"
+version = "0.18.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "225e674cf31712b8bb15fdbca3ec0c1b9d825c5a24407ff2b7e005fb6a29ba03"
+checksum = "d428f8247852f894ee1be110b375111b586d4fa431f6c46e64ba5a0dcccbe605"
 dependencies = [
  "cfg-if",
  "glob",
@@ -3703,20 +3711,6 @@ name = "termtree"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3369f5ac52d5eb6ab48c6b4ffdc8efbcad6b89c765749064ba298f2c68a16a76"
-
-[[package]]
-name = "testdir"
-version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a45fc921e7c4ad1aedb3484811514f3e5cd187886e0bbf1302c175f7578ef552"
-dependencies = [
- "anyhow",
- "backtrace",
- "cargo_metadata",
- "once_cell",
- "sysinfo",
- "whoami",
-]
 
 [[package]]
 name = "testdir"

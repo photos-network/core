@@ -15,6 +15,8 @@ If possible, encrypt your message with our PGP key;
 - **Public key**: https://keys.openpgp.org/search?q=security@photos.network
 
 
+It is also possible to report it via the [Github security page](https://github.com/photos-network/core/security)
+
 Please do not make vulnerabilities public without notifying us and giving us at least 4 weeks to respond.
 
 If you are going to write about Photos.network’s security, please get in touch, so we can make sure that all claims are correct.

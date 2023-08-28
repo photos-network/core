@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::result::Result;
 use tracing::error;
 
-use crate::repository::repository::MediaRepositoryState;
+use crate::repository::MediaRepositoryState;
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct MediaListQuery {

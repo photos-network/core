@@ -25,7 +25,6 @@ use uuid::Uuid;
 
 use crate::data::error::DataAccessError;
 use crate::data::media_item::MediaItem;
-use crate::data::open_db_conn;
 
 pub struct MediaRepository {
     #[allow(dead_code)]
@@ -72,9 +71,7 @@ impl MediaRepository {
 #[async_trait]
 impl MediaRepositoryTrait for MediaRepository {
     async fn new(db_url: &'static str) -> MediaRepository {
-        let db = open_db_conn(db_url.to_string())
-            .await
-            .expect("Could not connect do database 'media'!");
+        let db = DatabaseConnection::Disconnected;
 
         MediaRepository { db, db_url }
     }

@@ -17,20 +17,20 @@ doctest = false
 
 [dependencies]
 # OIDC interfaces
-openidconnect = { version = "3.2.0", features = ["accept-rfc3339-timestamps", "accept-string-booleans"] }
+openidconnect.workspace = true
 
-anyhow = { workspace = true }
+anyhow.workspace = true
 
 # error handling
-thiserror = "1.0.40"
+thiserror.workspace = true
 
 # URL parsing
-url = { version = "2.4.0", features = ["serde"] }
+url.workspace = true
 
 
 
 # OIDC Router
-axum = { workspace = true }
+axum.workspace = true
 tower-http.workspace = true
 
 
@@ -54,8 +54,8 @@ tracing-subscriber.workspace = true
 
 
 [dev-dependencies]
-testdir = { version="0.8.0" }
-rand = { version = "0.8.5" }
-tokio = { workspace = true }
-serde_json = { workspace = true }
-axum-test = { workspace = true }
+testdir.workspace = true
+rand.workspace = true
+tokio.workspace = true
+serde_json.workspace = true
+axum-test.workspace = true

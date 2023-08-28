@@ -66,23 +66,6 @@ To run tests for all crates in this workspace, run:
 $ cargo test --workspace --all-targets
 ```
 
-
-### 📜 Roadmap (MvP)
-
- - Authenticate via openID
- - Create a new media item
- - Upload one or multiple photos
- - Download a list of owned media items
- - Download the original photo from a specific media item
- - *Metadata (size, resolution)
- - *EXIF (orientation, image taken timestamp, last modified, camera)
- - *RAW (image support for RAW-images)
- - *Resize (create low-resolutions / thumbnails)
- - *Deep learning (image recognition, Reinforcement learning)
- - *Plugin System (extract features into plugins)
-
-
-
 ### Visual Studio Code
 
 The fastest start into development can be archived by using [Visual Studio Code](https://code.visualstudio.com/) and [Docker](https://www.docker.com/get-started).
@@ -95,6 +78,22 @@ The fastest start into development can be archived by using [Visual Studio Code]
 6. Launch **Photos.network** from the `RUN` window.
 
 ![VS Code with devcontainers](vscode.gif)
+
+
+
+## 📜 Roadmap (MvP)
+
+ - Authenticate via openID
+ - Create a new media item
+ - Upload one or multiple photos
+ - Download a list of owned media items
+ - Download the original photo from a specific media item
+ - *Metadata (size, resolution)
+ - *EXIF (orientation, image taken timestamp, last modified, camera)
+ - *RAW (image support for RAW-images)
+ - *Resize (create low-resolutions / thumbnails)
+ - *Deep learning (image recognition, Reinforcement learning)
+ - *Plugin System (extract features into plugins)
 
 
 

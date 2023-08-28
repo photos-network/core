@@ -30,9 +30,6 @@ mime = { workspace = true }
 
 # persistency
 sea-orm = { workspace = true }
-log = "0.4.19"
-
-
 uuid = { workspace = true, features = ["serde"] }
 
 

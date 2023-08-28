@@ -15,4 +15,5 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod repository;
+//! This crate offers a database abstraction for [Photos.network](https://photos.network) core application.
+//!

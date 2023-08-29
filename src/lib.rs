@@ -54,10 +54,9 @@ use tower_http::trace::TraceLayer;
 use tracing::{debug, error, info};
 use tracing_subscriber::{fmt, layer::SubscriberExt};
 
-use config::configuration::Configuration;
+use common::config::configuration::Configuration;
 use plugin::plugin_manager::PluginManager;
 
-pub mod config;
 pub mod plugin;
 
 const CONFIG_PATH: &str = "./config/core.json";
@@ -92,20 +91,20 @@ pub async fn start_server() -> Result<()> {
     fs::create_dir_all("plugins")?;
 
     // read config file
-    let config = Configuration::new(CONFIG_PATH).expect("Could not parse configuration!");
-    debug!("Configuration: {}", config);
+    let configuration = Configuration::new(CONFIG_PATH).expect("Could not parse configuration!");
+    debug!("Configuration: {}", configuration);
 
     // init application state
-    let mut app_state = ApplicationState::new(config.clone());
+    let mut app_state = ApplicationState::new(configuration.clone());
 
     let cfg = ServerConfig {
-        listen_addr: config.internal_url.to_owned(),
-        domain: config.external_url.to_owned(),
+        listen_addr: configuration.internal_url.to_owned(),
+        domain: configuration.external_url.to_owned(),
         use_ssl: true,
         realm_keys_base_path: Path::new("config").to_path_buf(),
         realms: vec![ConfigRealm {
             name: String::from("master"),
-            domain: Some(config.external_url.to_owned()),
+            domain: Some(configuration.external_url.to_owned()),
             clients: vec![Client {
                 id: String::from("mobile-app"),
                 secret: None,
@@ -151,8 +150,11 @@ pub async fn start_server() -> Result<()> {
     app_state.router = Some(router);
 
     // initialize plugin manager
-    let mut plugin_manager =
-        PluginManager::new(config.clone(), PLUGIN_PATH.to_string(), &mut app_state)?;
+    let mut plugin_manager = PluginManager::new(
+        configuration.clone(),
+        PLUGIN_PATH.to_string(),
+        &mut app_state,
+    )?;
 
     match plugin_manager.init().await {
         Ok(_) => info!("PluginManager: initialization succed."),

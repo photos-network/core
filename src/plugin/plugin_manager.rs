@@ -20,8 +20,9 @@ use std::path::PathBuf;
 use abi_stable::library::{lib_header_from_path, LibrarySuffix, RawLibrary};
 
 use anyhow::Result;
+use common::config::configuration::Configuration;
 
-use crate::{config::configuration::Configuration, ApplicationState};
+use crate::ApplicationState;
 use core_extensions::SelfOps;
 use photos_network_plugin::{PluginFactoryRef, PluginId};
 use tracing::{debug, error, info};

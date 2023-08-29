@@ -42,10 +42,11 @@ impl MediaApi {
     where
         S: Send + Sync + 'static + Clone,
     {
-        let media_repository: MediaRepositoryState = Arc::new(MediaRepository {
+        let media_repository: MediaRepository = MediaRepository {
             db_url: "",
             db: sea_orm::DatabaseConnection::Disconnected,
-        });
+        };
+        let repository_state: MediaRepositoryState = Arc::new(media_repository);
 
         Router::new()
             // Returns a list of owned media items for current user
@@ -86,7 +87,7 @@ impl MediaApi {
             // unshares the given album
             .route("/albums/:entity_id/unshare", patch(patch_albums_id_unshare))
             .layer(tower_http::trace::TraceLayer::new_for_http())
-            .with_state(media_repository)
+            .with_state(repository_state)
     }
 }
 

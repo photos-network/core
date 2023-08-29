@@ -17,4 +17,4 @@ doctest = false
 
 [dependencies]
 async-trait = { workspace = true }
-sea-orm = { workspace = true, features = ["sqlx-postgres", "runtime-tokio-rustls", "mock"] }
+sea-orm = { workspace = true, features = ["sqlx-sqlite", "sqlx-postgres", "sqlx-mysql", "runtime-tokio-rustls", "macros", "mock", "with-time", "with-uuid" ] }

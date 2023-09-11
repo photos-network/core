@@ -20,4 +20,5 @@
 //!
 pub mod client;
 pub mod configuration;
+pub mod database_config;
 pub mod plugin;

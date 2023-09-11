@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 use std::result::Result;
 use tracing::error;
 
+use crate::data::error::DataAccessError;
+use crate::data::media_item::MediaItem;
 use crate::repository::MediaRepositoryState;
 
 #[derive(Serialize, Deserialize)]
@@ -20,7 +22,8 @@ pub(crate) async fn get_media(
     user: User,
     Query(query): Query<MediaListQuery>,
 ) -> Result<Json<String>, StatusCode> {
-    let items = repo.get_media_items_for_user(user.uuid).await;
+    let items: Result<Vec<MediaItem>, DataAccessError> =
+        repo.get_media_items_for_user(user.uuid.into());
     match items {
         Ok(i) => {
             error!("Found {} items for user.", i.len());
@@ -46,6 +49,7 @@ pub(crate) async fn get_media(
 #[cfg(test)]
 mod tests {
     use axum::Router;
+    use common::config::configuration::Configuration;
     use hyper::{Body, Request};
     use tower::ServiceExt;
 
@@ -56,7 +60,7 @@ mod tests {
     #[tokio::test]
     async fn get_media_unauthorized_should_not_fail() {
         // given
-        let app = Router::new().nest("/", MediaApi::routes());
+        let app = Router::new().nest("/", MediaApi::routes(Configuration::empty()).await);
 
         // when
         let response = app

@@ -20,7 +20,6 @@ services:
     image: postgres:latest
     volumes:
       - ./data/database:/var/lib/postgres/data
-      - ./data/init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       - POSTGRES_PASSWORD=unsecure
     ports:

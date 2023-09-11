@@ -19,7 +19,11 @@ use std::sync::Arc;
 
 use axum::routing::{delete, get, patch, post};
 use axum::Router;
+use common::config::configuration::Configuration;
+use database::Database;
+use tracing::error;
 
+use crate::data::error;
 use crate::repository::{MediaRepository, MediaRepositoryState};
 
 use super::routes::delete_media_id::delete_media_id;
@@ -38,14 +42,11 @@ use super::routes::post_media_id::post_media_id;
 pub struct MediaApi {}
 
 impl MediaApi {
-    pub fn routes<S>() -> Router<S>
+    pub async fn routes<S>(database: &dyn Database) -> Router<S>
     where
-        S: Send + Sync + 'static + Clone,
+        S: Send + Sync + Clone,
     {
-        let media_repository: MediaRepository = MediaRepository {
-            db_url: "",
-            db: sea_orm::DatabaseConnection::Disconnected,
-        };
+        let media_repository: MediaRepository = MediaRepository::new(database).await;
         let repository_state: MediaRepositoryState = Arc::new(media_repository);
 
         Router::new()
@@ -66,7 +67,8 @@ impl MediaApi {
             // 200 - Ok
             // 400 Bad Request - The request body was malformed or a field violated its constraints.
             // 401 Unauthorized - You are unauthenticated
-            // 403 Forbidden - You are authenticated but have no permission to manage the target user.            // 500 Internal Server Error
+            // 403 Forbidden - You are authenticated but have no permission to manage the target user.
+            // 500 Internal Server Error
             .route("/media/:media_id", get(get_media_id))
             // Add files for a specific media item
             .route("/media/:media_id", post(post_media_id))
@@ -104,7 +106,7 @@ mod tests {
     #[tokio::test]
     async fn get_media_with_query_success() {
         // given
-        let app = Router::new().nest("/", MediaApi::routes());
+        let app = Router::new().nest("/", MediaApi::routes(Configuration::empty()).await);
 
         // when
         let response = app
@@ -131,7 +133,7 @@ mod tests {
     #[tokio::test]
     async fn get_media_without_query_success() {
         // given
-        let app = Router::new().nest("/", MediaApi::routes());
+        let app = Router::new().nest("/", MediaApi::routes(Configuration::empty()).await);
 
         // when
         let response = app
@@ -160,7 +162,7 @@ mod tests {
     #[allow(dead_code)]
     async fn post_media_success() {
         // given
-        let app = Router::new().nest("/", MediaApi::routes());
+        let app = Router::new().nest("/", MediaApi::routes(Configuration::empty()).await);
 
         // when
         let response = app

@@ -2,14 +2,10 @@
 
 This crate provides an database abstraction used within [Photos.network](https://photos.network).
 
-## Framework choice
 
-The decision for [sea-orm](https://www.sea-ql.org/SeaORM/) has 3 main reasons compared to [Diesel](https://diesel.rs/)
+We're using polymorphism via trait objects so users can choose between differen database implementations like `PostgreSQL`, `MySQL` or `SQLite`.
+The [trait object](lib.rs) defines shared behaviour and is implemented multiple times for each database type.
 
-- supports async
-- testable
-- written in rust
-
-A big downsite of sea-orm:
-
-- performance
+Another solution would be to use a generic type, since we only need a single instance for now, it would be totally sufficient.
+It might be possible that a user wants to migrate from a `SQLite` to a `PostgreSQL` in the future, than it would be a hard limitation to use only
+a single generic database.

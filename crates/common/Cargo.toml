@@ -19,7 +19,6 @@ doctest = false
 async-trait.workspace = true
 axum.workspace = true
 http.workspace = true
-sea-orm = { workspace = true, features = ["sqlx-postgres", "runtime-tokio-rustls"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 time.workspace = true

@@ -38,6 +38,8 @@ use anyhow::Result;
 use axum::extract::DefaultBodyLimit;
 use axum::routing::{get, head};
 use axum::{Json, Router};
+use common::model::auth::user::User;
+use database::{Database, PostgresDatabase};
 use media::api::router::MediaApi;
 use oauth_authentication::AuthenticationManager;
 use oauth_authorization_server::client::Client;
@@ -48,9 +50,11 @@ use oauth_authorization_server::AuthorizationServerManager;
 use photos_network_plugin::{PluginFactoryRef, PluginId};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
+use tokio::join;
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
+use tracing::callsite::DefaultCallsite;
 use tracing::{debug, error, info};
 use tracing_subscriber::{fmt, layer::SubscriberExt};
 
@@ -60,6 +64,7 @@ use plugin::plugin_manager::PluginManager;
 pub mod plugin;
 
 const CONFIG_PATH: &str = "./config/core.json";
+const DATA_PATH: &str = "./data";
 const PLUGIN_PATH: &str = "./plugins";
 const LOGGING_PATH: &str = "./logs";
 
@@ -114,6 +119,28 @@ pub async fn start_server() -> Result<()> {
     };
     let server = ServerState::new(cfg)?;
 
+    let db = PostgresDatabase::new("postgres://postgres:unsecure@localhost:5432/postgres").await;
+    let users = db.get_users().await;
+    if users.unwrap().len() < 1 {
+        info!("No user found, create a default admin user. Please check `data/credentials.txt` for details.");
+        let default_user = "photo@photos.network";
+        let default_pass = "unsecure";
+        let path = Path::new(DATA_PATH).join("credentials.txt");
+        let mut output = File::create(path)?;
+        let line = "hello";
+        write!(output, "{}\n{}", default_user, default_pass);
+
+        let user = database::User {
+            uuid: "".to_string(),
+            email: default_user.to_string(),
+            password: default_pass.to_string(),
+            lastname: "Admin".to_string(),
+            firstname: "".to_string(),
+        };
+        db.create_user(&user).await;
+    }
+
+    // TODO: check if `data/credentials.txt` still exists and stop immediately!
     let mut router = Router::new()
         // favicon
         .nest_service("/assets", ServeDir::new("src/api/static"))
@@ -123,7 +150,7 @@ pub async fn start_server() -> Result<()> {
         .route("/", head(status))
 
         // Media items
-        .nest("/", MediaApi::routes())
+        .nest("/", MediaApi::routes(db.clone()).await)
 
         // OAuth 2.0 Authentication
         .nest("/", AuthenticationManager::routes())

@@ -16,7 +16,7 @@
  */
 
 #[allow(dead_code)]
-pub(crate) enum DataAccessError {
+pub enum DataAccessError {
     NotFound,
     #[allow(dead_code)]
     TechnicalError,

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cargo test --workspace --all-targets
+cargo fmt --all -- --check
+cargo clippy -- -D warnings

@@ -16,26 +16,27 @@ path = "src/lib.rs"
 doctest = false
 
 [dependencies]
-common = { path = "../common" }
+common.workspace = true
+database = { path = "../database" }
 
-tracing = { workspace = true }
+tracing.workspace = true
 # serialization
 serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true }
+serde_json.workspace = true
 
 # Router
 axum = { workspace = true, features = ["multipart"] }
-tower-http = { workspace = true }
-mime = { workspace = true }
+tower-http.workspace = true
+mime.workspace = true
 
 # persistency
-sea-orm = { workspace = true }
 uuid = { workspace = true, features = ["serde"] }
-
+sqlx.workspace = true
+rand.workspace = true
 
 # testing
-mockall = { workspace = true }
-rstest = { workspace = true }
-tokio = { workspace = true }
+mockall.workspace = true
+rstest.workspace = true
+tokio.workspace = true
 tower = { workspace = true, features = ["util"] }
 hyper = { workspace = true, features = ["full"] }

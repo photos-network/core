@@ -1,10 +1,13 @@
 //! Creates a new media item to aggregate related files for current user
 //!
-use axum::http::StatusCode;
-use common::model::auth::user::User;
+use axum::{extract::Multipart, http::StatusCode};
+use common::auth::user::User;
 use tracing::{debug, error};
 
-pub(crate) async fn post_media(user: User) -> std::result::Result<String, StatusCode> {
+pub(crate) async fn post_media(
+    user: User,
+    mut _multipart: Multipart,
+) -> std::result::Result<String, StatusCode> {
     error!("POST /media user={}", user);
 
     let id = uuid::Uuid::new_v4();

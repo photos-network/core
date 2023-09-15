@@ -3,7 +3,7 @@
 
 use axum::extract::{Multipart, Path};
 use axum::http::StatusCode;
-use common::model::auth::user::User;
+use common::auth::user::User;
 use tracing::{debug, error};
 
 pub(crate) async fn post_media_id(

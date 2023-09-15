@@ -21,12 +21,14 @@ use std::{fmt, fs};
 use serde::Deserialize;
 use tracing::info;
 
-use super::{client::OAuthClientConfig, plugin::Plugin};
+use super::{client::OAuthClientConfig, database_config::DatabaseConfig, plugin::Plugin};
 
 #[derive(Debug, PartialEq, Deserialize, Clone)]
 pub struct Configuration {
     pub internal_url: String,
     pub external_url: String,
+    pub database: Option<DatabaseConfig>,
+    // pub auth_provider: Vec<AuthProvider>,
     pub clients: Vec<OAuthClientConfig>,
     pub plugins: Vec<Plugin>,
 }
@@ -39,6 +41,16 @@ impl Configuration {
             serde_json::from_str(&data).expect("Configuration file could not be parsed as JSON!");
 
         Some(config)
+    }
+
+    pub fn empty() -> Self {
+        Configuration {
+            internal_url: "".into(),
+            external_url: "".into(),
+            database: None,
+            clients: vec![],
+            plugins: vec![],
+        }
     }
 }
 
@@ -78,6 +90,27 @@ impl fmt::Display for Configuration {
 mod tests {
     use super::*;
     use serde_json::Map;
+
+    #[test]
+    fn test_minimal_deserialization() {
+        // given
+        let json = r#"{
+            "internal_url": "192.168.0.1",
+            "external_url": "demo.photos.network",
+            "clients": [],
+            "plugins": []
+        }"#;
+
+        let data = Configuration {
+            internal_url: "192.168.0.1".into(),
+            external_url: "demo.photos.network".into(),
+            database: None,
+            clients: vec![],
+            plugins: vec![],
+        };
+
+        assert_eq!(data, serde_json::from_str(json).unwrap());
+    }
 
     #[test]
     fn test_full_deserialization() {
@@ -121,6 +154,7 @@ mod tests {
         let data = Configuration {
             internal_url: "192.168.0.1".into(),
             external_url: "demo.photos.network".into(),
+            database: None,
             clients: vec![OAuthClientConfig {
                 name: "Client".into(),
                 client_id: "clientId".into(),

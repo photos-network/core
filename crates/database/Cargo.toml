@@ -16,5 +16,12 @@ path = "src/lib.rs"
 doctest = false
 
 [dependencies]
-async-trait = { workspace = true }
-sea-orm = { workspace = true, features = ["sqlx-sqlite", "sqlx-postgres", "sqlx-mysql", "runtime-tokio-rustls", "macros", "mock", "with-time", "with-uuid" ] }
+common.workspace = true
+async-trait.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+tokio.workspace = true
+sqlx = { workspace = true, features = ["runtime-tokio", "tls-native-tls", "postgres", "mysql", "sqlite", "any", "macros", "migrate", "time" ] }
+
+[dev-dependencies]
+testdir.workspace = true

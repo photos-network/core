@@ -18,7 +18,7 @@
 //! This extractor checks if an `Authorization` is header and contains a valid JWT token.
 //! Otherwise it will respond `Some(None)` to indicate an unauthorized user or a visiter without an account at all.
 //!
-use crate::model::auth::user::User;
+use crate::auth::user::User;
 use async_trait::async_trait;
 use axum::extract::FromRequestParts;
 use http::request::Parts;

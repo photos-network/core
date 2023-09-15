@@ -15,13 +15,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::sync::Arc;
-
-use axum::routing::{delete, get, patch, post};
-use axum::Router;
-
-use crate::repository::{MediaRepository, MediaRepositoryState};
-
 use super::routes::delete_media_id::delete_media_id;
 use super::routes::get_albums::get_albums;
 use super::routes::get_albums_id::get_albums_id;
@@ -34,18 +27,22 @@ use super::routes::patch_media_id::patch_media_id;
 use super::routes::post_albums::post_albums;
 use super::routes::post_media::post_media;
 use super::routes::post_media_id::post_media_id;
+use crate::repository::{MediaRepository, MediaRepositoryState};
+use axum::routing::{delete, get, patch, post};
+use axum::Router;
+use common::ApplicationState;
+use database::sqlite::SqliteDatabase;
+use std::sync::Arc;
 
 pub struct MediaApi {}
 
 impl MediaApi {
-    pub fn routes<S>() -> Router<S>
+    pub async fn routes<S>(state: ApplicationState<SqliteDatabase>) -> Router<S>
     where
-        S: Send + Sync + 'static + Clone,
+        S: Send + Sync + Clone,
     {
-        let media_repository: MediaRepository = MediaRepository {
-            db_url: "",
-            db: sea_orm::DatabaseConnection::Disconnected,
-        };
+        let media_repository: MediaRepository<SqliteDatabase> =
+            MediaRepository::new(state.database.clone()).await;
         let repository_state: MediaRepositoryState = Arc::new(media_repository);
 
         Router::new()
@@ -66,7 +63,8 @@ impl MediaApi {
             // 200 - Ok
             // 400 Bad Request - The request body was malformed or a field violated its constraints.
             // 401 Unauthorized - You are unauthenticated
-            // 403 Forbidden - You are authenticated but have no permission to manage the target user.            // 500 Internal Server Error
+            // 403 Forbidden - You are authenticated but have no permission to manage the target user.
+            // 500 Internal Server Error
             .route("/media/:media_id", get(get_media_id))
             // Add files for a specific media item
             .route("/media/:media_id", post(post_media_id))
@@ -93,18 +91,28 @@ impl MediaApi {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use super::*;
     use axum::{
         body::Body,
         http::{self, Request, StatusCode},
     };
+    use common::config::configuration::Configuration;
     use serde_json::json;
+    use sqlx::SqlitePool;
     use tower::ServiceExt;
 
-    #[tokio::test]
-    async fn get_media_with_query_success() {
+    #[sqlx::test]
+    async fn get_media_with_query_success(pool: SqlitePool) {
         // given
-        let app = Router::new().nest("/", MediaApi::routes());
+        let state: ApplicationState<SqliteDatabase> = ApplicationState {
+            config: Configuration::empty(),
+            plugins: HashMap::new(),
+            router: None,
+            database: SqliteDatabase { pool },
+        };
+        let app = Router::new().nest("/", MediaApi::routes(state).await);
 
         // when
         let response = app
@@ -128,10 +136,16 @@ mod tests {
         assert_eq!(body, "list media items. limit=100000, offset=1");
     }
 
-    #[tokio::test]
-    async fn get_media_without_query_success() {
+    #[sqlx::test]
+    async fn get_media_without_query_success(pool: SqlitePool) {
         // given
-        let app = Router::new().nest("/", MediaApi::routes());
+        let state: ApplicationState<SqliteDatabase> = ApplicationState {
+            config: Configuration::empty(),
+            plugins: HashMap::new(),
+            router: None,
+            database: SqliteDatabase { pool },
+        };
+        let app = Router::new().nest("/", MediaApi::routes(state).await);
 
         // when
         let response = app
@@ -155,12 +169,18 @@ mod tests {
         assert_eq!(body, "list media items. limit=1000, offset=0");
     }
 
-    // TODO: re-enable test
-    // #[tokio::test]
+    // TODO: test is failing due to missing multi-part body
+    //#[sqlx::test]
     #[allow(dead_code)]
-    async fn post_media_success() {
+    async fn post_media_success(pool: SqlitePool) {
         // given
-        let app = Router::new().nest("/", MediaApi::routes());
+        let state: ApplicationState<SqliteDatabase> = ApplicationState {
+            config: Configuration::empty(),
+            plugins: HashMap::new(),
+            router: None,
+            database: SqliteDatabase { pool },
+        };
+        let app = Router::new().nest("/", MediaApi::routes(state).await);
 
         // when
         let response = app
@@ -168,8 +188,15 @@ mod tests {
                 Request::builder()
                     .uri("/media")
                     .method("POST")
+                    .header("Authorization", "FakeAuth")
                     .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
-                    // add multipart file to body
+                    .header(
+                        "Content-Disposition",
+                        "attachment; filename=\"DSC_1234.NEF\"",
+                    )
+                    //.body(Body::from(bytes))
+                    //.body(Body::empty())
+                    // TODO: add multipart file to body
                     .body(Body::from(
                         serde_json::to_vec(&json!([1, 2, 3, 4])).unwrap(),
                     ))

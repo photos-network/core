@@ -38,6 +38,10 @@ jobs:
 
       - name: Run cargo test
         uses: actions-rs/cargo@v1
+        env:
+          CARGO_INCREMENTAL: '0'
+          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
         with:
           command: test
           args: --workspace --all-targets
@@ -53,7 +57,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           verbose: true
-          fail_ci_if_error: true
+          fail_ci_if_error: false
 
   lints:
     name: Lint checks

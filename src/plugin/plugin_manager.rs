@@ -20,24 +20,24 @@ use std::path::PathBuf;
 use abi_stable::library::{lib_header_from_path, LibrarySuffix, RawLibrary};
 
 use anyhow::Result;
-use common::config::configuration::Configuration;
+use common::{config::configuration::Configuration, ApplicationState};
 
-use crate::ApplicationState;
 use core_extensions::SelfOps;
+use database::sqlite::SqliteDatabase;
 use photos_network_plugin::{PluginFactoryRef, PluginId};
 use tracing::{debug, error, info};
 
 pub struct PluginManager<'a> {
     config: Configuration,
     path: String,
-    state: &'a mut ApplicationState,
+    state: &'a mut ApplicationState<SqliteDatabase>,
 }
 
 impl<'a> PluginManager<'a> {
     pub fn new(
         config: Configuration,
         path: String,
-        state: &'a mut ApplicationState,
+        state: &'a mut ApplicationState<SqliteDatabase>,
     ) -> Result<Self> {
         Ok(Self {
             config,

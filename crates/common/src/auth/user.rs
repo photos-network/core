@@ -21,15 +21,15 @@ use uuid::Uuid;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct User {
-    pub uuid: Uuid,
-    email: String,
-    password: Option<String>,
-    lastname: Option<String>,
-    firstname: Option<String>,
-    is_locked: bool,
-    created_at: OffsetDateTime,
-    updated_at: Option<OffsetDateTime>,
-    last_login: Option<OffsetDateTime>,
+    pub uuid: String, //Uuid,
+    pub email: String,
+    pub password: Option<String>,
+    pub lastname: Option<String>,
+    pub firstname: Option<String>,
+    pub is_locked: bool,
+    pub created_at: OffsetDateTime,
+    pub updated_at: Option<OffsetDateTime>,
+    pub last_login: Option<OffsetDateTime>,
 }
 
 impl fmt::Display for User {
@@ -45,7 +45,7 @@ impl fmt::Display for User {
 impl User {
     pub(crate) fn new(email: String) -> User {
         User {
-            uuid: Uuid::new_v4(),
+            uuid: Uuid::new_v4().hyphenated().to_string(),
             email,
             password: Option::None,
             lastname: Option::None,

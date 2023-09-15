@@ -16,7 +16,7 @@ path = "src/lib.rs"
 doctest = false
 
 [dependencies]
-common = { path = "../common" }
+common.workspace = true
 database = { path = "../database" }
 
 tracing.workspace = true

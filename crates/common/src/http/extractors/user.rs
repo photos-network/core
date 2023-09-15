@@ -23,7 +23,7 @@ use axum::extract::FromRequestParts;
 use axum::http::StatusCode;
 use http::request::Parts;
 
-use crate::model::auth::user::User;
+use crate::auth::user::User;
 
 #[async_trait]
 impl<S> FromRequestParts<S> for User

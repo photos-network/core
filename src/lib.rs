@@ -27,8 +27,7 @@
 //! See also the following crates
 //!  * [Authentication](../oauth_authentication/index.html)
 
-use std::collections::HashMap;
-use std::fs;
+use std::fs::{self, OpenOptions};
 use std::net::SocketAddr;
 
 use abi_stable::external_types::crossbeam_channel;
@@ -38,8 +37,10 @@ use anyhow::Result;
 use axum::extract::DefaultBodyLimit;
 use axum::routing::{get, head};
 use axum::{Json, Router};
-use common::model::auth::user::User;
-use database::{Database, PostgresDatabase};
+use common::auth::user::User;
+use common::database::Database;
+use common::ApplicationState;
+use database::sqlite::SqliteDatabase;
 use media::api::router::MediaApi;
 use oauth_authentication::AuthenticationManager;
 use oauth_authorization_server::client::Client;
@@ -47,14 +48,12 @@ use oauth_authorization_server::config::ConfigRealm;
 use oauth_authorization_server::config::ServerConfig;
 use oauth_authorization_server::state::ServerState;
 use oauth_authorization_server::AuthorizationServerManager;
-use photos_network_plugin::{PluginFactoryRef, PluginId};
 use serde::{Deserialize, Serialize};
+use sqlx::types::time::OffsetDateTime;
 use std::path::Path;
-use tokio::join;
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
-use tracing::callsite::DefaultCallsite;
 use tracing::{debug, error, info};
 use tracing_subscriber::{fmt, layer::SubscriberExt};
 
@@ -99,8 +98,43 @@ pub async fn start_server() -> Result<()> {
     let configuration = Configuration::new(CONFIG_PATH).expect("Could not parse configuration!");
     debug!("Configuration: {}", configuration);
 
+    // init database
+    //let db = PostgresDatabase::new("postgres://postgres:unsecure@localhost:5432/postgres").await;
+
+    let _file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open("data/core.sqlite3");
+    let db = SqliteDatabase::new("data/core.sqlite3").await;
+    let _ = db.clone().setup().await;
+    let users = db.clone().get_users().await;
+    if users.unwrap().is_empty() {
+        info!("No user found, create a default admin user. Please check `data/credentials.txt` for details.");
+        let default_user = "photo@photos.network";
+        let default_pass = "unsecure";
+        let path = Path::new(DATA_PATH).join("credentials.txt");
+        let _ = fs::write(path, format!("{}\n{}", default_user, default_pass));
+        // let mut output = File::create(path)?;
+        // let line = "hello";
+        // write!(output, "{}\n{}", default_user, default_pass);
+
+        let user = User {
+            uuid: "".to_string(),
+            email: default_user.to_string(),
+            password: Some(default_pass.to_string()),
+            lastname: Some("Admin".to_string()),
+            firstname: Some("".to_string()),
+            is_locked: false,
+            created_at: OffsetDateTime::now_utc(),
+            updated_at: None,
+            last_login: None,
+        };
+        let _ = db.clone().create_user(&user).await;
+    }
+
     // init application state
-    let mut app_state = ApplicationState::new(configuration.clone());
+    //let mut app_state = ApplicationState::<PostgresDatabase>::new(configuration.clone(), db);
+    let mut app_state = ApplicationState::<SqliteDatabase>::new(configuration.clone(), db);
 
     let cfg = ServerConfig {
         listen_addr: configuration.internal_url.to_owned(),
@@ -119,27 +153,6 @@ pub async fn start_server() -> Result<()> {
     };
     let server = ServerState::new(cfg)?;
 
-    let db = PostgresDatabase::new("postgres://postgres:unsecure@localhost:5432/postgres").await;
-    let users = db.get_users().await;
-    if users.unwrap().len() < 1 {
-        info!("No user found, create a default admin user. Please check `data/credentials.txt` for details.");
-        let default_user = "photo@photos.network";
-        let default_pass = "unsecure";
-        let path = Path::new(DATA_PATH).join("credentials.txt");
-        let mut output = File::create(path)?;
-        let line = "hello";
-        write!(output, "{}\n{}", default_user, default_pass);
-
-        let user = database::User {
-            uuid: "".to_string(),
-            email: default_user.to_string(),
-            password: default_pass.to_string(),
-            lastname: "Admin".to_string(),
-            firstname: "".to_string(),
-        };
-        db.create_user(&user).await;
-    }
-
     // TODO: check if `data/credentials.txt` still exists and stop immediately!
     let mut router = Router::new()
         // favicon
@@ -150,7 +163,7 @@ pub async fn start_server() -> Result<()> {
         .route("/", head(status))
 
         // Media items
-        .nest("/", MediaApi::routes(db.clone()).await)
+        .nest("/", MediaApi::routes(app_state.clone()).await)
 
         // OAuth 2.0 Authentication
         .nest("/", AuthenticationManager::routes())
@@ -237,23 +250,6 @@ pub async fn start_server() -> Result<()> {
         .unwrap();
 
     Ok(())
-}
-
-/// Aggregates the applications configuration, its loaded plugins and the router for all REST APIs
-pub struct ApplicationState {
-    pub config: Configuration,
-    pub plugins: HashMap<PluginId, PluginFactoryRef>,
-    pub router: Option<Router>,
-}
-
-impl ApplicationState {
-    pub fn new(config: Configuration) -> Self {
-        Self {
-            config,
-            plugins: HashMap::new(),
-            router: None,
-        }
-    }
 }
 
 async fn status() -> Json<Status> {

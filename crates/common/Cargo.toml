@@ -19,8 +19,11 @@ doctest = false
 async-trait.workspace = true
 axum.workspace = true
 http.workspace = true
+photos_network_plugin = { path = "../plugin_interface" }
+
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
+serde_with.workspace = true
 time.workspace = true
 tracing.workspace = true
 uuid = { workspace = true, features = ["serde"] }

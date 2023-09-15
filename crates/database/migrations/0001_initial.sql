@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS users (
     --auto generated
     uuid VARCHAR NOT NULL,
-    email VARCHAR,
+    email VARCHAR UNIQUE,
     password VARCHAR,
     lastname VARCHAR,
     firstname VARCHAR,

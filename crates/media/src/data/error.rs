@@ -19,6 +19,8 @@
 pub enum DataAccessError {
     NotFound,
     #[allow(dead_code)]
+    InvalidDateFormat,
+    AlreadyExist,
     TechnicalError,
     #[allow(dead_code)]
     OtherError,

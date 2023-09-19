@@ -16,7 +16,7 @@
  */
 
 //! This defines the app configuration
-use std::{fmt, fs};
+use std::{fmt, fs, path::PathBuf};
 
 use serde::Deserialize;
 use tracing::info;
@@ -43,6 +43,7 @@ impl Configuration {
         Some(config)
     }
 
+    /// Use this for tests
     pub fn empty() -> Self {
         Configuration {
             internal_url: "".into(),

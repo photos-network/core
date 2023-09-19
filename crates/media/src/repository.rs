@@ -16,8 +16,10 @@
  */
 
 use axum::async_trait;
+use common::config::configuration::Configuration;
 use std::sync::Arc;
 use std::time::Instant;
+use time::OffsetDateTime;
 use tracing::info;
 use uuid::Uuid;
 
@@ -27,6 +29,7 @@ use crate::data::media_item::MediaItem;
 #[allow(dead_code)]
 pub struct MediaRepository<D> {
     pub(crate) database: D,
+    pub(crate) config: Configuration,
 }
 
 pub type MediaRepositoryState = Arc<dyn MediaRepositoryTrait + Send + Sync>;
@@ -37,11 +40,19 @@ pub type MediaRepositoryState = Arc<dyn MediaRepositoryTrait + Send + Sync>;
 pub trait MediaRepositoryTrait {
     // Gets a list of media items from the DB filted by user_id
     fn get_media_items_for_user(&self, user_id: Uuid) -> Result<Vec<MediaItem>, DataAccessError>;
+
+    /// Create a new media item for the given user
+    fn create_media_item_for_user(
+        &self,
+        user_id: Uuid,
+        name: String,
+        date_taken: String,
+    ) -> Result<Uuid, DataAccessError>;
 }
 
 impl<D> MediaRepository<D> {
-    pub async fn new(database: D) -> Self {
-        Self { database }
+    pub async fn new(database: D, config: Configuration) -> Self {
+        Self { database, config }
     }
 }
 
@@ -62,6 +73,17 @@ impl<D> MediaRepositoryTrait for MediaRepository<D> {
             location: None,
             references: None,
         }])
+    }
+
+    /// inside impl
+    fn create_media_item_for_user(
+        &self,
+        user_id: Uuid,
+        name: String,
+        date_taken: String,
+    ) -> Result<Uuid, DataAccessError> {
+        // Err(DataAccessError::AlreadyExist)
+        Ok(Uuid::new_v4())
     }
 }
 
@@ -91,7 +113,7 @@ mod tests {
 
         let db = SqliteDatabase::new("target/sqlx/test-dbs/media/repository/tests/test_new.sqlite")
             .await;
-        let repository = MediaRepository::new(db).await;
+        let repository = MediaRepository::new(db, Configuration::empty()).await;
 
         // when
         let result = repository.get_media_items_for_user(Uuid::new_v4());

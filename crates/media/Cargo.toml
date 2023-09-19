@@ -17,7 +17,10 @@ doctest = false
 
 [dependencies]
 common.workspace = true
-database = { path = "../database" }
+database.workspace = true
+# database = { path = "../database" }
+
+time.workspace = true
 
 tracing.workspace = true
 # serialization
@@ -34,9 +37,12 @@ uuid = { workspace = true, features = ["serde"] }
 sqlx.workspace = true
 rand.workspace = true
 
+
+[dev-dependencies]
 # testing
 mockall.workspace = true
 rstest.workspace = true
 tokio.workspace = true
 tower = { workspace = true, features = ["util"] }
 hyper = { workspace = true, features = ["full"] }
+testdir.workspace = true

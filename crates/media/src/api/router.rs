@@ -42,7 +42,7 @@ impl MediaApi {
         S: Send + Sync + Clone,
     {
         let media_repository: MediaRepository<SqliteDatabase> =
-            MediaRepository::new(state.database.clone()).await;
+            MediaRepository::new(state.database.clone(), state.config.clone()).await;
         let repository_state: MediaRepositoryState = Arc::new(media_repository);
 
         Router::new()

@@ -15,8 +15,8 @@ pub(crate) async fn post_media_id(
     while let Some(mut field) = multipart.next_field().await.unwrap() {
         if let Some(field_name) = field.name() {
             match field_name {
-                "description" => {
-                    debug!("description={}", field.text().await.unwrap());
+                "name" => {
+                    debug!("name={}", field.text().await.unwrap());
                 }
                 "file" => {
                     // TODO: wrap bytes and write to persistency

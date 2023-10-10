@@ -15,8 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Returns the details of a given media item
-//!
-pub(crate) async fn photo_details() -> std::result::Result<String, StatusCode> {
-    Err(StatusCode::NOT_IMPLEMENTED)
+use uuid::Uuid;
+
+pub struct Tag {
+    pub uuid: &'static Uuid,
+    pub tag: &'static str,
+    pub origin: &'static str,
 }

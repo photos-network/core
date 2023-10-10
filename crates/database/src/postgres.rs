@@ -19,6 +19,8 @@
 //!
 use async_trait::async_trait;
 use common::auth::user::User;
+use common::database::media_item::MediaItem;
+use common::database::reference::Reference;
 use common::database::Database;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::PgPool;
@@ -34,7 +36,7 @@ pub struct PostgresDatabase {
 
 impl PostgresDatabase {
     pub async fn new(db_url: &str) -> Self {
-        let pool = sqlx::postgres::PgPool::connect(db_url).await.unwrap();
+        let pool = PgPool::connect(db_url).await.unwrap();
 
         PostgresDatabase { pool }
     }
@@ -45,34 +47,6 @@ impl Database for PostgresDatabase {
     async fn setup(&mut self) -> Result<(), Box<dyn Error>> {
         // run migrations from `migrations` directory
         sqlx::migrate!("./migrations").run(&self.pool).await?;
-
-        Ok(())
-    }
-
-    async fn create_user(&self, user: &User) -> Result<(), Box<dyn Error>> {
-        let query = "INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)";
-        let id = Uuid::new_v4().hyphenated().to_string();
-        info!("create new user with id `{}`.", id);
-        sqlx::query(query)
-            .bind(id)
-            .bind(&user.email)
-            .bind(&user.password)
-            .bind(&user.lastname)
-            .bind(&user.firstname)
-            .execute(&self.pool)
-            .await?;
-
-        Ok(())
-    }
-
-    async fn update_email(&self, email: &str, user_id: &str) -> Result<(), Box<dyn Error>> {
-        let query = "UPDATE users SET email = $1 WHERE uuid = $2";
-
-        sqlx::query(query)
-            .bind(email)
-            .bind(user_id)
-            .execute(&self.pool)
-            .await?;
 
         Ok(())
     }
@@ -100,5 +74,118 @@ impl Database for PostgresDatabase {
             .collect();
 
         Ok(users)
+    }
+
+    async fn create_user(&self, user: &User) -> Result<(), Box<dyn Error>> {
+        let query = "INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)";
+        let id = Uuid::new_v4().hyphenated().to_string();
+        info!("create new user with id `{}`.", id);
+        sqlx::query(query)
+            .bind(id)
+            .bind(&user.email)
+            .bind(&user.password)
+            .bind(&user.lastname)
+            .bind(&user.firstname)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn get_user(&self, _user_id: &str) -> Result<User, Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+
+    async fn update_email(&self, email: &str, user_id: &str) -> Result<(), Box<dyn Error>> {
+        let query = "UPDATE users SET email = $1 WHERE uuid = $2";
+
+        sqlx::query(query)
+            .bind(email)
+            .bind(user_id)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn update_nickname(&self, _nickname: &str) -> Result<(), Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+
+    async fn update_names(
+        &self,
+        _firstname: &str,
+        _lastname: &str,
+        _user_id: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+
+    async fn disable_user(&self, _user_id: &str) -> Result<(), Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+    async fn enable_user(&self, _user_id: &str) -> Result<(), Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+
+    async fn get_media_items(&self, _user_id: &str) -> Result<Vec<MediaItem>, Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+
+    /// Creates a new media item if it doesn't exist and returns the media_id
+    async fn create_media_item(
+        &self,
+        user_id: &str,
+        name: &str,
+        date_taken: OffsetDateTime,
+    ) -> Result<String, Box<dyn Error>> {
+        let query = "SELECT COUNT(*) FROM media WHERE owner is $1 and taken_at like $2";
+        let res = sqlx::query(query).bind(user_id).bind(date_taken);
+        let rows = res.fetch_all(&self.pool).await?;
+
+        if rows.len() > 1 {
+            // TODO: return media item id for existing item
+            // rows.first()
+        } else {
+            // TODO: create a new media item and return id for new item
+            let query = "INSERT INTO media (uuid, name) VALUES ($1, $2)";
+            let id = Uuid::new_v4().hyphenated().to_string();
+            info!("create new media item with id `{}`.", id);
+
+            sqlx::query(query)
+                .bind(id)
+                .bind(name)
+                .execute(&self.pool)
+                .await?;
+        }
+
+        Ok("NOT IMPLEMENTED".to_string())
+    }
+    async fn get_media_item(&self, _media_id: &str) -> Result<MediaItem, Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+    async fn add_reference(
+        &self,
+        _user_id: &str,
+        _media_id: &str,
+        _reference: &Reference,
+    ) -> Result<String, Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+
+    async fn update_reference(
+        &self,
+        _reference_id: &str,
+        _reference: &Reference,
+    ) -> Result<(), Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+
+    async fn remove_reference(
+        &self,
+        _media_id: &str,
+        _reference_id: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        Err("Not implemented".into())
     }
 }

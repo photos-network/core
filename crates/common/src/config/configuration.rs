@@ -16,7 +16,7 @@
  */
 
 //! This defines the app configuration
-use std::{fmt, fs, path::PathBuf};
+use std::{fmt, fs};
 
 use serde::Deserialize;
 use tracing::info;

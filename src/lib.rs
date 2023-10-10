@@ -75,7 +75,7 @@ pub async fn start_server() -> Result<()> {
     tracing::subscriber::set_global_default(
         fmt::Subscriber::builder()
             // subscriber configuration
-            .with_max_level(tracing::Level::DEBUG)
+            .with_max_level(tracing::Level::TRACE)
             .with_target(false)
             .finish()
             // add additional writers
@@ -105,9 +105,14 @@ pub async fn start_server() -> Result<()> {
         .write(true)
         .create_new(true)
         .open("data/core.sqlite3");
-    let db = SqliteDatabase::new("data/core.sqlite3").await;
-    let _ = db.clone().setup().await;
-    let users = db.clone().get_users().await;
+
+    let mut db = SqliteDatabase::new("data/core.sqlite3").await;
+
+    {
+        let _ = db.setup().await;
+    }
+
+    let users = db.get_users().await;
     if users.unwrap().is_empty() {
         info!("No user found, create a default admin user. Please check `data/credentials.txt` for details.");
         let default_user = "photo@photos.network";

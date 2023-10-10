@@ -15,8 +15,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Returns the details of a given media item
-//!
-pub(crate) async fn photo_details() -> std::result::Result<String, StatusCode> {
-    Err(StatusCode::NOT_IMPLEMENTED)
+use std::time::Instant;
+
+use super::{details::Details, location::Location, reference::Reference, tag::Tag};
+
+pub struct MediaItem {
+    pub uuid: &'static str,
+    pub name: &'static str,
+    pub added_at: Instant,
+    pub taken_at: Option<Instant>,
+    pub details: Option<Details>,
+    pub tags: Option<Vec<Tag>>,
+    pub location: Option<Location>,
+    pub references: Option<Vec<Reference>>,
 }

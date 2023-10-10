@@ -15,8 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Returns the details of a given media item
-//!
-pub(crate) async fn photo_details() -> std::result::Result<String, StatusCode> {
-    Err(StatusCode::NOT_IMPLEMENTED)
+use time::OffsetDateTime;
+
+pub struct Reference {
+    pub uuid: &'static str,
+    pub filepath: String,
+    pub filename: String,
+    pub size: u64,
+    pub description: &'static str,
+    pub last_modified: OffsetDateTime,
+    pub is_missing: bool,
 }

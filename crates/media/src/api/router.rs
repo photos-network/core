@@ -41,7 +41,7 @@ impl MediaApi {
     where
         S: Send + Sync + Clone,
     {
-        let media_repository: MediaRepository<SqliteDatabase> =
+        let media_repository: MediaRepository =
             MediaRepository::new(state.database.clone(), state.config.clone()).await;
         let repository_state: MediaRepositoryState = Arc::new(media_repository);
 
@@ -168,6 +168,45 @@ mod tests {
 
         assert_eq!(body, "list media items. limit=1000, offset=0");
     }
+
+
+    #[sqlx::test]
+    async fn post_media_without_user_fail(pool: SqlitePool) {
+        // given
+        let state: ApplicationState<SqliteDatabase> = ApplicationState {
+            config: Configuration::empty(),
+            plugins: HashMap::new(),
+            router: None,
+            database: SqliteDatabase { pool },
+        };
+        let app = Router::new().nest("/", MediaApi::routes(state).await);
+
+        // when
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/media")
+                    .method("POST")
+                    .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
+                    .header(
+                        "Content-Disposition",
+                        "attachment; filename=\"DSC_1234.NEF\"",
+                    )
+                    //.body(Body::from(bytes))
+                    //.body(Body::empty())
+                    // TODO: add multipart file to body
+                    .body(Body::from(
+                        serde_json::to_vec(&json!([1, 2, 3, 4])).unwrap(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        // then
+        assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
+    }
+
 
     // TODO: test is failing due to missing multi-part body
     //#[sqlx::test]

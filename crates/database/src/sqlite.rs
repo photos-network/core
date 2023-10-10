@@ -1,10 +1,32 @@
+/* Photos.network · A privacy first photo storage and sharing service for fediverse.
+ * Copyright (C) 2020 Photos network developers
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+//! This crate offers a database abstraction for [Photos.network](https://photos.network) core application.
+//!
 use async_trait::async_trait;
 use common::auth::user::User;
+use common::database::media_item::MediaItem;
+use common::database::reference::Reference;
 use common::database::Database;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::Row;
 use sqlx::SqlitePool;
 use std::error::Error;
+use sqlx::sqlite::SqliteQueryResult;
 use tracing::info;
 use uuid::Uuid;
 
@@ -24,35 +46,8 @@ impl SqliteDatabase {
 #[async_trait]
 impl Database for SqliteDatabase {
     async fn setup(&mut self) -> Result<(), Box<dyn Error>> {
+        // run migrations from `migrations` directory
         sqlx::migrate!("./migrations").run(&self.pool).await?;
-
-        Ok(())
-    }
-
-    async fn create_user(&self, user: &User) -> Result<(), Box<dyn Error>> {
-        let query = "INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)";
-        let id = Uuid::new_v4().hyphenated().to_string();
-        info!("create new user with id `{}`.", id);
-        sqlx::query(query)
-            .bind(id)
-            .bind(&user.email)
-            .bind(&user.password)
-            .bind(&user.lastname)
-            .bind(&user.firstname)
-            .execute(&self.pool)
-            .await?;
-
-        Ok(())
-    }
-
-    async fn update_email(&self, email: &str, user_id: &str) -> Result<(), Box<dyn Error>> {
-        let query = "UPDATE users SET email = $1 WHERE uuid = $2";
-
-        sqlx::query(query)
-            .bind(email)
-            .bind(user_id)
-            .execute(&self.pool)
-            .await?;
 
         Ok(())
     }
@@ -81,11 +76,131 @@ impl Database for SqliteDatabase {
 
         Ok(users)
     }
+
+    async fn create_user(&self, user: &User) -> Result<(), Box<dyn Error>> {
+        let query = "INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)";
+        let id = Uuid::new_v4().hyphenated().to_string();
+        info!("create new user with id `{}`.", id);
+        sqlx::query(query)
+            .bind(id)
+            .bind(&user.email)
+            .bind(&user.password)
+            .bind(&user.lastname)
+            .bind(&user.firstname)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn get_user(&self, _user_id: &str) -> Result<User, Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+
+    async fn update_email(&self, email: &str, user_id: &str) -> Result<(), Box<dyn Error>> {
+        let query = "UPDATE users SET email = $1 WHERE uuid = $2";
+
+        sqlx::query(query)
+            .bind(email)
+            .bind(user_id)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn update_nickname(&self, _nickname: &str) -> Result<(), Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+
+    async fn update_names(
+        &self,
+        _firstname: &str,
+        _lastname: &str,
+        _user_id: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+
+    async fn disable_user(&self, _user_id: &str) -> Result<(), Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+    async fn enable_user(&self, _user_id: &str) -> Result<(), Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+
+    async fn get_media_items(&self, _user_id: &str) -> Result<Vec<MediaItem>, Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+    async fn create_media_item(
+        &self,
+        user_id: &str,
+        name: &str,
+        date_taken: OffsetDateTime,
+    ) -> Result<String, Box<dyn Error>> {
+        // TODO: check if item with same `name` and `date_taken` already exists
+        let query = "INSERT INTO media (uuid, owner, name, is_sensitive, added_at, taken_at) VALUES ($1, $2, $3, $4, $5, $6)";
+        let id = Uuid::new_v4().hyphenated().to_string();
+        sqlx::query(query)
+            .bind(id.clone())
+            .bind(&user_id)
+            .bind(&name)
+            .bind(false)
+            .bind(OffsetDateTime::now_utc())
+            .bind(date_taken)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(id)
+    }
+    async fn get_media_item(&self, _media_id: &str) -> Result<MediaItem, Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+    async fn add_reference(
+        &self,
+        user_id: &str,
+        media_id: &str,
+        reference: &Reference,
+    ) -> Result<String, Box<dyn Error>> {
+        let query = "INSERT INTO reference (uuid, media, owner, filepath, filename, size) VALUES ($1, $2, $3, $4, $5, $6)";
+        let id = Uuid::new_v4().hyphenated().to_string();
+        let res: SqliteQueryResult = sqlx::query(query)
+            .bind(id.clone())
+            .bind(&media_id)
+            .bind(&user_id)
+            .bind(&reference.filepath)
+            .bind(&reference.filename)
+            .bind(&reference.size)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(id)
+    }
+
+    async fn update_reference(
+        &self,
+        _reference_id: &str,
+        _reference: &Reference,
+    ) -> Result<(), Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
+
+    async fn remove_reference(
+        &self,
+        _media_id: &str,
+        _reference_id: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        Err("Not implemented".into())
+    }
 }
 
 #[allow(unused_imports)]
 mod tests {
+    use std::path::PathBuf;
+    use std::time::Instant;
+    use testdir::testdir;
     use super::*;
+    use time::format_description::well_known::Rfc3339;
 
     #[sqlx::test]
     async fn create_user_should_succeed(pool: SqlitePool) -> sqlx::Result<()> {
@@ -98,7 +213,7 @@ mod tests {
         // when
         for i in 0..3 {
             let user = User {
-                uuid: uuid::Uuid::new_v4().hyphenated().to_string(),
+                uuid: Uuid::new_v4().hyphenated().to_string(),
                 email: format!("test_{}@photos.network", i),
                 password: Some("unsecure".into()),
                 lastname: Some("Stuermer".into()),
@@ -260,6 +375,89 @@ mod tests {
             users.get(0).unwrap().uuid,
             "570DC079-664A-4496-BAA3-668C445A447"
         );
+
+        Ok(())
+    }
+
+    #[sqlx::test]
+    async fn create_media_item_should_succeed(pool: SqlitePool) -> sqlx::Result<()> {
+        // given
+        let user_id = "570DC079-664A-4496-BAA3-668C445A447";
+        // create fake user - used as FOREIGN KEY in media
+        sqlx::query("INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)")
+            .bind(user_id.clone())
+            .bind("info@photos.network")
+            .bind("unsecure")
+            .bind("Stuermer")
+            .bind("Benjamin")
+            .execute(&pool).await?;
+        let db = SqliteDatabase::new(
+            "target/sqlx/test-dbs/database/sqlite/tests/create_media_item_should_succeed.sqlite",
+        ).await;
+
+        let name = "DSC_1234";
+        let date_taken = OffsetDateTime::now_utc();
+
+        // when
+        let media_item_result = db.create_media_item(user_id.clone(), name, date_taken).await;
+
+        // then
+        assert!(media_item_result.is_ok());
+
+        Ok(())
+    }
+
+    #[sqlx::test]
+    async fn add_reference_should_succeed(pool: SqlitePool) -> sqlx::Result<()> {
+        // given
+        let user_id = "570DC079-664A-4496-BAA3-668C445A447";
+        let media_id = "ef9ac799-02f3-4b3f-9d96-7576be0434e6";
+        let reference_id = "ef9ac799-02f3-4b3f-9d96-7576be0434e6";
+        let added_at = OffsetDateTime::parse("2023-02-03T13:37:01.234567Z", &Rfc3339).unwrap();
+        let taken_at = OffsetDateTime::parse("2023-01-01T13:37:01.234567Z", &Rfc3339).unwrap();
+        // create fake user - used as FOREIGN KEY in reference
+        sqlx::query("INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)")
+            .bind(user_id.clone())
+            .bind("info@photos.network")
+            .bind("unsecure")
+            .bind("Stuermer")
+            .bind("Benjamin")
+            .execute(&pool).await?;
+        // create fake media item - used as FOREIGN KEY in reference
+        sqlx::query("INSERT INTO media (uuid, owner, name, is_sensitive, added_at, taken_at) VALUES ($1, $2, $3, $4, $5, $6)")
+            .bind(media_id.clone())
+            .bind(user_id.clone())
+            .bind("DSC_1234")
+            .bind(false)
+            .bind(added_at)
+            .bind(taken_at)
+            .execute(&pool).await?;
+        let db = SqliteDatabase::new(
+            "target/sqlx/test-dbs/database/sqlite/tests/add_reference_should_succeed.sqlite",
+        ).await;
+
+        let filename = "DSC_1234.jpg";
+        let dir: PathBuf = testdir!();
+        let path = dir.join(filename);
+        let filepath = path.clone().to_str().unwrap().to_string();
+        std::fs::write(&path, "fake image data").ok();
+        let metadata = std::fs::metadata(path.clone()).unwrap();
+
+        let reference = Reference {
+            uuid: reference_id,
+            filepath,
+            filename: filename.to_string(),
+            size: metadata.len(),
+            description: "",
+            last_modified: OffsetDateTime::parse("2023-02-03T13:37:01.234567Z", &Rfc3339).unwrap(),
+            is_missing: false,
+        };
+
+        // when
+        let add_reference_result = db.add_reference(user_id.clone(), media_id.clone(), &reference).await;
+
+        // then
+        assert!(add_reference_result.is_ok());
 
         Ok(())
     }

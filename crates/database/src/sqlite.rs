@@ -22,11 +22,12 @@ use common::auth::user::User;
 use common::database::media_item::MediaItem;
 use common::database::reference::Reference;
 use common::database::Database;
+use sqlx::sqlite::SqliteQueryResult;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::Row;
 use sqlx::SqlitePool;
 use std::error::Error;
-use sqlx::sqlite::SqliteQueryResult;
+use std::i64;
 use tracing::info;
 use uuid::Uuid;
 
@@ -138,20 +139,47 @@ impl Database for SqliteDatabase {
         name: &str,
         date_taken: OffsetDateTime,
     ) -> Result<String, Box<dyn Error>> {
-        // TODO: check if item with same `name` and `date_taken` already exists
-        let query = "INSERT INTO media (uuid, owner, name, is_sensitive, added_at, taken_at) VALUES ($1, $2, $3, $4, $5, $6)";
-        let id = Uuid::new_v4().hyphenated().to_string();
-        sqlx::query(query)
-            .bind(id.clone())
-            .bind(&user_id)
-            .bind(&name)
-            .bind(false)
-            .bind(OffsetDateTime::now_utc())
-            .bind(date_taken)
-            .execute(&self.pool)
-            .await?;
+        struct Item {
+            uuid: String,
+        }
 
-        Ok(id)
+        let rows: Option<Item> = sqlx::query_as!(
+            Item,
+            "SELECT uuid FROM media WHERE owner is $1 AND name is $2 AND taken_at is $3",
+            user_id,
+            name,
+            date_taken,
+        )
+        .fetch_optional(&self.pool)
+        .await?;
+
+        return match rows {
+            Some(r) => {
+                info!(
+                    "found media item with same name and taken_at for current owner. uuid = `{}`.",
+                    r.uuid.clone()
+                );
+
+                Ok(r.uuid)
+            }
+            _ => {
+                let query = "INSERT INTO media (uuid, owner, name, is_sensitive, added_at, taken_at) VALUES ($1, $2, $3, $4, $5, $6)";
+                let id = Uuid::new_v4().hyphenated().to_string();
+                info!("create new media item with id `{}`.", id);
+
+                sqlx::query(query)
+                    .bind(id.clone())
+                    .bind(&user_id)
+                    .bind(&name)
+                    .bind(false)
+                    .bind(OffsetDateTime::now_utc())
+                    .bind(date_taken)
+                    .execute(&self.pool)
+                    .await?;
+
+                Ok(id)
+            }
+        };
     }
     async fn get_media_item(&self, _media_id: &str) -> Result<MediaItem, Box<dyn Error>> {
         Err("Not implemented".into())
@@ -164,13 +192,13 @@ impl Database for SqliteDatabase {
     ) -> Result<String, Box<dyn Error>> {
         let query = "INSERT INTO reference (uuid, media, owner, filepath, filename, size) VALUES ($1, $2, $3, $4, $5, $6)";
         let id = Uuid::new_v4().hyphenated().to_string();
-        let res: SqliteQueryResult = sqlx::query(query)
+        let _res: SqliteQueryResult = sqlx::query(query)
             .bind(id.clone())
             .bind(&media_id)
             .bind(&user_id)
             .bind(&reference.filepath)
             .bind(&reference.filename)
-            .bind(&reference.size)
+            .bind(i64::try_from(reference.size).unwrap())
             .execute(&self.pool)
             .await?;
 
@@ -194,12 +222,11 @@ impl Database for SqliteDatabase {
     }
 }
 
-#[allow(unused_imports)]
+#[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-    use std::time::Instant;
-    use testdir::testdir;
     use super::*;
+    use std::path::PathBuf;
+    use testdir::testdir;
     use time::format_description::well_known::Rfc3339;
 
     #[sqlx::test]
@@ -393,16 +420,62 @@ mod tests {
             .execute(&pool).await?;
         let db = SqliteDatabase::new(
             "target/sqlx/test-dbs/database/sqlite/tests/create_media_item_should_succeed.sqlite",
-        ).await;
+        )
+        .await;
 
         let name = "DSC_1234";
         let date_taken = OffsetDateTime::now_utc();
 
         // when
-        let media_item_result = db.create_media_item(user_id.clone(), name, date_taken).await;
+        let media_item_result = db
+            .create_media_item(user_id.clone(), name, date_taken)
+            .await;
 
         // then
         assert!(media_item_result.is_ok());
+
+        Ok(())
+    }
+
+    #[sqlx::test]
+    async fn create_media_item_should_return_existing_uuid(pool: SqlitePool) -> sqlx::Result<()> {
+        // given
+
+        let user_id = "570DC079-664A-4496-BAA3-668C445A447";
+        let media_id = "ef9ac799-02f3-4b3f-9d96-7576be0434e6";
+        let added_at = OffsetDateTime::parse("2023-02-03T13:37:01.234567Z", &Rfc3339).unwrap();
+        let taken_at = OffsetDateTime::parse("2023-01-01T13:37:01.234567Z", &Rfc3339).unwrap();
+        let name = "DSC_1234";
+
+        // create fake user - used as FOREIGN KEY in media
+        sqlx::query("INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)")
+            .bind(user_id.clone())
+            .bind("info@photos.network")
+            .bind("unsecure")
+            .bind("Stuermer")
+            .bind("Benjamin")
+            .execute(&pool).await?;
+
+        sqlx::query("INSERT INTO media (uuid, owner, name, is_sensitive, added_at, taken_at) VALUES ($1, $2, $3, $4, $5, $6)")
+            .bind(media_id.clone())
+            .bind(user_id.clone())
+            .bind("DSC_1234")
+            .bind(false)
+            .bind(added_at)
+            .bind(taken_at)
+            .execute(&pool).await?;
+
+        let db = SqliteDatabase::new(
+            "target/sqlx/test-dbs/database/sqlite/tests/create_media_item_should_return_existing_uuid.sqlite",
+        )
+        .await;
+
+        // when
+        let media_item_result = db.create_media_item(user_id.clone(), name, taken_at).await;
+
+        // then
+        assert!(media_item_result.is_ok());
+        assert_eq!(media_item_result.ok().unwrap(), media_id.to_string());
 
         Ok(())
     }
@@ -434,7 +507,8 @@ mod tests {
             .execute(&pool).await?;
         let db = SqliteDatabase::new(
             "target/sqlx/test-dbs/database/sqlite/tests/add_reference_should_succeed.sqlite",
-        ).await;
+        )
+        .await;
 
         let filename = "DSC_1234.jpg";
         let dir: PathBuf = testdir!();
@@ -454,7 +528,9 @@ mod tests {
         };
 
         // when
-        let add_reference_result = db.add_reference(user_id.clone(), media_id.clone(), &reference).await;
+        let add_reference_result = db
+            .add_reference(user_id.clone(), media_id.clone(), &reference)
+            .await;
 
         // then
         assert!(add_reference_result.is_ok());

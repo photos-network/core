@@ -169,7 +169,6 @@ mod tests {
         assert_eq!(body, "list media items. limit=1000, offset=0");
     }
 
-
     #[sqlx::test]
     async fn post_media_without_user_fail(pool: SqlitePool) {
         // given
@@ -204,9 +203,8 @@ mod tests {
             .unwrap();
 
         // then
-        assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     }
-
 
     // TODO: test is failing due to missing multi-part body
     //#[sqlx::test]

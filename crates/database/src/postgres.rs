@@ -147,19 +147,22 @@ impl Database for PostgresDatabase {
             // TODO: return media item id for existing item
             // rows.first()
         } else {
-            // TODO: create a new media item and return id for new item
-            let query = "INSERT INTO media (uuid, name) VALUES ($1, $2)";
+            let query = "INSERT INTO media (uuid, owner, name, is_sensitive, added_at, taken_at) VALUES ($1, $2, $3, $4, $5, $6)";
             let id = Uuid::new_v4().hyphenated().to_string();
             info!("create new media item with id `{}`.", id);
 
             sqlx::query(query)
-                .bind(id)
-                .bind(name)
+                .bind(id.clone())
+                .bind(&user_id)
+                .bind(&name)
+                .bind(false)
+                .bind(OffsetDateTime::now_utc())
+                .bind(date_taken)
                 .execute(&self.pool)
                 .await?;
         }
 
-        Ok("NOT IMPLEMENTED".to_string())
+        Ok("".to_string())
     }
     async fn get_media_item(&self, _media_id: &str) -> Result<MediaItem, Box<dyn Error>> {
         Err("Not implemented".into())

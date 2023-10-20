@@ -10,3 +10,5 @@ pub(crate) mod patch_media_id;
 pub(crate) mod post_albums;
 pub(crate) mod post_media;
 pub(crate) mod post_media_id;
+
+pub(crate) mod photo_details;

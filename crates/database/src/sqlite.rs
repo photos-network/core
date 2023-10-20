@@ -28,6 +28,7 @@ use sqlx::Row;
 use sqlx::SqlitePool;
 use std::error::Error;
 use std::i64;
+use tracing::error;
 use tracing::info;
 use uuid::Uuid;
 
@@ -155,35 +156,42 @@ impl Database for SqliteDatabase {
 
         return match rows {
             Some(r) => {
-                info!(
-                    "found media item with same name and taken_at for current owner. uuid = `{}`.",
-                    r.uuid.clone()
-                );
+                info!("Found media item with same 'name' and 'taken_at' for owner.");
 
                 Ok(r.uuid)
             }
             _ => {
                 let query = "INSERT INTO media (uuid, owner, name, is_sensitive, added_at, taken_at) VALUES ($1, $2, $3, $4, $5, $6)";
                 let id = Uuid::new_v4().hyphenated().to_string();
-                info!("create new media item with id `{}`.", id);
 
-                sqlx::query(query)
+                let db_result = sqlx::query(query)
                     .bind(id.clone())
-                    .bind(&user_id)
-                    .bind(&name)
+                    .bind(&user_id.to_string())
+                    .bind(&name.to_string())
                     .bind(false)
                     .bind(OffsetDateTime::now_utc())
                     .bind(date_taken)
                     .execute(&self.pool)
-                    .await?;
+                    .await;
+
+                match db_result {
+                    Ok(_) => {
+                        info!("New media item created with id {}.", id)
+                    }
+                    Err(e) => {
+                        error!("Could not create new media item in database! {}", e);
+                    }
+                }
 
                 Ok(id)
             }
         };
     }
+
     async fn get_media_item(&self, _media_id: &str) -> Result<MediaItem, Box<dyn Error>> {
         Err("Not implemented".into())
     }
+
     async fn add_reference(
         &self,
         user_id: &str,
@@ -406,6 +414,7 @@ mod tests {
         Ok(())
     }
 
+    //noinspection DuplicatedCode
     #[sqlx::test]
     async fn create_media_item_should_succeed(pool: SqlitePool) -> sqlx::Result<()> {
         // given
@@ -437,6 +446,7 @@ mod tests {
         Ok(())
     }
 
+    //noinspection DuplicatedCode
     #[sqlx::test]
     async fn create_media_item_should_return_existing_uuid(pool: SqlitePool) -> sqlx::Result<()> {
         // given
@@ -480,6 +490,7 @@ mod tests {
         Ok(())
     }
 
+    //noinspection DuplicatedCode
     #[sqlx::test]
     async fn add_reference_should_succeed(pool: SqlitePool) -> sqlx::Result<()> {
         // given
@@ -518,7 +529,7 @@ mod tests {
         let metadata = std::fs::metadata(path.clone()).unwrap();
 
         let reference = Reference {
-            uuid: reference_id,
+            uuid: reference_id.to_string(),
             filepath,
             filename: filename.to_string(),
             size: metadata.len(),

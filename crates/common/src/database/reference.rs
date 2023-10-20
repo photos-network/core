@@ -18,7 +18,7 @@
 use time::OffsetDateTime;
 
 pub struct Reference {
-    pub uuid: &'static str,
+    pub uuid: String,
     pub filepath: String,
     pub filename: String,
     pub size: u64,

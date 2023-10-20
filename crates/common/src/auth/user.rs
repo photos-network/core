@@ -45,7 +45,9 @@ impl fmt::Display for User {
 impl User {
     pub(crate) fn new(email: String) -> User {
         User {
-            uuid: Uuid::new_v4().hyphenated().to_string(),
+            uuid: Uuid::parse_str("808c78e4-34bc-486a-902f-929e8b146d20")
+                .unwrap()
+                .to_string(),
             email,
             password: Option::None,
             lastname: Option::None,

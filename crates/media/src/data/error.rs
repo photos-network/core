@@ -20,7 +20,7 @@ pub enum DataAccessError {
     NotFound,
     #[allow(dead_code)]
     InvalidDateFormat,
-    AlreadyExist,
+    AlreadyExist(String),
     TechnicalError,
     #[allow(dead_code)]
     OtherError,

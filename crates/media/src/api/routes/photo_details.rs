@@ -17,6 +17,9 @@
 
 //! Returns the details of a given media item
 //!
+use axum::http::StatusCode;
+
+#[allow(dead_code)]
 pub(crate) async fn photo_details() -> std::result::Result<String, StatusCode> {
     Err(StatusCode::NOT_IMPLEMENTED)
 }

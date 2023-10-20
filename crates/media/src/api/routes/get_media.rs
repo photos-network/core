@@ -40,8 +40,9 @@ pub(crate) async fn get_media(
     user: User,
     Query(query): Query<MediaListQuery>,
 ) -> Result<Json<String>, StatusCode> {
-    let items: Result<Vec<MediaItem>, DataAccessError> =
-        repo.get_media_items_for_user(Uuid::parse_str(user.uuid.as_str()).unwrap()).await;
+    let items: Result<Vec<MediaItem>, DataAccessError> = repo
+        .get_media_items_for_user(Uuid::parse_str(user.uuid.as_str()).unwrap())
+        .await;
     match items {
         Ok(i) => {
             error!("Found {} items for user.", i.len());
@@ -50,8 +51,6 @@ pub(crate) async fn get_media(
             error!("Failed to get media items!");
         }
     }
-    //tracing::error!("GET /media user={}", user);
-    // TODO: check auth header
     // TODO: read list from persistency
     // TODO: return list
     Ok(Json(

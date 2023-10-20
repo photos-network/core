@@ -23,12 +23,15 @@ database.workspace = true
 time.workspace = true
 
 tracing.workspace = true
+tokio = { workspace = true, features = ["full"] }
+
 # serialization
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 
 # Router
 axum = { workspace = true, features = ["multipart"] }
+hyper = { workspace = true, features = ["full"] }
 tower-http.workspace = true
 mime.workspace = true
 
@@ -36,13 +39,12 @@ mime.workspace = true
 uuid = { workspace = true, features = ["serde"] }
 sqlx.workspace = true
 rand.workspace = true
+tempfile.workspace = true
 
 
 [dev-dependencies]
 # testing
 mockall.workspace = true
 rstest.workspace = true
-tokio.workspace = true
 tower = { workspace = true, features = ["util"] }
-hyper = { workspace = true, features = ["full"] }
 testdir.workspace = true

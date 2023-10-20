@@ -20,22 +20,32 @@
 use axum::{
     extract::{Multipart, State},
     http::StatusCode,
+    Json,
 };
+use common::auth::user::User;
+use hyper::header::LOCATION;
+use hyper::HeaderMap;
+use serde::{Deserialize, Serialize};
 use time::format_description::well_known::Rfc3339;
 use time::OffsetDateTime;
-use common::auth::user::User;
 use tracing::debug;
 use uuid::Uuid;
 
 use crate::{data::error::DataAccessError, repository::MediaRepositoryState};
 
+#[derive(Serialize, Deserialize)]
+pub struct ResponseId {
+    pub id: String,
+}
+
 pub(crate) async fn post_media(
     State(repo): State<MediaRepositoryState>,
     user: User,
     mut multipart: Multipart,
-) -> Result<String, StatusCode> {
+) -> Result<(StatusCode, Json<ResponseId>), StatusCode> {
     let mut name = None;
     let mut date_taken = None;
+    let mut headers = HeaderMap::new();
 
     while let Some(field) = multipart.next_field().await.unwrap() {
         if let Some(field_name) = field.name() {
@@ -53,14 +63,16 @@ pub(crate) async fn post_media(
 
     let date = OffsetDateTime::parse(date_taken.unwrap().as_str(), &Rfc3339);
     if date.is_err() {
-        return Err(StatusCode::CREATED);
+        return Err(StatusCode::BAD_REQUEST);
     }
 
-    let result = repo.create_media_item_for_user(
-        Uuid::parse_str(user.uuid.as_str()).unwrap(),
-        name.clone().unwrap(),
-        date.unwrap(),
-    ).await;
+    let result = repo
+        .create_media_item_for_user(
+            Uuid::parse_str(user.uuid.as_str()).unwrap(),
+            name.clone().unwrap(),
+            date.unwrap(),
+        )
+        .await;
 
     match result {
         Ok(uuid) => {
@@ -71,12 +83,20 @@ pub(crate) async fn post_media(
                 uuid.clone().hyphenated().to_string()
             );
 
-            Ok(uuid.hyphenated().to_string())
+            Ok((
+                StatusCode::OK,
+                Json(ResponseId {
+                    id: uuid.hyphenated().to_string(),
+                }),
+            ))
         }
         Err(error) => {
             match error {
-                DataAccessError::AlreadyExist => {
+                DataAccessError::AlreadyExist(id) => {
                     // TODO: use Redirect::permanent to add a Location header to the already existing item
+                    let location = format!("/media/{}", id);
+                    headers.insert(LOCATION, location.parse().unwrap());
+
                     return Err(StatusCode::SEE_OTHER);
                 }
                 _ => {
@@ -102,10 +122,10 @@ mod tests {
     use tower::ServiceExt;
 
     use crate::api::router::MediaApi;
-    use std::io::Write;
-    use std::path::PathBuf;
     use axum::http::header::CONTENT_TYPE;
     use hyper::header::CONNECTION;
+    use std::io::Write;
+    use std::path::PathBuf;
     use testdir::testdir;
     use tokio::io::AsyncReadExt;
 
@@ -161,7 +181,7 @@ mod tests {
                     .header(CONNECTION, "Keep-Alive")
                     .header(
                         CONTENT_TYPE,
-                        format!("multipart/form-data; boundary={}", BOUNDARY)
+                        format!("multipart/form-data; boundary={}", BOUNDARY),
                     )
                     // .header(CONTENT_TYPE, &*format!("multipart/form-data; boundary={}", BOUNDARY))
                     .body(data.into())
@@ -184,7 +204,10 @@ mod tests {
         write!(data, "\r\n")?;
 
         write!(data, "--{}\r\n", BOUNDARY)?;
-        write!(data, "Content-Disposition: form-data; name=\"date_taken\";\r\n")?;
+        write!(
+            data,
+            "Content-Disposition: form-data; name=\"date_taken\";\r\n"
+        )?;
         write!(data, "\r\n")?;
         write!(data, "1985-04-12T23:20:50.52Z")?;
         write!(data, "\r\n")?;
@@ -202,7 +225,10 @@ mod tests {
 
         let mut data: Vec<u8> = Vec::new();
         write!(data, "--{}\r\n", BOUNDARY)?;
-        write!(data, "Content-Disposition: form-data; name=\"DSC_1234\"; filename=\"11.jpg\"\r\n")?;
+        write!(
+            data,
+            "Content-Disposition: form-data; name=\"DSC_1234\"; filename=\"11.jpg\"\r\n"
+        )?;
         write!(data, "Content-Type: image/jpeg\r\n")?;
         write!(data, "\r\n")?;
 

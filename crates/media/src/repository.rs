@@ -19,11 +19,13 @@ use crate::data::error::DataAccessError;
 use crate::data::media_item::MediaItem;
 use axum::async_trait;
 use common::config::configuration::Configuration;
+use common::database::reference::Reference;
 use common::database::Database;
 use database::sqlite::SqliteDatabase;
-use std::fs::File;
+use std::path::Path;
 use std::sync::Arc;
 use time::OffsetDateTime;
+use tokio::fs::File;
 use tracing::info;
 use uuid::Uuid;
 
@@ -52,6 +54,14 @@ pub trait MediaRepositoryTrait {
         name: String,
         date_taken: OffsetDateTime,
     ) -> Result<Uuid, DataAccessError>;
+
+    async fn add_reference_for_media_item(
+        &self,
+        user_id: Uuid,
+        media_id: String,
+        name: String,
+        file: File,
+    ) -> Result<Uuid, DataAccessError>;
 }
 
 impl MediaRepository {
@@ -72,9 +82,9 @@ impl MediaRepositoryTrait for MediaRepository {
             .database
             .get_media_items(user_id.hyphenated().to_string().as_str())
             .await;
-        match items_result {
+        return match items_result {
             Ok(items) => {
-                return Ok(items
+                Ok(items
                     .into_iter()
                     .map(|d| MediaItem {
                         // TODO: fill in missing info like references, details, tags
@@ -88,10 +98,10 @@ impl MediaRepositoryTrait for MediaRepository {
                         location: None,
                         references: None,
                     })
-                    .collect());
+                    .collect())
             }
-            Err(_) => return Err(DataAccessError::OtherError),
-        }
+            Err(_) => Err(DataAccessError::OtherError),
+        };
     }
 
     async fn create_media_item_for_user(
@@ -100,8 +110,7 @@ impl MediaRepositoryTrait for MediaRepository {
         name: String,
         date_taken: OffsetDateTime,
     ) -> Result<Uuid, DataAccessError> {
-        // TODO: map result to <Uuid, DatabaseAccessError>
-        let _ = &self
+        let db_result = &self
             .database
             .create_media_item(
                 user_id.hyphenated().to_string().as_str(),
@@ -110,7 +119,49 @@ impl MediaRepositoryTrait for MediaRepository {
             )
             .await;
 
-        Ok(Uuid::new_v4())
+        match db_result {
+            Ok(id) => Ok(Uuid::parse_str(id.as_str()).unwrap()),
+            Err(_) => Err(DataAccessError::OtherError),
+        }
+    }
+
+    async fn add_reference_for_media_item(
+        &self,
+        user_id: Uuid,
+        media_id: String,
+        name: String,
+        mut tmp_file: File,
+    ) -> Result<Uuid, DataAccessError> {
+        let path = Path::new("data/files/")
+            .join(user_id.clone().hyphenated().to_string())
+            .join(media_id.clone())
+            .join(name.clone());
+
+        let mut dest_file = File::create(path.clone()).await.unwrap();
+
+        let num_bytes = tokio::io::copy(&mut tmp_file, &mut dest_file)
+            .await
+            .expect("Coudl not copy tmp file to path!");
+        println!(
+            "{} bytes copied to path {}",
+            num_bytes,
+            path.clone().to_string_lossy()
+        );
+
+        let reference = Reference {
+            uuid: Uuid::new_v4().hyphenated().to_string(),
+            filepath: path.to_str().unwrap().to_string(),
+            filename: name.to_string(),
+            size: 0u64,
+            description: "",
+            last_modified: OffsetDateTime::now_utc(),
+            is_missing: false,
+        };
+        let _ = &self
+            .database
+            .add_reference(media_id.as_str(), name.as_str(), &reference)
+            .await;
+        Err(DataAccessError::OtherError)
     }
 }
 
@@ -121,6 +172,7 @@ mod tests {
 
     use super::*;
 
+    //noinspection DuplicatedCode
     #[sqlx::test(migrations = "../database/migrations")]
     async fn get_media_items_should_succeed(pool: SqlitePool) -> sqlx::Result<()> {
         // given
@@ -148,7 +200,7 @@ mod tests {
 
         // when
         let result = repository
-            .get_media_items_for_user(uuid::Uuid::parse_str(user_id).unwrap())
+            .get_media_items_for_user(Uuid::parse_str(user_id).unwrap())
             .await;
 
         // then

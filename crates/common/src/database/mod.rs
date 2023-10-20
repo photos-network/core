@@ -28,6 +28,7 @@ pub mod location;
 pub mod media_item;
 pub mod reference;
 pub mod tag;
+pub mod user;
 
 #[async_trait]
 pub trait Database {

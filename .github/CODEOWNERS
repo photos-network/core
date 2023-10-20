@@ -3,7 +3,4 @@
 # https://github.blog/2017-07-06-introducing-code-owners/
 
 # Add a fallback to default owners
-*       @thebino
-
-# setup can be reviewed by the core team
-setup.py @photos.network/core
+*       @photos-network/core-team

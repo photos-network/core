@@ -1,37 +1,14 @@
 {
-    "name": "Photos.network Core",
-    "context": "..",
-    "dockerFile": "../Dockerfile.dev",
-    "forwardPorts": [3000],
-    "postCreateCommand": "mkdir -p config && pip3 install -e .",
-    "runArgs": ["-e", "GIT_EDITOR=code --wait"],
-    "extensions": [
-      "ms-python.vscode-pylance",
-      "visualstudioexptteam.vscodeintellicode",
-      "ms-azure-devops.azure-pipelines",
-      "redhat.vscode-yaml",
-      "esbenp.prettier-vscode"
-    ],
-    "settings": {
-      "python.pythonPath": "/usr/local/bin/python",
-      "python.linting.pylintEnabled": true,
-      "python.linting.enabled": true,
-      "python.formatting.provider": "black",
-      "python.testing.pytestArgs": ["--no-cov"],
-      "python.testing.pytestEnabled": true,
-      "editor.formatOnPaste": false,
-      "editor.formatOnSave": true,
-      "editor.formatOnType": true,
-      "files.trimTrailingWhitespace": true,
-      "terminal.integrated.shell.linux": "/bin/bash",
-      "yaml.customTags": [
-        "!input scalar",
-        "!secret scalar",
-        "!include_dir_named scalar",
-        "!include_dir_list scalar",
-        "!include_dir_merge_list scalar",
-        "!include_dir_merge_named scalar"
-      ]
-    }
-  }
-  
+  "name": "Photos.network core",
+  "image": "mcr.microsoft.com/devcontainers/rust:0-1-bullseye",
+  "appPort": [
+    "7777:7777"
+  ],
+  "extensions": [
+    "rust-lang.rust-analyzer",
+    "swellaby.vscode-rust-test-adapter",
+    "ms-vscode.test-adapter-converter"
+  ],
+  "postCreateCommand": "rustc --version",
+  "remoteUser": "vscode"
+}

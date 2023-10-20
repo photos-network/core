@@ -1,0 +1,16 @@
+[package]
+name = "photos_network_plugin"
+version = "0.2.0"
+authors = ["Photos network developers <info@photos.network>"]
+
+repository = "https://github.com/photos-network/plugin"
+description = "The plugin interface for photos.network an free and open-source project (FOSS) for a self-hosted photo management."
+documentation = "https://developers.photos.network/"
+readme = "README.md"
+keywords = ["Photos.network", "Photos network", "plugin", "abi_stable_crates"]
+license = "GNU Affero General Public License (AGPL)"
+edition = "2021"
+
+[dependencies]
+abi_stable = "0.11.1"
+core_extensions = { version = "1.5.3", default_features = false, features = ["std"] }

@@ -1,0 +1,55 @@
+[package]
+name = "oauth_authorization_server"
+description = "OAuth Authorization Server for privacy and offline support to replace third-party oauth servers like Okta, Google or Microsoft"
+version.workspace = true
+authors.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+readme.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[lib]
+name = "oauth_authorization_server"
+path = "src/lib.rs"
+doctest = false
+
+[dependencies]
+# OIDC interfaces
+openidconnect.workspace = true
+
+# OIDC Router
+axum.workspace = true
+
+# json payload
+serde.workspace = true
+
+# time related data in models
+chrono.workspace = true
+uuid.workspace = true
+
+# key signing and cryptographics
+rsa.workspace = true
+
+# error handling
+thiserror.workspace = true
+
+# URL parsing
+url.workspace = true
+
+# Rendering login form
+# dioxus = "0.3.2"
+# dioxus-ssr = "0.3.0"
+
+tower-http.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+
+[dev-dependencies]
+testdir.workspace = true
+rand.workspace = true
+tokio.workspace = true
+serde_json.workspace = true
+axum-test.workspace = true

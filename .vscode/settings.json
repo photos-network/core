@@ -1,0 +1,21 @@
+{
+  "terminal.integrated.defaultProfile.osx": "zsh",  
+  "editor.semanticTokenColorCustomizations": {
+    "rules": {
+      "*.mutable": {
+        "fontStyle": "", // set to empty string to disable underline, which is the default
+      },
+    }
+  },
+  "rust-analyzer.linkedProjects": [
+    "./crates/accounts/Cargo.toml",
+    "./crates/activity_pub/Cargo.toml",
+    "./crates/common/Cargo.toml",
+    "./crates/media/Cargo.toml",
+    "./crates/oauth_authentication/Cargo.toml",
+    "./crates/oauth_authorization_server/Cargo.toml"
+  ],
+  "rust-analyzer.showUnlinkedFileNotification": false,
+  "debug.allowBreakpointsEverywhere": true,
+  "rest-client.followredirect": false
+}

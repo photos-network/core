@@ -1,9 +1,0 @@
-{
-  "domain": "places365",
-  "name": "Tag various places based on convolutional neural networks (CNN)",
-  "requirements": [
-    "torchvision==0.2.1",
-    "Pillow==5.1.0"
-  ],
-  "core": "0.1.0"
-}

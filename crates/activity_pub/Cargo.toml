@@ -1,0 +1,20 @@
+[package]
+name = "activity_pub"
+description = "ActivityPub protocol implementation to join the Fediverse."
+version.workspace = true
+authors.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+readme.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[lib]
+name = "activity_pub"
+path = "src/lib.rs"
+doctest = false
+
+[dependencies]
+common = { workspace = true }
+activitypub_federation = { workspace = true }

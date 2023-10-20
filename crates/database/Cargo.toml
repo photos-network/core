@@ -1,0 +1,29 @@
+[package]
+name = "database"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+readme.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[lib]
+name = "database"
+path = "src/lib.rs"
+doctest = false
+
+[dependencies]
+common.workspace = true
+async-trait.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+tokio.workspace = true
+sqlx = { workspace = true, features = ["runtime-tokio", "tls-native-tls", "postgres", "mysql", "sqlite", "any", "macros", "migrate", "time" ] }
+
+[dev-dependencies]
+pretty_assertions.workspace = true
+testdir.workspace = true
+time.workspace = true

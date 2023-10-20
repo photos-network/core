@@ -1,0 +1,50 @@
+[package]
+name = "media"
+description = "Manages all media items in the database and on filesystem."
+version.workspace = true
+authors.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+readme.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[lib]
+name = "media"
+path = "src/lib.rs"
+doctest = false
+
+[dependencies]
+common.workspace = true
+database.workspace = true
+# database = { path = "../database" }
+
+time.workspace = true
+
+tracing.workspace = true
+tokio = { workspace = true, features = ["full"] }
+
+# serialization
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+
+# Router
+axum = { workspace = true, features = ["multipart"] }
+hyper = { workspace = true, features = ["full"] }
+tower-http.workspace = true
+mime.workspace = true
+
+# persistency
+uuid = { workspace = true, features = ["serde"] }
+sqlx.workspace = true
+rand.workspace = true
+tempfile.workspace = true
+
+
+[dev-dependencies]
+# testing
+mockall.workspace = true
+rstest.workspace = true
+tower = { workspace = true, features = ["util"] }
+testdir.workspace = true

@@ -1,0 +1,102 @@
+# Welcome to Photos.network <!-- omit in toc -->
+
+This is a **FOSS** (free and open-source software) and lives from contributions of the community.
+
+There are many ways to contribute:
+
+ * 📣 Spread the project or its apps to the world
+ * ✍️ Writing tutorials and blog posts
+ * 📝 Create or update the documentation
+ * 🐛 Submit bug reports
+ * 💡 Adding ideas and feature requests to Discussions
+ * 👩‍🎨 Create designs or UX flows
+ * 🧑‍💻 Contribute code or review PRs
+
+
+
+## 📜 Ground Rules
+
+A community like this should be **open**, **considerate** and **respectful**.
+
+Behaviours that reinforce these values contribute to a positive environment, and include:
+
+ * **Being open**. Members of the community are open to collaboration, whether it's on PEPs, patches, problems, or otherwise.
+ * **Focusing on what is best for the community**. We're respectful of the processes set forth in the community, and we work within them.
+ * **Acknowledging time and effort**. We're respectful of the volunteer efforts that permeate the Python community. We're thoughtful when addressing the efforts of others, keeping in mind that often times the labor was completed simply for the good of the community.
+ * **Being respectful of differing viewpoints and experiences**. We're receptive to constructive comments and criticism, as the experiences and skill sets of other members contribute to the whole of our efforts.
+ * **Showing empathy towards other community members**. We're attentive in our communications, whether in person or online, and we're tactful when approaching differing views.
+ * **Being considerate**. Members of the community are considerate of their peers -- other Python users.
+ * **Being respectful**. We're respectful of others, their positions, their skills, their commitments, and their efforts.
+ * **Gracefully accepting constructive criticism**. When we disagree, we are courteous in raising our issues.
+ * **Using welcoming and inclusive language**. We're accepting of all who wish to take part in our activities, fostering an environment where anyone can participate and everyone can make a difference.
+
+
+
+## 🧑‍💻 Code Contribution
+
+To contribute code to the repository, you don't need any permissions.
+First start by forking the repository, clone and checkout your clone and start coding.
+When you're happy with your changes, create Atomic commits on a **new feature branch** and push it to ***your*** fork.
+
+Atomic commits will make it easier to track down regressions. Also, it enables the ability to cherry-pick or revert a change if needed.
+
+1. Fork it (https://github.com/photos-network/core/fork)
+2. Create a new feature branch (`git checkout -b feature/fooBar`)
+3. Commit your changes (`git commit -am 'Add some fooBar'`)
+4. Push to the branch (`git push origin feature/fooBar`)
+5. Create a new Pull Request
+
+
+
+## 🐛 How to report a bug
+
+> If you find a security vulnerability, do NOT open an issue. Email [security@photos.network](mailto:security@photos.network) instead. See [SECURITY.md](./SECURITY.md) for details.
+
+1. Open the [issues tab](https://github.com/photos-network/core/issues) on github
+2. Click on [New issue](https://github.com/photos-network/core/issues/new/choose)
+3. Choose the bug report 🐛 template and fill out all required fields
+
+
+
+## 💡 How to suggest a feature or enhancement
+
+Check [open issues](https://github.com/photos-network/core/issues) for a list of proposed features.
+
+If your suggestion can not be found already, see if it is already covered by our [Roadmap](https://github.com/photos-network/core/#roadmap).
+
+
+
+## 📟 Communication
+
+To get in touch with the community join our [Discord](https://img.shields.io/discord/793235453871390720) or write use on Mastodon: [@photos@mastodon.cloud](https://mastodon.cloud/@photos).
+
+
+
+## 💾 Technology
+
+The project is written in [Rust](https://rust-lang.org/) 
+
+Underneath it is using these frameworks:
+
+* [tokio](https://github.com/tokio-rs/tokio) - an asynchronous runtime
+* [tower](https://github.com/tower-rs/tower) - for networking
+* [axum](https://github.com/tokio-rs/axum) - as web framework
+* [abi_stable](https://github.com/rodrimati1992/abi_stable_crates) - FFI for dynamic library loading
+
+
+
+## 💻 Build & Run
+
+To build and run the core
+
+```shell
+$ cargo run
+```
+
+### 🔬 Verifications
+
+To run tests
+
+```shell
+$ cargo test
+```

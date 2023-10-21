@@ -85,7 +85,7 @@ impl MediaRepositoryTrait for MediaRepository {
         return match items_result {
             Ok(items) => {
                 Ok(items
-                    .into_iter()
+                    .iter()
                     .map(|d| MediaItem {
                         // TODO: fill in missing info like references, details, tags
                         // TODO: check references on filesystem
@@ -133,7 +133,7 @@ impl MediaRepositoryTrait for MediaRepository {
         mut tmp_file: File,
     ) -> Result<Uuid, DataAccessError> {
         let path = Path::new("data/files/")
-            .join(user_id.clone().hyphenated().to_string())
+            .join(user_id.hyphenated().to_string())
             .join(media_id.clone())
             .join(name.clone());
 

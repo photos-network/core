@@ -202,8 +202,8 @@ impl Database for SqliteDatabase {
         let id = Uuid::new_v4().hyphenated().to_string();
         let _res: SqliteQueryResult = sqlx::query(query)
             .bind(id.clone())
-            .bind(&media_id)
-            .bind(&user_id)
+            .bind(media_id)
+            .bind(user_id)
             .bind(&reference.filepath)
             .bind(&reference.filename)
             .bind(i64::try_from(reference.size).unwrap())

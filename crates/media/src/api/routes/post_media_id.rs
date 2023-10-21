@@ -84,10 +84,7 @@ pub(crate) async fn post_media_id(
 
     match result {
         Ok(uuid) => {
-            debug!(
-                "reference added. uuid={}",
-                uuid.clone().hyphenated().to_string()
-            );
+            debug!("reference added. uuid={}", uuid.hyphenated().to_string());
 
             Ok(uuid.hyphenated().to_string())
         }
@@ -99,11 +96,9 @@ pub(crate) async fn post_media_id(
                     let location = format!("/media/{}", id);
                     headers.insert(LOCATION, location.parse().unwrap());
 
-                    return Err(StatusCode::SEE_OTHER);
+                    Err(StatusCode::SEE_OTHER)
                 }
-                _ => {
-                    return Err(StatusCode::INTERNAL_SERVER_ERROR);
-                }
+                _ => Err(StatusCode::INTERNAL_SERVER_ERROR),
             }
         }
     }

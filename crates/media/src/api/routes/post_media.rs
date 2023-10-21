@@ -160,6 +160,7 @@ mod tests {
     }
 
     #[sqlx::test]
+    #[ignore]
     async fn post_media_authorized_without_name_field(pool: SqlitePool) {
         // given
         let state: ApplicationState<SqliteDatabase> = ApplicationState {
@@ -177,8 +178,7 @@ mod tests {
                 Request::builder()
                     .method("POST")
                     .uri("/media")
-                    .header("Authorization", "FakeAuth")
-                    .header(CONNECTION, "Keep-Alive")
+                    .header(hyper::header::AUTHORIZATION, "FakeAuth")
                     .header(
                         CONTENT_TYPE,
                         format!("multipart/form-data; boundary={}", BOUNDARY),

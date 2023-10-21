@@ -80,7 +80,7 @@ pub(crate) async fn post_media(
                 "name={}, taken={} => id={}",
                 name.unwrap(),
                 date.unwrap(),
-                uuid.clone().hyphenated().to_string()
+                uuid.hyphenated().to_string()
             );
 
             Ok((
@@ -97,11 +97,9 @@ pub(crate) async fn post_media(
                     let location = format!("/media/{}", id);
                     headers.insert(LOCATION, location.parse().unwrap());
 
-                    return Err(StatusCode::SEE_OTHER);
+                    Err(StatusCode::SEE_OTHER)
                 }
-                _ => {
-                    return Err(StatusCode::INTERNAL_SERVER_ERROR);
-                }
+                _ => Err(StatusCode::INTERNAL_SERVER_ERROR),
             }
         }
     }

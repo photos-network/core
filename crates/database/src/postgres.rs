@@ -153,8 +153,8 @@ impl Database for PostgresDatabase {
 
             sqlx::query(query)
                 .bind(id.clone())
-                .bind(&user_id)
-                .bind(&name)
+                .bind(user_id)
+                .bind(name)
                 .bind(false)
                 .bind(OffsetDateTime::now_utc())
                 .bind(date_taken)

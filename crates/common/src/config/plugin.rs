@@ -18,10 +18,10 @@
 //! This describes a plugin with a key-value pair configuration
 use std::fmt;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Map;
 
-#[derive(Debug, PartialEq, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Plugin {
     pub name: String,
     pub config: Option<Map<String, serde_json::Value>>,

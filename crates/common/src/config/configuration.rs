@@ -18,12 +18,16 @@
 //! This defines the app configuration
 use std::{fmt, fs};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tracing::info;
 
-use super::{client::OAuthClientConfig, database_config::DatabaseConfig, plugin::Plugin};
+use super::{
+    client::OAuthClientConfig,
+    database_config::{DatabaseConfig, DatabaseDriver},
+    plugin::Plugin,
+};
 
-#[derive(Debug, PartialEq, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Configuration {
     pub internal_url: String,
     pub external_url: String,
@@ -36,19 +40,33 @@ pub struct Configuration {
 impl Configuration {
     pub fn new(path: &str) -> Option<Self> {
         info!("Load configuration file {}", path);
-        let data = fs::read_to_string(path).expect("Unable to read configuration file!");
-        let config: Configuration =
-            serde_json::from_str(&data).expect("Configuration file could not be parsed as JSON!");
+
+        let read_file_result = fs::read_to_string(path);
+
+        let config = match read_file_result {
+            Ok(data) => serde_json::from_str(&data)
+                .expect("Configuration file could not be parsed as JSON!"),
+            Err(_) => {
+                let default_config = Configuration::empty();
+
+                fs::write(path, serde_json::to_string_pretty(&default_config).unwrap())
+                    .expect("Could not write default Configuration to file!");
+
+                default_config
+            }
+        };
 
         Some(config)
     }
 
-    /// Use this for tests
     pub fn empty() -> Self {
         Configuration {
-            internal_url: "".into(),
-            external_url: "".into(),
-            database: None,
+            internal_url: "127.0.0.1".into(),
+            external_url: "127.0.0.1".into(),
+            database: Some(DatabaseConfig {
+                driver: DatabaseDriver::SQLite,
+                url: "sqlite://data/core.sqlite3".into(),
+            }),
             clients: vec![],
             plugins: vec![],
         }

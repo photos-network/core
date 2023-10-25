@@ -17,15 +17,13 @@
 
 use openidconnect::core::{
     CoreClaimName, CoreJsonWebKeySet, CoreJwsSigningAlgorithm, CoreProviderMetadata,
-    CoreResponseType, CoreRsaPrivateSigningKey, CoreSubjectIdentifierType,
+    CoreResponseType, CoreSubjectIdentifierType,
 };
 use openidconnect::{
-    AuthUrl, EmptyAdditionalProviderMetadata, IssuerUrl, JsonWebKeyId, JsonWebKeySetUrl,
-    PrivateSigningKey, ResponseTypes, TokenUrl, UserInfoUrl,
+    AuthUrl, EmptyAdditionalProviderMetadata, IssuerUrl, JsonWebKeySetUrl, ResponseTypes, TokenUrl,
+    UserInfoUrl,
 };
 
-use std::fs::File;
-use std::io::Read;
 use std::path::Path;
 
 use crate::client::Client;
@@ -49,26 +47,32 @@ impl Realm {
         domain: &str,
         scheme: &str,
         clients: Vec<Client>,
-        realm_keys_base_path: P,
+        _realm_keys_base_path: P,
     ) -> Result<Self, Error> {
-        let mut realm_key_file = File::open(
-            realm_keys_base_path
-                .as_ref()
-                .join(name)
-                .with_extension("pem"),
-        )
-        .unwrap_or_else(|_| {
-            panic!(
-                "key ({}) not found in directory ({})!",
-                name,
-                realm_keys_base_path.as_ref().display()
-            )
-        });
-        let mut realm_key_str = String::new();
-        realm_key_file
-            .read_to_string(&mut realm_key_str)
-            .map_err(|_| Error::CouldNotOpenRealmKey(name.to_owned()))?;
-
+        /*
+                let mut realm_key_file = File::open(
+                    realm_keys_base_path
+                        .as_ref()
+                        .join(name)
+                        .with_extension("pem"),
+                )
+                .unwrap_or_else(|_| {
+                    error!(
+                        "key ({}) not found in directory ({})!",
+                        name,
+                        realm_keys_base_path.as_ref().display()
+                    );
+                    // TODO: create default key file
+                    let mut default_key_file =
+                        File::create(format!("{}/{}.pem", realm_keys_base_path, name)).unwrap();
+                    let default_key = CoreRsaPrivateSigningKey::into() //CoreJsonWebKey::new_rsa();
+                    default_key_file.write(default_key
+                });
+                let mut realm_key_str = String::new();
+                realm_key_file
+                    .read_to_string(&mut realm_key_str)
+                    .map_err(|_| Error::CouldNotOpenRealmKey(name.to_owned()))?;
+        */
         Ok(Self {
             name: name.to_owned(),
             domain: domain.to_owned(),
@@ -140,15 +144,15 @@ impl Realm {
                 CoreClaimName::new("locale".to_string()),
             ])),
             jwks: CoreJsonWebKeySet::new(vec![
-                // RSA keys may also be constructed directly using CoreJsonWebKey::new_rsa(). Providers
-                // aiming to support other key types may provide their own implementation of the
-                // JsonWebKey trait or submit a PR to add the desired support to this crate.
-                CoreRsaPrivateSigningKey::from_pem(
-                    &realm_key_str,
-                    Some(JsonWebKeyId::new(format!("{}_key", name))),
-                )
-                .expect("Invalid RSA private key")
-                .as_verification_key(),
+            // RSA keys may also be constructed directly using CoreJsonWebKey::new_rsa(). Providers
+            // aiming to support other key types may provide their own implementation of the
+            // JsonWebKey trait or submit a PR to add the desired support to this crate.
+            //    CoreRsaPrivateSigningKey::from_pem(
+            //        &realm_key_str,
+            //        Some(JsonWebKeyId::new(format!("{}_key", name))),
+            //    )
+            //    .expect("Invalid RSA private key")
+            //    .as_verification_key(),
             ]),
         })
     }

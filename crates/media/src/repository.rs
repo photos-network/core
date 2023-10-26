@@ -178,7 +178,7 @@ mod tests {
         // given
         let user_id = "605EE8BE-BAF2-4499-B8D4-BA8C74E8B242";
         sqlx::query("INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)")
-            .bind(user_id.clone())
+            .bind(user_id)
             .bind("info@photos.network")
             .bind("unsecure")
             .bind("Stuermer")
@@ -188,7 +188,7 @@ mod tests {
         sqlx::query("INSERT INTO media (uuid, name, owner) VALUES ($1, $2, $3)")
             .bind("6A92460C-53FB-4B42-AC1B-E6760A34E169")
             .bind("DSC_1234")
-            .bind(user_id.clone())
+            .bind(user_id)
             .execute(&pool)
             .await?;
 

@@ -421,7 +421,7 @@ mod tests {
         let user_id = "570DC079-664A-4496-BAA3-668C445A447";
         // create fake user - used as FOREIGN KEY in media
         sqlx::query("INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)")
-            .bind(user_id.clone())
+            .bind(user_id)
             .bind("info@photos.network")
             .bind("unsecure")
             .bind("Stuermer")
@@ -436,9 +436,7 @@ mod tests {
         let date_taken = OffsetDateTime::now_utc();
 
         // when
-        let media_item_result = db
-            .create_media_item(user_id.clone(), name, date_taken)
-            .await;
+        let media_item_result = db.create_media_item(user_id, name, date_taken).await;
 
         // then
         assert!(media_item_result.is_ok());
@@ -459,7 +457,7 @@ mod tests {
 
         // create fake user - used as FOREIGN KEY in media
         sqlx::query("INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)")
-            .bind(user_id.clone())
+            .bind(user_id)
             .bind("info@photos.network")
             .bind("unsecure")
             .bind("Stuermer")
@@ -467,8 +465,8 @@ mod tests {
             .execute(&pool).await?;
 
         sqlx::query("INSERT INTO media (uuid, owner, name, is_sensitive, added_at, taken_at) VALUES ($1, $2, $3, $4, $5, $6)")
-            .bind(media_id.clone())
-            .bind(user_id.clone())
+            .bind(media_id)
+            .bind(user_id)
             .bind("DSC_1234")
             .bind(false)
             .bind(added_at)
@@ -481,7 +479,7 @@ mod tests {
         .await;
 
         // when
-        let media_item_result = db.create_media_item(user_id.clone(), name, taken_at).await;
+        let media_item_result = db.create_media_item(user_id, name, taken_at).await;
 
         // then
         assert!(media_item_result.is_ok());
@@ -501,7 +499,7 @@ mod tests {
         let taken_at = OffsetDateTime::parse("2023-01-01T13:37:01.234567Z", &Rfc3339).unwrap();
         // create fake user - used as FOREIGN KEY in reference
         sqlx::query("INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)")
-            .bind(user_id.clone())
+            .bind(user_id)
             .bind("info@photos.network")
             .bind("unsecure")
             .bind("Stuermer")
@@ -509,8 +507,8 @@ mod tests {
             .execute(&pool).await?;
         // create fake media item - used as FOREIGN KEY in reference
         sqlx::query("INSERT INTO media (uuid, owner, name, is_sensitive, added_at, taken_at) VALUES ($1, $2, $3, $4, $5, $6)")
-            .bind(media_id.clone())
-            .bind(user_id.clone())
+            .bind(media_id)
+            .bind(user_id)
             .bind("DSC_1234")
             .bind(false)
             .bind(added_at)
@@ -539,9 +537,7 @@ mod tests {
         };
 
         // when
-        let add_reference_result = db
-            .add_reference(user_id.clone(), media_id.clone(), &reference)
-            .await;
+        let add_reference_result = db.add_reference(user_id, media_id, &reference).await;
 
         // then
         assert!(add_reference_result.is_ok());

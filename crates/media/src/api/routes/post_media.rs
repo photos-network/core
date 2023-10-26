@@ -121,7 +121,6 @@ mod tests {
 
     use crate::api::router::MediaApi;
     use axum::http::header::CONTENT_TYPE;
-    use hyper::header::CONNECTION;
     use std::io::Write;
     use std::path::PathBuf;
     use testdir::testdir;

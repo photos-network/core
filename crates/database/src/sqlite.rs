@@ -436,9 +436,7 @@ mod tests {
         let date_taken = OffsetDateTime::now_utc();
 
         // when
-        let media_item_result = db
-            .create_media_item(user_id, name, date_taken)
-            .await;
+        let media_item_result = db.create_media_item(user_id, name, date_taken).await;
 
         // then
         assert!(media_item_result.is_ok());
@@ -539,9 +537,7 @@ mod tests {
         };
 
         // when
-        let add_reference_result = db
-            .add_reference(user_id, media_id, &reference)
-            .await;
+        let add_reference_result = db.add_reference(user_id, media_id, &reference).await;
 
         // then
         assert!(add_reference_result.is_ok());

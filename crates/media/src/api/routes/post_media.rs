@@ -104,6 +104,7 @@ pub(crate) async fn post_media(
 mod tests {
     use std::collections::HashMap;
     use std::io;
+    use std::sync::Arc;
 
     use axum::Router;
     use common::{config::configuration::Configuration, ApplicationState};
@@ -126,14 +127,14 @@ mod tests {
     #[sqlx::test]
     async fn post_media_unauthorized_should_fail(pool: SqlitePool) {
         // given
-        let state: ApplicationState<SqliteDatabase> = ApplicationState {
-            config: Configuration::empty(),
+        let state: ApplicationState = ApplicationState {
+            config: Configuration::empty().into(),
             plugins: HashMap::new(),
             router: None,
-            database: SqliteDatabase { pool },
+            database: Arc::new(SqliteDatabase { pool }),
         };
 
-        let app = Router::new().nest("/", MediaApi::routes(state).await);
+        let app = Router::new().nest("/", MediaApi::routes(&state).await);
 
         // when
         let response = app
@@ -155,13 +156,13 @@ mod tests {
     #[ignore]
     async fn post_media_authorized_without_name_field(pool: SqlitePool) {
         // given
-        let state: ApplicationState<SqliteDatabase> = ApplicationState {
-            config: Configuration::empty(),
+        let state: ApplicationState = ApplicationState {
+            config: Configuration::empty().into(),
             plugins: HashMap::new(),
             router: None,
-            database: SqliteDatabase { pool },
+            database: Arc::new(SqliteDatabase { pool }),
         };
-        let app = Router::new().nest("/", MediaApi::routes(state).await);
+        let app = Router::new().nest("/", MediaApi::routes(&state).await);
         let data = media_item_form_data().await.unwrap();
 
         // when

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::Arc};
 
 use abi_stable::library::{lib_header_from_path, LibrarySuffix, RawLibrary};
 
@@ -23,21 +23,20 @@ use anyhow::Result;
 use common::{config::configuration::Configuration, ApplicationState};
 
 use core_extensions::SelfOps;
-use database::sqlite::SqliteDatabase;
 use photos_network_plugin::{PluginFactoryRef, PluginId};
 use tracing::{debug, error, info};
 
 pub struct PluginManager<'a> {
-    config: Configuration,
+    config: Arc<Configuration>,
     path: String,
-    state: &'a mut ApplicationState<SqliteDatabase>,
+    state: &'a mut ApplicationState,
 }
 
 impl<'a> PluginManager<'a> {
     pub fn new(
-        config: Configuration,
+        config: Arc<Configuration>,
         path: String,
-        state: &'a mut ApplicationState<SqliteDatabase>,
+        state: &'a mut ApplicationState,
     ) -> Result<Self> {
         Ok(Self {
             config,

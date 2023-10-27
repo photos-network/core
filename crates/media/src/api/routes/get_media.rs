@@ -65,7 +65,7 @@ pub(crate) async fn get_media(
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
+    use std::{collections::HashMap, sync::Arc};
 
     use axum::Router;
     use common::{config::configuration::Configuration, ApplicationState};
@@ -81,14 +81,14 @@ mod tests {
     #[sqlx::test]
     async fn get_media_unauthorized_should_not_fail(pool: SqlitePool) {
         // given
-        let state: ApplicationState<SqliteDatabase> = ApplicationState {
-            config: Configuration::empty(),
+        let state: ApplicationState = ApplicationState {
+            config: Configuration::empty().into(),
             plugins: HashMap::new(),
             router: None,
-            database: SqliteDatabase { pool },
+            database: Arc::new(SqliteDatabase { pool }),
         };
 
-        let app = Router::new().nest("/", MediaApi::routes(state).await);
+        let app = Router::new().nest("/", MediaApi::routes(&state).await);
 
         // when
         let response = app

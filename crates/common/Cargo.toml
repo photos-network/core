@@ -10,12 +10,16 @@ readme.workspace = true
 license.workspace = true
 edition.workspace = true
 
+[features]
+mock = ["mockall"]
+
 [lib]
 name = "common"
 path = "src/lib.rs"
 doctest = false
 
 [dependencies]
+anyhow.workspace = true
 async-trait.workspace = true
 axum.workspace = true
 http.workspace = true
@@ -27,6 +31,8 @@ serde_with.workspace = true
 time.workspace = true
 tracing.workspace = true
 uuid = { workspace = true, features = ["serde"] }
+mockall = { workspace = true, optional = true }
 
 [dev-dependencies]
 testdir.workspace = true
+mockall = { workspace = true }

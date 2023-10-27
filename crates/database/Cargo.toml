@@ -16,6 +16,7 @@ path = "src/lib.rs"
 doctest = false
 
 [dependencies]
+anyhow.workspace = true
 common.workspace = true
 async-trait.workspace = true
 tracing.workspace = true

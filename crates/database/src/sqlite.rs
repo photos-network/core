@@ -17,6 +17,7 @@
 
 //! This crate offers a database abstraction for [Photos.network](https://photos.network) core application.
 //!
+use anyhow::Result;
 use async_trait::async_trait;
 use common::auth::user::User;
 use common::database::media_item::MediaItem;
@@ -26,7 +27,6 @@ use sqlx::sqlite::SqliteQueryResult;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::Row;
 use sqlx::SqlitePool;
-use std::error::Error;
 use std::i64;
 use tracing::error;
 use tracing::info;
@@ -38,23 +38,19 @@ pub struct SqliteDatabase {
 }
 
 impl SqliteDatabase {
-    pub async fn new(db_url: &str) -> Self {
-        let pool = SqlitePool::connect(db_url).await.unwrap();
+    pub async fn new(db_url: &str) -> Result<Self> {
+        let pool = SqlitePool::connect(db_url).await?;
 
-        SqliteDatabase { pool }
+        // run migrations from `migrations` directory
+        sqlx::migrate!("./migrations").run(&pool).await?;
+
+        Ok(SqliteDatabase { pool })
     }
 }
 
 #[async_trait]
 impl Database for SqliteDatabase {
-    async fn setup(&mut self) -> Result<(), Box<dyn Error>> {
-        // run migrations from `migrations` directory
-        sqlx::migrate!("./migrations").run(&self.pool).await?;
-
-        Ok(())
-    }
-
-    async fn get_users(&self) -> Result<Vec<User>, Box<dyn Error>> {
+    async fn get_users(&self) -> Result<Vec<User>> {
         let query = "SELECT uuid, email, password, lastname, firstname FROM users";
 
         let res = sqlx::query(query);
@@ -79,7 +75,7 @@ impl Database for SqliteDatabase {
         Ok(users)
     }
 
-    async fn create_user(&self, user: &User) -> Result<(), Box<dyn Error>> {
+    async fn create_user(&self, user: &User) -> Result<()> {
         let query = "INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)";
         let id = Uuid::new_v4().hyphenated().to_string();
         info!("create new user with id `{}`.", id);
@@ -95,11 +91,11 @@ impl Database for SqliteDatabase {
         Ok(())
     }
 
-    async fn get_user(&self, _user_id: &str) -> Result<User, Box<dyn Error>> {
-        Err("Not implemented".into())
+    async fn get_user(&self, _user_id: &str) -> Result<User> {
+        unimplemented!()
     }
 
-    async fn update_email(&self, email: &str, user_id: &str) -> Result<(), Box<dyn Error>> {
+    async fn update_email(&self, email: &str, user_id: &str) -> Result<()> {
         let query = "UPDATE users SET email = $1 WHERE uuid = $2";
 
         sqlx::query(query)
@@ -111,35 +107,30 @@ impl Database for SqliteDatabase {
         Ok(())
     }
 
-    async fn update_nickname(&self, _nickname: &str) -> Result<(), Box<dyn Error>> {
-        Err("Not implemented".into())
+    async fn update_nickname(&self, _nickname: &str) -> Result<()> {
+        unimplemented!()
     }
 
-    async fn update_names(
-        &self,
-        _firstname: &str,
-        _lastname: &str,
-        _user_id: &str,
-    ) -> Result<(), Box<dyn Error>> {
-        Err("Not implemented".into())
+    async fn update_names(&self, _firstname: &str, _lastname: &str, _user_id: &str) -> Result<()> {
+        unimplemented!()
     }
 
-    async fn disable_user(&self, _user_id: &str) -> Result<(), Box<dyn Error>> {
-        Err("Not implemented".into())
+    async fn disable_user(&self, _user_id: &str) -> Result<()> {
+        unimplemented!()
     }
-    async fn enable_user(&self, _user_id: &str) -> Result<(), Box<dyn Error>> {
-        Err("Not implemented".into())
+    async fn enable_user(&self, _user_id: &str) -> Result<()> {
+        unimplemented!()
     }
 
-    async fn get_media_items(&self, _user_id: &str) -> Result<Vec<MediaItem>, Box<dyn Error>> {
-        Err("Not implemented".into())
+    async fn get_media_items(&self, _user_id: &str) -> Result<Vec<MediaItem>> {
+        unimplemented!()
     }
     async fn create_media_item(
         &self,
         user_id: &str,
         name: &str,
         date_taken: OffsetDateTime,
-    ) -> Result<String, Box<dyn Error>> {
+    ) -> Result<String> {
         struct Item {
             uuid: String,
         }
@@ -188,8 +179,8 @@ impl Database for SqliteDatabase {
         };
     }
 
-    async fn get_media_item(&self, _media_id: &str) -> Result<MediaItem, Box<dyn Error>> {
-        Err("Not implemented".into())
+    async fn get_media_item(&self, _media_id: &str) -> Result<MediaItem> {
+        unimplemented!()
     }
 
     async fn add_reference(
@@ -197,7 +188,7 @@ impl Database for SqliteDatabase {
         user_id: &str,
         media_id: &str,
         reference: &Reference,
-    ) -> Result<String, Box<dyn Error>> {
+    ) -> Result<String> {
         let query = "INSERT INTO reference (uuid, media, owner, filepath, filename, size) VALUES ($1, $2, $3, $4, $5, $6)";
         let id = Uuid::new_v4().hyphenated().to_string();
         let _res: SqliteQueryResult = sqlx::query(query)
@@ -213,20 +204,12 @@ impl Database for SqliteDatabase {
         Ok(id)
     }
 
-    async fn update_reference(
-        &self,
-        _reference_id: &str,
-        _reference: &Reference,
-    ) -> Result<(), Box<dyn Error>> {
-        Err("Not implemented".into())
+    async fn update_reference(&self, _reference_id: &str, _reference: &Reference) -> Result<()> {
+        unimplemented!()
     }
 
-    async fn remove_reference(
-        &self,
-        _media_id: &str,
-        _reference_id: &str,
-    ) -> Result<(), Box<dyn Error>> {
-        Err("Not implemented".into())
+    async fn remove_reference(&self, _media_id: &str, _reference_id: &str) -> Result<()> {
+        unimplemented!()
     }
 }
 
@@ -238,12 +221,12 @@ mod tests {
     use time::format_description::well_known::Rfc3339;
 
     #[sqlx::test]
-    async fn create_user_should_succeed(pool: SqlitePool) -> sqlx::Result<()> {
+    async fn create_user_should_succeed(pool: SqlitePool) -> Result<()> {
         // given
         let db = SqliteDatabase::new(
             "target/sqlx/test-dbs/database/sqlite/tests/create_user_should_succeed.sqlite",
         )
-        .await;
+        .await?;
 
         // when
         for i in 0..3 {
@@ -273,12 +256,12 @@ mod tests {
     }
 
     #[sqlx::test]
-    async fn create_already_existing_user_should_fail(pool: SqlitePool) -> sqlx::Result<()> {
+    async fn create_already_existing_user_should_fail(pool: SqlitePool) -> Result<()> {
         // given
         let db = SqliteDatabase::new(
             "target/sqlx/test-dbs/database/sqlite/tests/create_already_existing_user_should_fail.sqlite",
         )
-        .await;
+        .await?;
 
         // when
         let uuid = uuid::Uuid::new_v4().hyphenated().to_string();
@@ -310,7 +293,7 @@ mod tests {
     }
 
     #[sqlx::test]
-    async fn update_email_should_succeed(pool: SqlitePool) -> sqlx::Result<()> {
+    async fn update_email_should_succeed(pool: SqlitePool) -> Result<()> {
         // given
         sqlx::query("INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)")
             .bind("570DC079-664A-4496-BAA3-668C445A447")
@@ -322,13 +305,13 @@ mod tests {
         let db = SqliteDatabase::new(
             "target/sqlx/test-dbs/database/sqlite/tests/update_email_should_succeed.sqlite",
         )
-        .await;
+        .await?;
 
         // when
         let result = db
             .update_email(
-                "security@photos.network".into(),
-                "570DC079-664A-4496-BAA3-668C445A447".into(),
+                "security@photos.network",
+                "570DC079-664A-4496-BAA3-668C445A447",
             )
             .await;
 
@@ -343,7 +326,7 @@ mod tests {
     }
 
     #[sqlx::test]
-    async fn update_email_to_existing_should_fail(pool: SqlitePool) -> sqlx::Result<()> {
+    async fn update_email_to_existing_should_fail(pool: SqlitePool) -> Result<()> {
         // given
         sqlx::query("INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)")
             .bind("570DC079-664A-4496-BAA3-668C445A447")
@@ -364,13 +347,13 @@ mod tests {
         let db = SqliteDatabase::new(
             "target/sqlx/test-dbs/database/sqlite/tests/update_email_to_existing_should_fail.sqlite",
         )
-        .await;
+        .await?;
 
         // when
         let result = db
             .update_email(
-                "security@photos.network".into(),
-                "570DC079-664A-4496-BAA3-668C445A447".into(),
+                "security@photos.network",
+                "570DC079-664A-4496-BAA3-668C445A447",
             )
             .await;
 
@@ -387,7 +370,7 @@ mod tests {
     }
 
     #[sqlx::test]
-    async fn get_users_should_succeed(pool: SqlitePool) -> sqlx::Result<()> {
+    async fn get_users_should_succeed(pool: SqlitePool) -> Result<()> {
         // given
         sqlx::query("INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)")
             .bind("570DC079-664A-4496-BAA3-668C445A447")
@@ -399,7 +382,7 @@ mod tests {
         let db = SqliteDatabase::new(
             "target/sqlx/test-dbs/database/sqlite/tests/get_users_should_succeed.sqlite",
         )
-        .await;
+        .await?;
 
         // when
         let users = db.get_users().await.unwrap();
@@ -416,7 +399,7 @@ mod tests {
 
     //noinspection DuplicatedCode
     #[sqlx::test]
-    async fn create_media_item_should_succeed(pool: SqlitePool) -> sqlx::Result<()> {
+    async fn create_media_item_should_succeed(pool: SqlitePool) -> Result<()> {
         // given
         let user_id = "570DC079-664A-4496-BAA3-668C445A447";
         // create fake user - used as FOREIGN KEY in media
@@ -430,7 +413,7 @@ mod tests {
         let db = SqliteDatabase::new(
             "target/sqlx/test-dbs/database/sqlite/tests/create_media_item_should_succeed.sqlite",
         )
-        .await;
+        .await?;
 
         let name = "DSC_1234";
         let date_taken = OffsetDateTime::now_utc();
@@ -446,7 +429,7 @@ mod tests {
 
     //noinspection DuplicatedCode
     #[sqlx::test]
-    async fn create_media_item_should_return_existing_uuid(pool: SqlitePool) -> sqlx::Result<()> {
+    async fn create_media_item_should_return_existing_uuid(pool: SqlitePool) -> Result<()> {
         // given
 
         let user_id = "570DC079-664A-4496-BAA3-668C445A447";
@@ -476,7 +459,7 @@ mod tests {
         let db = SqliteDatabase::new(
             "target/sqlx/test-dbs/database/sqlite/tests/create_media_item_should_return_existing_uuid.sqlite",
         )
-        .await;
+        .await?;
 
         // when
         let media_item_result = db.create_media_item(user_id, name, taken_at).await;
@@ -490,7 +473,7 @@ mod tests {
 
     //noinspection DuplicatedCode
     #[sqlx::test]
-    async fn add_reference_should_succeed(pool: SqlitePool) -> sqlx::Result<()> {
+    async fn add_reference_should_succeed(pool: SqlitePool) -> Result<()> {
         // given
         let user_id = "570DC079-664A-4496-BAA3-668C445A447";
         let media_id = "ef9ac799-02f3-4b3f-9d96-7576be0434e6";
@@ -517,7 +500,7 @@ mod tests {
         let db = SqliteDatabase::new(
             "target/sqlx/test-dbs/database/sqlite/tests/add_reference_should_succeed.sqlite",
         )
-        .await;
+        .await?;
 
         let filename = "DSC_1234.jpg";
         let dir: PathBuf = testdir!();

@@ -29,16 +29,17 @@
 
 use std::fs::{self, OpenOptions};
 use std::net::SocketAddr;
+use std::sync::Arc;
 
 use abi_stable::external_types::crossbeam_channel;
 use abi_stable::std_types::RResult::{RErr, ROk};
 use accounts::api::router::AccountsApi;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use axum::extract::DefaultBodyLimit;
 use axum::routing::{get, head};
 use axum::{Json, Router};
 use common::auth::user::User;
-use common::database::Database;
+use common::database::ArcDynDatabase;
 use common::ApplicationState;
 use database::sqlite::SqliteDatabase;
 use media::api::router::MediaApi;
@@ -95,7 +96,8 @@ pub async fn start_server() -> Result<()> {
     fs::create_dir_all("plugins")?;
 
     // read config file
-    let configuration = Configuration::new(CONFIG_PATH).expect("Could not parse configuration!");
+    let configuration =
+        Arc::new(Configuration::new(CONFIG_PATH).context("Could not parse configuration!")?);
     debug!("Configuration: {}", configuration);
 
     // init database
@@ -106,14 +108,11 @@ pub async fn start_server() -> Result<()> {
         .create_new(true)
         .open("data/core.sqlite3");
 
-    let mut db = SqliteDatabase::new("data/core.sqlite3").await;
+    // TODO: which db?
+    let db: ArcDynDatabase = Arc::new(SqliteDatabase::new("data/core.sqlite3").await?);
 
-    {
-        let _ = db.setup().await;
-    }
-
-    let users = db.get_users().await;
-    if users.unwrap().is_empty() {
+    let users = db.get_users().await?;
+    if users.is_empty() {
         info!("No user found, create a default admin user. Please check `data/credentials.txt` for details.");
         let default_user = "photo@photos.network";
         let default_pass = "unsecure";
@@ -134,12 +133,11 @@ pub async fn start_server() -> Result<()> {
             updated_at: None,
             last_login: None,
         };
-        let _ = db.clone().create_user(&user).await;
+        let _ = db.create_user(&user).await;
     }
 
     // init application state
-    //let mut app_state = ApplicationState::<PostgresDatabase>::new(configuration.clone(), db);
-    let mut app_state = ApplicationState::<SqliteDatabase>::new(configuration.clone(), db);
+    let mut app_state = ApplicationState::new(Arc::clone(&configuration), db);
 
     let cfg = ServerConfig {
         listen_addr: configuration.internal_url.to_owned(),
@@ -168,7 +166,7 @@ pub async fn start_server() -> Result<()> {
         .route("/", head(status))
 
         // Media items
-        .nest("/", MediaApi::routes(app_state.clone()).await)
+        .nest("/", MediaApi::routes(&app_state).await)
 
         // OAuth 2.0 Authentication
         .nest("/", AuthenticationManager::routes())
@@ -196,7 +194,7 @@ pub async fn start_server() -> Result<()> {
 
     // initialize plugin manager
     let mut plugin_manager = PluginManager::new(
-        configuration.clone(),
+        Arc::clone(&configuration),
         PLUGIN_PATH.to_string(),
         &mut app_state,
     )?;
@@ -252,7 +250,7 @@ pub async fn start_server() -> Result<()> {
     axum::Server::bind(&addr)
         .serve(router.into_make_service())
         .await
-        .unwrap();
+        .context("start server")?;
 
     Ok(())
 }

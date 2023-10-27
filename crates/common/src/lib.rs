@@ -18,11 +18,11 @@
 //! This crate offers shared data models for [Photos.network](https://photos.network) core application.
 //!
 
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use axum::Router;
 use config::configuration::Configuration;
-use database::Database;
+use database::ArcDynDatabase;
 use photos_network_plugin::{PluginFactoryRef, PluginId};
 
 pub mod auth;
@@ -35,18 +35,15 @@ pub mod model {
 
 /// Aggregates the applications configuration, its loaded plugins and the router for all REST APIs
 #[derive(Clone)]
-pub struct ApplicationState<D> {
-    pub config: Configuration,
+pub struct ApplicationState {
+    pub config: Arc<Configuration>,
     pub plugins: HashMap<PluginId, PluginFactoryRef>,
     pub router: Option<Router>,
-    pub database: D,
+    pub database: ArcDynDatabase,
 }
 
-impl<D> ApplicationState<D>
-where
-    D: Database,
-{
-    pub fn new(config: Configuration, database: D) -> Self {
+impl ApplicationState {
+    pub fn new(config: Arc<Configuration>, database: ArcDynDatabase) -> Self {
         Self {
             config,
             plugins: HashMap::new(),

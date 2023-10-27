@@ -17,12 +17,12 @@
 
 use crate::data::error::DataAccessError;
 use crate::data::media_item::MediaItem;
+use anyhow::Result;
 use axum::async_trait;
 use bytes::Bytes;
 use common::config::configuration::Configuration;
 use common::database::reference::Reference;
-use common::database::Database;
-use database::sqlite::SqliteDatabase;
+use common::database::ArcDynDatabase;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
@@ -33,8 +33,8 @@ use uuid::Uuid;
 
 #[allow(dead_code)]
 pub struct MediaRepository {
-    pub(crate) database: SqliteDatabase,
-    pub(crate) config: Configuration,
+    pub(crate) database: ArcDynDatabase,
+    pub(crate) config: Arc<Configuration>,
 }
 
 pub type MediaRepositoryState = Arc<dyn MediaRepositoryTrait + Send + Sync>;
@@ -67,7 +67,7 @@ pub trait MediaRepositoryTrait {
 }
 
 impl MediaRepository {
-    pub async fn new(database: SqliteDatabase, config: Configuration) -> Self {
+    pub async fn new(database: ArcDynDatabase, config: Arc<Configuration>) -> Self {
         Self { database, config }
     }
 }
@@ -175,37 +175,21 @@ impl MediaRepositoryTrait for MediaRepository {
 }
 
 #[allow(unused_imports)]
+#[cfg(test)]
 mod tests {
-    use database::sqlite::SqliteDatabase;
-    use sqlx::SqlitePool;
-
     use super::*;
+    use common::database::*;
 
-    //noinspection DuplicatedCode
-    #[sqlx::test(migrations = "../database/migrations")]
-    async fn get_media_items_should_succeed(pool: SqlitePool) -> sqlx::Result<()> {
+    #[tokio::test]
+    async fn get_media_items_should_succeed() -> Result<()> {
         // given
         let user_id = "605EE8BE-BAF2-4499-B8D4-BA8C74E8B242";
-        sqlx::query("INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)")
-            .bind(user_id)
-            .bind("info@photos.network")
-            .bind("unsecure")
-            .bind("Stuermer")
-            .bind("Benjamin")
-            .execute(&pool).await?;
-
-        sqlx::query("INSERT INTO media (uuid, name, owner) VALUES ($1, $2, $3)")
-            .bind("6A92460C-53FB-4B42-AC1B-E6760A34E169")
-            .bind("DSC_1234")
-            .bind(user_id)
-            .execute(&pool)
-            .await?;
-
-        let db = SqliteDatabase::new(
-            "target/sqlx/test-dbs/media/repository/tests/get_media_items_should_succeed.sqlite",
-        )
-        .await;
-        let repository = MediaRepository::new(db, Configuration::empty()).await;
+        let mut mock_db = MockDatabase::new();
+        mock_db
+            .expect_get_media_items()
+            .return_once(|_| Ok(Vec::new()));
+        let repository =
+            MediaRepository::new(Arc::new(mock_db), Configuration::empty().into()).await;
 
         // when
         let result = repository
@@ -213,8 +197,7 @@ mod tests {
             .await;
 
         // then
-        // TODO fix assertion
-        assert!(result.is_err());
+        assert!(result.is_ok());
         //assert_eq!(result.ok().unwrap().len(), 1);
 
         Ok(())

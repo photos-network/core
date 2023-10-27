@@ -218,7 +218,6 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
     use testdir::testdir;
-    use time::format_description::well_known::Rfc3339;
 
     #[sqlx::test]
     async fn create_user_should_succeed(pool: SqlitePool) -> Result<()> {
@@ -481,8 +480,12 @@ mod tests {
         let user_id = "570DC079-664A-4496-BAA3-668C445A447";
         let media_id = "ef9ac799-02f3-4b3f-9d96-7576be0434e6";
         let reference_id = "ef9ac799-02f3-4b3f-9d96-7576be0434e6";
-        let added_at = DateTime::parse_from_rfc3339m("2023-02-03T13:37:01.234567Z").unwrap();
-        let taken_at = DateTime::parse_from_rfc3339("2023-01-01T13:37:01.234567Z").unwrap();
+        let added_at = "2023-02-03T13:37:01.234567Z"
+            .parse::<DateTime<Utc>>()
+            .unwrap();
+        let taken_at = "2023-01-01T13:37:01.234567Z"
+            .parse::<DateTime<Utc>>()
+            .unwrap();
         // create fake user - used as FOREIGN KEY in reference
         sqlx::query("INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)")
             .bind(user_id)

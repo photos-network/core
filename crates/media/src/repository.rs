@@ -18,15 +18,20 @@
 use crate::data::error::DataAccessError;
 use crate::data::media_item::MediaItem;
 use axum::async_trait;
+use bytes::Bytes;
 use common::config::configuration::Configuration;
 use common::database::reference::Reference;
 use common::database::Database;
+use core::ffi::FromBytesUntilNulError;
 use database::sqlite::SqliteDatabase;
+use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 use time::OffsetDateTime;
 use tokio::fs::File;
-use tracing::info;
+use tokio::io::AsyncWriteExt;
+use tracing::log::warn;
+use tracing::{debug, info};
 use uuid::Uuid;
 
 #[allow(dead_code)]
@@ -58,9 +63,9 @@ pub trait MediaRepositoryTrait {
     async fn add_reference_for_media_item(
         &self,
         user_id: Uuid,
-        media_id: String,
+        media_id: &str,
         name: String,
-        file: File,
+        bytes: Bytes,
     ) -> Result<Uuid, DataAccessError>;
 }
 
@@ -128,29 +133,36 @@ impl MediaRepositoryTrait for MediaRepository {
     async fn add_reference_for_media_item(
         &self,
         user_id: Uuid,
-        media_id: String,
+        media_id: &str,
         name: String,
-        mut tmp_file: File,
+        bytes: Bytes,
     ) -> Result<Uuid, DataAccessError> {
         let path = Path::new("data/files/")
             .join(user_id.hyphenated().to_string())
-            .join(media_id.clone())
-            .join(name.clone());
+            .join(media_id);
 
-        let mut dest_file = File::create(path.clone()).await.unwrap();
+        let file_path = path.join(&name);
+        let _ = fs::create_dir_all(&path);
 
-        let num_bytes = tokio::io::copy(&mut tmp_file, &mut dest_file)
-            .await
-            .expect("Coudl not copy tmp file to path!");
-        println!(
-            "{} bytes copied to path {}",
-            num_bytes,
-            path.clone().to_string_lossy()
-        );
+        info!("target {}", path.clone().to_str().unwrap().to_string());
+        debug!("got {} bytes to handle", bytes.len());
+
+        let file_result = tokio::fs::write(&path.join(&name), &bytes).await;
+        match file_result {
+            Ok(_) => {
+                info!("wrote to {}", file_path.to_str().unwrap().to_string());
+            }
+            Err(_) => {
+                warn!(
+                    "Could not write file to path {}",
+                    path.clone().to_str().unwrap().to_string()
+                );
+            }
+        }
 
         let reference = Reference {
             uuid: Uuid::new_v4().hyphenated().to_string(),
-            filepath: path.to_str().unwrap().to_string(),
+            filepath: path.clone().to_str().unwrap().to_string(),
             filename: name.to_string(),
             size: 0u64,
             description: "",
@@ -159,7 +171,7 @@ impl MediaRepositoryTrait for MediaRepository {
         };
         let _ = &self
             .database
-            .add_reference(media_id.as_str(), name.as_str(), &reference)
+            .add_reference(media_id, name.as_str(), &reference)
             .await;
         Err(DataAccessError::OtherError)
     }

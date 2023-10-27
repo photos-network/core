@@ -18,15 +18,10 @@
 //! Add files for a specific media item
 //!
 
-use core::panic;
-
 use axum::extract::{Multipart, Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Redirect};
 use common::auth::user::User;
-use hyper::header::LOCATION;
-use hyper::HeaderMap;
-use tempfile::tempfile;
 use tracing::{debug, info};
 use uuid::Uuid;
 

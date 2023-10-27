@@ -20,12 +20,10 @@
 use axum::{
     extract::{Multipart, State},
     http::StatusCode,
-    response::{IntoResponse, Redirect, Response},
+    response::{IntoResponse, Redirect},
     Json,
 };
 use common::auth::user::User;
-use hyper::header::LOCATION;
-use hyper::HeaderMap;
 use serde::{Deserialize, Serialize};
 use time::format_description::well_known::Rfc3339;
 use time::OffsetDateTime;
@@ -48,7 +46,6 @@ pub(crate) async fn post_media(
 
     let mut name = None;
     let mut date_taken = None;
-    let mut headers = HeaderMap::new();
 
     while let Some(field) = multipart.next_field().await.unwrap() {
         if let Some(field_name) = field.name() {

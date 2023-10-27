@@ -1791,6 +1791,7 @@ name = "media"
 version = "0.6.0"
 dependencies = [
  "axum",
+ "bytes",
  "common",
  "database",
  "hyper",

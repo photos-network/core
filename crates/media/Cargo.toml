@@ -34,6 +34,7 @@ axum = { workspace = true, features = ["multipart"] }
 hyper = { workspace = true, features = ["full"] }
 tower-http.workspace = true
 mime.workspace = true
+bytes.workspace = true
 
 # persistency
 uuid = { workspace = true, features = ["serde"] }

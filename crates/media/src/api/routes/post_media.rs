@@ -20,15 +20,14 @@
 use axum::{
     extract::{Multipart, State},
     http::StatusCode,
+    response::{IntoResponse, Redirect},
     Json,
 };
 use common::auth::user::User;
-use hyper::header::LOCATION;
-use hyper::HeaderMap;
 use serde::{Deserialize, Serialize};
 use time::format_description::well_known::Rfc3339;
 use time::OffsetDateTime;
-use tracing::debug;
+use tracing::{debug, info};
 use uuid::Uuid;
 
 use crate::{data::error::DataAccessError, repository::MediaRepositoryState};
@@ -42,10 +41,11 @@ pub(crate) async fn post_media(
     State(repo): State<MediaRepositoryState>,
     user: User,
     mut multipart: Multipart,
-) -> Result<(StatusCode, Json<ResponseId>), StatusCode> {
+) -> Result<impl IntoResponse, StatusCode> {
+    info!("POST /media");
+
     let mut name = None;
     let mut date_taken = None;
-    let mut headers = HeaderMap::new();
 
     while let Some(field) = multipart.next_field().await.unwrap() {
         if let Some(field_name) = field.name() {
@@ -88,20 +88,15 @@ pub(crate) async fn post_media(
                 Json(ResponseId {
                     id: uuid.hyphenated().to_string(),
                 }),
-            ))
+            )
+                .into_response())
         }
-        Err(error) => {
-            match error {
-                DataAccessError::AlreadyExist(id) => {
-                    // TODO: use Redirect::permanent to add a Location header to the already existing item
-                    let location = format!("/media/{}", id);
-                    headers.insert(LOCATION, location.parse().unwrap());
-
-                    Err(StatusCode::SEE_OTHER)
-                }
-                _ => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(error) => match error {
+            DataAccessError::AlreadyExist(id) => {
+                Ok(Redirect::to(&format!("/media/{id}")).into_response())
             }
-        }
+            _ => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        },
     }
 }
 

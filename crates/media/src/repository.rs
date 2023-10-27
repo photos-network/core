@@ -111,7 +111,7 @@ impl MediaRepositoryTrait for MediaRepository {
         name: String,
         date_taken: OffsetDateTime,
     ) -> Result<Uuid, DataAccessError> {
-        debug!("user_id: {}", user_id.clone().hyphenated().to_string());
+        debug!("user_id: {}", user_id.hyphenated().to_string());
         let db_result = &self
             .database
             .create_media_item(

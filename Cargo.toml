@@ -50,7 +50,7 @@ abi_stable = "0.11.1"
 activitypub_federation = "0.4.6"
 async-trait = "0.1.73"
 axum = { version = "0.6.20", features = ["ws", "headers"] }
-axum-test = "12.1.0"
+axum-test = "13.0.1"
 anyhow = "1.0.72"
 
 bytes = "1.4.0"

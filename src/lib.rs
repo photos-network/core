@@ -50,7 +50,7 @@ use oauth_authorization_server::config::ServerConfig;
 use oauth_authorization_server::state::ServerState;
 use oauth_authorization_server::AuthorizationServerManager;
 use serde::{Deserialize, Serialize};
-use sqlx::types::time::OffsetDateTime;
+use sqlx::types::chrono::Utc;
 use std::path::Path;
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
@@ -126,7 +126,7 @@ pub async fn start_server() -> Result<()> {
             lastname: Some("Admin".to_string()),
             firstname: Some("".to_string()),
             is_locked: false,
-            created_at: OffsetDateTime::now_utc(),
+            created_at: Utc::now(),
             updated_at: None,
             last_login: None,
         };

@@ -84,7 +84,7 @@ pub(crate) async fn post_media(
             );
 
             Ok((
-                StatusCode::OK,
+                StatusCode::CREATED,
                 Json(ResponseId {
                     id: uuid.hyphenated().to_string(),
                 }),

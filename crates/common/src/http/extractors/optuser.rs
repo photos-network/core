@@ -41,7 +41,7 @@ where
                 let _auth_token = header.to_str().ok();
 
                 // TODO: verify auth token
-                Some(Self(Some(User::new("info@photos.network".to_string()))))
+                Some(Self(Some(User::new())))
             })
             .ok_or("".to_string())
     }

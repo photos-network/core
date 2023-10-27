@@ -21,12 +21,14 @@
 use axum::extract::{Multipart, Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Redirect};
+use axum::Json;
 use common::auth::user::User;
 use tracing::{debug, info};
 use uuid::Uuid;
 
 use bytes::Bytes;
 
+use crate::api::routes::post_media::ResponseId;
 use crate::data::error::DataAccessError;
 use crate::repository::MediaRepositoryState;
 
@@ -71,7 +73,13 @@ pub(crate) async fn post_media_id(
         Ok(uuid) => {
             debug!("reference added. uuid={}", uuid.hyphenated().to_string());
 
-            Ok(uuid.hyphenated().to_string().into_response())
+            Ok((
+                StatusCode::CREATED,
+                Json(ResponseId {
+                    id: uuid.hyphenated().to_string(),
+                }),
+            )
+                .into_response())
         }
         Err(error) => match error {
             DataAccessError::AlreadyExist(id) => {

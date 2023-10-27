@@ -114,16 +114,13 @@ pub async fn start_server() -> Result<()> {
     let users = db.get_users().await?;
     if users.is_empty() {
         info!("No user found, create a default admin user. Please check `data/credentials.txt` for details.");
-        let default_user = "photo@photos.network";
+        let default_user = "noreply@photos.network";
         let default_pass = "unsecure";
         let path = Path::new(DATA_PATH).join("credentials.txt");
         let _ = fs::write(path, format!("{}\n{}", default_user, default_pass));
-        // let mut output = File::create(path)?;
-        // let line = "hello";
-        // write!(output, "{}\n{}", default_user, default_pass);
 
         let user = User {
-            uuid: "".to_string(),
+            uuid: "808c78e4-34bc-486a-902f-929e8b146d20".to_string(),
             email: default_user.to_string(),
             password: Some(default_pass.to_string()),
             lastname: Some("Admin".to_string()),
@@ -260,7 +257,7 @@ async fn status() -> Json<Status> {
 
     // TODO: print loaded plugins from appState
     let status = Status {
-        message: String::from("API running"),
+        message: String::from("API running."),
     };
     Json(status)
 }

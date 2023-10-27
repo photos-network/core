@@ -27,8 +27,7 @@ use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 use time::OffsetDateTime;
-use tracing::log::warn;
-use tracing::{debug, info};
+use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
 #[allow(dead_code)]
@@ -112,6 +111,7 @@ impl MediaRepositoryTrait for MediaRepository {
         name: String,
         date_taken: OffsetDateTime,
     ) -> Result<Uuid, DataAccessError> {
+        debug!("user_id: {}", user_id.hyphenated().to_string());
         let db_result = &self
             .database
             .create_media_item(
@@ -143,6 +143,7 @@ impl MediaRepositoryTrait for MediaRepository {
 
         info!("target {}", path.clone().to_str().unwrap().to_string());
         debug!("got {} bytes to handle", bytes.len());
+        let size = bytes.len();
 
         let file_result = tokio::fs::write(&path.join(&name), &bytes).await;
         match file_result {
@@ -161,16 +162,30 @@ impl MediaRepositoryTrait for MediaRepository {
             uuid: Uuid::new_v4().hyphenated().to_string(),
             filepath: path.clone().to_str().unwrap().to_string(),
             filename: name.to_string(),
-            size: 0u64,
+            size: size.try_into().unwrap(),
             description: "",
             last_modified: OffsetDateTime::now_utc(),
             is_missing: false,
         };
-        let _ = &self
+        let db_result = &self
             .database
-            .add_reference(media_id, name.as_str(), &reference)
+            .add_reference(
+                user_id.hyphenated().to_string().as_str(),
+                media_id,
+                &reference,
+            )
             .await;
-        Err(DataAccessError::OtherError)
+
+        match db_result {
+            Ok(uuid) => {
+                info!("added reference with id {}", uuid.clone());
+                Ok(Uuid::parse_str(uuid.as_str()).unwrap())
+            }
+            Err(e) => {
+                error!("Could not write reference to database! {:?}", e);
+                Err(DataAccessError::OtherError)
+            }
+        }
     }
 }
 

@@ -17,7 +17,6 @@
 
 use std::fmt;
 use time::OffsetDateTime;
-use uuid::Uuid;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct User {
@@ -43,12 +42,10 @@ impl fmt::Display for User {
 }
 
 impl User {
-    pub(crate) fn new(email: String) -> User {
+    pub(crate) fn new() -> User {
         User {
-            uuid: Uuid::parse_str("808c78e4-34bc-486a-902f-929e8b146d20")
-                .unwrap()
-                .to_string(),
-            email,
+            uuid: "808c78e4-34bc-486a-902f-929e8b146d20".to_string(),
+            email: "noreply@photos.network".to_string(),
             password: Option::None,
             lastname: Option::None,
             firstname: Option::None,

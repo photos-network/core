@@ -40,7 +40,7 @@ where
             .ok_or((StatusCode::UNAUTHORIZED, "Unauthorized"))?;
 
         // TODO: get user for Authtoken
-        Ok(User::new("info@photos.network".to_string()))
+        Ok(User::new())
         // TODO: verify Token
         //        verify_auth_token(auth_header)
         //            .await

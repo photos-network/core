@@ -77,10 +77,9 @@ impl Database for SqliteDatabase {
 
     async fn create_user(&self, user: &User) -> Result<()> {
         let query = "INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)";
-        let id = Uuid::new_v4().hyphenated().to_string();
-        info!("create new user with id `{}`.", id);
+        info!("create new user with id `{}`.", &user.uuid);
         sqlx::query(query)
-            .bind(id)
+            .bind(&user.uuid)
             .bind(&user.email)
             .bind(&user.password)
             .bind(&user.lastname)

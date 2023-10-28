@@ -23,7 +23,7 @@ use common::auth::user::User;
 use common::database::media_item::MediaItem;
 use common::database::reference::Reference;
 use common::database::Database;
-use sqlx::types::time::OffsetDateTime;
+use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use sqlx::Row;
 use tracing::info;
@@ -63,7 +63,7 @@ impl Database for PostgresDatabase {
                 lastname: row.get("lastname"),
                 firstname: row.get("firstname"),
                 is_locked: false,
-                created_at: OffsetDateTime::now_utc(),
+                created_at: Utc::now(),
                 updated_at: None,
                 last_login: None,
             })
@@ -128,7 +128,7 @@ impl Database for PostgresDatabase {
         &self,
         user_id: &str,
         name: &str,
-        date_taken: OffsetDateTime,
+        date_taken: DateTime<Utc>,
     ) -> Result<String> {
         let query = "SELECT COUNT(*) FROM media WHERE owner is $1 and taken_at like $2";
         let res = sqlx::query(query).bind(user_id).bind(date_taken);
@@ -147,7 +147,7 @@ impl Database for PostgresDatabase {
                 .bind(user_id)
                 .bind(name)
                 .bind(false)
-                .bind(OffsetDateTime::now_utc())
+                .bind(Utc::now())
                 .bind(date_taken)
                 .execute(&self.pool)
                 .await?;

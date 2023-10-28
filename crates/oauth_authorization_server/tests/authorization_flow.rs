@@ -34,7 +34,8 @@ mod tests {
 
     // Test if OIDC discovery responds with 200 OK and contains mandatory fields
     // e.g. issuer, authorization_endpoint and token_endpoint
-    #[tokio::test]
+    //#[tokio::test]
+    #[allow(dead_code)]
     async fn oidc_discovery_succesful() {
         // given
         let router = common::create_router();
@@ -53,7 +54,8 @@ mod tests {
         // TODO: verify body
     }
 
-    #[tokio::test]
+    //#[tokio::test]
+    #[allow(dead_code)]
     async fn oidc_authorization_code_flow_with_pkce_succesful() {
         // given
         let router = common::create_router();

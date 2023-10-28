@@ -16,19 +16,21 @@
  */
 
 use std::fmt;
-use time::OffsetDateTime;
+
+use sqlx::types::chrono::DateTime;
+use sqlx::types::chrono::Utc;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct User {
-    pub uuid: String, //Uuid,
+    pub uuid: String,
     pub email: String,
     pub password: Option<String>,
     pub lastname: Option<String>,
     pub firstname: Option<String>,
     pub is_locked: bool,
-    pub created_at: OffsetDateTime,
-    pub updated_at: Option<OffsetDateTime>,
-    pub last_login: Option<OffsetDateTime>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
+    pub last_login: Option<DateTime<Utc>>,
 }
 
 impl fmt::Display for User {
@@ -50,7 +52,7 @@ impl User {
             lastname: Option::None,
             firstname: Option::None,
             is_locked: false,
-            created_at: OffsetDateTime::now_utc(),
+            created_at: Utc::now(),
             updated_at: Option::None,
             last_login: Option::None,
         }

@@ -19,7 +19,9 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use async_trait::async_trait;
-use time::OffsetDateTime;
+use sqlx::types::chrono::DateTime;
+
+use sqlx::types::chrono::Utc;
 
 use crate::auth::user::User;
 
@@ -59,7 +61,7 @@ pub trait Database {
         &self,
         user_id: &str,
         name: &str,
-        date_taken: OffsetDateTime,
+        date_taken: DateTime<Utc>,
     ) -> Result<String>;
     async fn get_media_item(&self, media_id: &str) -> Result<MediaItem>;
     async fn add_reference(

@@ -23,10 +23,10 @@ use bytes::Bytes;
 use common::config::configuration::Configuration;
 use common::database::reference::Reference;
 use common::database::ArcDynDatabase;
+use sqlx::types::chrono::{DateTime, Utc};
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
-use time::OffsetDateTime;
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
@@ -53,7 +53,7 @@ pub trait MediaRepositoryTrait {
         &self,
         user_id: Uuid,
         name: String,
-        date_taken: OffsetDateTime,
+        date_taken: DateTime<Utc>,
     ) -> Result<Uuid, DataAccessError>;
 
     async fn add_reference_for_media_item(
@@ -109,7 +109,7 @@ impl MediaRepositoryTrait for MediaRepository {
         &self,
         user_id: Uuid,
         name: String,
-        date_taken: OffsetDateTime,
+        date_taken: DateTime<Utc>,
     ) -> Result<Uuid, DataAccessError> {
         debug!("user_id: {}", user_id.hyphenated().to_string());
         let db_result = &self
@@ -164,7 +164,7 @@ impl MediaRepositoryTrait for MediaRepository {
             filename: name.to_string(),
             size: size.try_into().unwrap(),
             description: "",
-            last_modified: OffsetDateTime::now_utc(),
+            last_modified: Utc::now(),
             is_missing: false,
         };
         let db_result = &self

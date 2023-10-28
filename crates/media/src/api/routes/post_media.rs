@@ -25,8 +25,7 @@ use axum::{
 };
 use common::auth::user::User;
 use serde::{Deserialize, Serialize};
-use time::format_description::well_known::Rfc3339;
-use time::OffsetDateTime;
+use sqlx::types::chrono::{DateTime, Utc};
 use tracing::{debug, info};
 use uuid::Uuid;
 
@@ -61,7 +60,7 @@ pub(crate) async fn post_media(
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let date = OffsetDateTime::parse(date_taken.unwrap().as_str(), &Rfc3339);
+    let date = date_taken.unwrap().parse::<DateTime<Utc>>();
     if date.is_err() {
         return Err(StatusCode::BAD_REQUEST);
     }

@@ -24,7 +24,8 @@ use common::database::media_item::MediaItem;
 use common::database::reference::Reference;
 use common::database::Database;
 use sqlx::sqlite::SqliteQueryResult;
-use sqlx::types::time::OffsetDateTime;
+use sqlx::types::chrono::DateTime;
+use sqlx::types::chrono::Utc;
 use sqlx::Row;
 use sqlx::SqlitePool;
 use std::i64;
@@ -66,7 +67,7 @@ impl Database for SqliteDatabase {
                 lastname: row.get("lastname"),
                 firstname: row.get("firstname"),
                 is_locked: false,
-                created_at: OffsetDateTime::now_utc(),
+                created_at: Utc::now(),
                 updated_at: None,
                 last_login: None,
             })
@@ -128,7 +129,7 @@ impl Database for SqliteDatabase {
         &self,
         user_id: &str,
         name: &str,
-        date_taken: OffsetDateTime,
+        date_taken: DateTime<Utc>,
     ) -> Result<String> {
         struct Item {
             uuid: String,
@@ -159,7 +160,7 @@ impl Database for SqliteDatabase {
                     .bind(&user_id.to_string())
                     .bind(&name.to_string())
                     .bind(false)
-                    .bind(OffsetDateTime::now_utc())
+                    .bind(Utc::now())
                     .bind(date_taken)
                     .execute(&self.pool)
                     .await;
@@ -217,7 +218,6 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
     use testdir::testdir;
-    use time::format_description::well_known::Rfc3339;
 
     #[sqlx::test]
     async fn create_user_should_succeed(pool: SqlitePool) -> Result<()> {
@@ -236,7 +236,7 @@ mod tests {
                 lastname: Some("Stuermer".into()),
                 firstname: Some("Benjamin".into()),
                 is_locked: false,
-                created_at: OffsetDateTime::now_utc(),
+                created_at: Utc::now(),
                 updated_at: None,
                 last_login: None,
             };
@@ -271,7 +271,7 @@ mod tests {
             lastname: Some("Stuermer".into()),
             firstname: Some("Benjamin".into()),
             is_locked: false,
-            created_at: OffsetDateTime::now_utc(),
+            created_at: Utc::now(),
             updated_at: None,
             last_login: None,
         };
@@ -415,7 +415,7 @@ mod tests {
         .await?;
 
         let name = "DSC_1234";
-        let date_taken = OffsetDateTime::now_utc();
+        let date_taken = Utc::now();
 
         // when
         let media_item_result = db.create_media_item(user_id, name, date_taken).await;
@@ -430,11 +430,14 @@ mod tests {
     #[sqlx::test]
     async fn create_media_item_should_return_existing_uuid(pool: SqlitePool) -> Result<()> {
         // given
-
         let user_id = "570DC079-664A-4496-BAA3-668C445A447";
         let media_id = "ef9ac799-02f3-4b3f-9d96-7576be0434e6";
-        let added_at = OffsetDateTime::parse("2023-02-03T13:37:01.234567Z", &Rfc3339).unwrap();
-        let taken_at = OffsetDateTime::parse("2023-01-01T13:37:01.234567Z", &Rfc3339).unwrap();
+        let added_at = "2023-02-03T13:37:01.234567Z"
+            .parse::<DateTime<Utc>>()
+            .unwrap();
+        let taken_at = "2023-01-01T13:37:01.234567Z"
+            .parse::<DateTime<Utc>>()
+            .unwrap();
         let name = "DSC_1234";
 
         // create fake user - used as FOREIGN KEY in media
@@ -477,8 +480,12 @@ mod tests {
         let user_id = "570DC079-664A-4496-BAA3-668C445A447";
         let media_id = "ef9ac799-02f3-4b3f-9d96-7576be0434e6";
         let reference_id = "ef9ac799-02f3-4b3f-9d96-7576be0434e6";
-        let added_at = OffsetDateTime::parse("2023-02-03T13:37:01.234567Z", &Rfc3339).unwrap();
-        let taken_at = OffsetDateTime::parse("2023-01-01T13:37:01.234567Z", &Rfc3339).unwrap();
+        let added_at = "2023-02-03T13:37:01.234567Z"
+            .parse::<DateTime<Utc>>()
+            .unwrap();
+        let taken_at = "2023-01-01T13:37:01.234567Z"
+            .parse::<DateTime<Utc>>()
+            .unwrap();
         // create fake user - used as FOREIGN KEY in reference
         sqlx::query("INSERT INTO users (uuid, email, password, lastname, firstname) VALUES ($1, $2, $3, $4, $5)")
             .bind(user_id)
@@ -514,7 +521,9 @@ mod tests {
             filename: filename.to_string(),
             size: metadata.len(),
             description: "",
-            last_modified: OffsetDateTime::parse("2023-02-03T13:37:01.234567Z", &Rfc3339).unwrap(),
+            last_modified: "2023-02-03T13:37:01.234567Z"
+                .parse::<DateTime<Utc>>()
+                .unwrap(),
             is_missing: false,
         };
 

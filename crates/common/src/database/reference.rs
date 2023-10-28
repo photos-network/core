@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use time::OffsetDateTime;
+use sqlx::types::chrono::{DateTime, Utc};
 
 pub struct Reference {
     pub uuid: String,
@@ -23,6 +23,6 @@ pub struct Reference {
     pub filename: String,
     pub size: u64,
     pub description: &'static str,
-    pub last_modified: OffsetDateTime,
+    pub last_modified: DateTime<Utc>,
     pub is_missing: bool,
 }

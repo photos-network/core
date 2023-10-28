@@ -25,6 +25,8 @@ axum.workspace = true
 http.workspace = true
 photos_network_plugin = { path = "../plugin_interface" }
 
+sqlx.workspace = true
+
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 serde_with.workspace = true

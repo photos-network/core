@@ -56,7 +56,12 @@ pub trait Database {
     async fn disable_user(&self, user_id: &str) -> Result<()>;
     async fn enable_user(&self, user_id: &str) -> Result<()>;
 
-    async fn get_media_items(&self, user_id: &str) -> Result<Vec<MediaItem>>;
+    async fn get_media_items(
+        &self,
+        user_id: &str,
+        years: Vec<i32>,
+        months: Vec<i32>,
+    ) -> Result<Vec<MediaItem>>;
     async fn create_media_item(
         &self,
         user_id: &str,

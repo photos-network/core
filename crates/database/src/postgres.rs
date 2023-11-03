@@ -119,7 +119,12 @@ impl Database for PostgresDatabase {
         unimplemented!()
     }
 
-    async fn get_media_items(&self, _user_id: &str) -> Result<Vec<MediaItem>> {
+    async fn get_media_items(
+        &self,
+        _user_id: &str,
+        _years: Vec<i32>,
+        _months: Vec<i32>,
+    ) -> Result<Vec<MediaItem>> {
         unimplemented!()
     }
 

@@ -18,9 +18,10 @@
 //! Returns a list of owned media items for current user
 //!
 use axum::extract::State;
-use axum::{extract::Query, http::StatusCode, Json};
+use axum::{http::StatusCode, Json};
 use common::auth::user::User;
 use serde::{Deserialize, Serialize};
+use serde_qs::axum::QsQuery;
 use std::result::Result;
 use tracing::error;
 use uuid::Uuid;
@@ -31,17 +32,21 @@ use crate::repository::MediaRepositoryState;
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct MediaListQuery {
-    offset: Option<i32>,
-    limit: Option<i32>,
+    years: Option<Vec<i32>>,
+    months: Option<Vec<i32>>,
 }
 
 pub(crate) async fn get_media(
     State(repo): State<MediaRepositoryState>,
     user: User,
-    Query(query): Query<MediaListQuery>,
+    QsQuery(query): QsQuery<MediaListQuery>, //Query(query): Query<MediaListQuery>,
 ) -> Result<Json<String>, StatusCode> {
     let items: Result<Vec<MediaItem>, DataAccessError> = repo
-        .get_media_items_for_user(Uuid::parse_str(user.uuid.as_str()).unwrap())
+        .get_media_items_for_user(
+            Uuid::parse_str(user.uuid.as_str()).unwrap(),
+            query.years.unwrap_or(vec![]),
+            query.months.unwrap_or(vec![]),
+        )
         .await;
     match items {
         Ok(i) => {
@@ -51,15 +56,11 @@ pub(crate) async fn get_media(
             error!("Failed to get media items!");
         }
     }
+
     // TODO: read list from persistency
     // TODO: return list
     Ok(Json(
-        format!(
-            "list media items. limit={}, offset={}",
-            query.limit.unwrap_or(1000),
-            query.offset.unwrap_or(0)
-        )
-        .to_owned(),
+        format!("list media items. limit=, offset=").to_owned(),
     ))
 }
 
@@ -104,5 +105,127 @@ mod tests {
 
         // then
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[sqlx::test]
+    async fn get_media_with_multiple_years_only_should_return_only_requested_years(
+        pool: SqlitePool,
+    ) {
+        // given
+        let state: ApplicationState = ApplicationState {
+            config: Configuration::empty().into(),
+            plugins: HashMap::new(),
+            router: None,
+            database: Arc::new(SqliteDatabase { pool }),
+        };
+
+        let app = Router::new().nest("/", MediaApi::routes(&state).await);
+
+        // when
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .header(hyper::header::AUTHORIZATION, "FakeAuth")
+                    .uri(format!("/media?years=[1990,1991]"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        // then
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[sqlx::test]
+    async fn get_media_with_multiple_years_and_months_should_return_requested_years_and_months(
+        pool: SqlitePool,
+    ) {
+        // given
+        let state: ApplicationState = ApplicationState {
+            config: Configuration::empty().into(),
+            plugins: HashMap::new(),
+            router: None,
+            database: Arc::new(SqliteDatabase { pool }),
+        };
+
+        let app = Router::new().nest("/", MediaApi::routes(&state).await);
+
+        // when
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .header(hyper::header::AUTHORIZATION, "FakeAuth")
+                    .uri(format!("/media?years=[1990,1991]&months=[3,4]"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        // then
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[sqlx::test]
+    async fn get_media_with_multiple_month_only_should_return_requested_months_for_all_years(
+        pool: SqlitePool,
+    ) {
+        // given
+        let state: ApplicationState = ApplicationState {
+            config: Configuration::empty().into(),
+            plugins: HashMap::new(),
+            router: None,
+            database: Arc::new(SqliteDatabase { pool }),
+        };
+
+        let app = Router::new().nest("/", MediaApi::routes(&state).await);
+
+        // when
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .header(hyper::header::AUTHORIZATION, "FakeAuth")
+                    .uri(format!("/media?years=[1990,1991]"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        // then
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[sqlx::test]
+    async fn get_media_without_parameters_should_return_all(pool: SqlitePool) {
+        // given
+        let state: ApplicationState = ApplicationState {
+            config: Configuration::empty().into(),
+            plugins: HashMap::new(),
+            router: None,
+            database: Arc::new(SqliteDatabase { pool }),
+        };
+
+        let app = Router::new().nest("/", MediaApi::routes(&state).await);
+
+        // when
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .header(hyper::header::AUTHORIZATION, "FakeAuth")
+                    .uri(format!("/media"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        // then
+        assert_eq!(response.status(), StatusCode::OK);
     }
 }

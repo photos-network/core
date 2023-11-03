@@ -123,7 +123,8 @@ impl Database for SqliteDatabase {
     }
 
     async fn get_media_items(&self, _user_id: &str) -> Result<Vec<MediaItem>> {
-        unimplemented!()
+        error!("get_media_items not implemented!");
+        Ok(vec![])
     }
     async fn create_media_item(
         &self,

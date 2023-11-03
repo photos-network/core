@@ -20,12 +20,12 @@ A community like this should be **open**, **considerate** and **respectful**.
 
 Behaviours that reinforce these values contribute to a positive environment, and include:
 
- * **Being open**. Members of the community are open to collaboration, whether it's on PEPs, patches, problems, or otherwise.
+ * **Being open**. Members of the community are open to collaboration.
  * **Focusing on what is best for the community**. We're respectful of the processes set forth in the community, and we work within them.
- * **Acknowledging time and effort**. We're respectful of the volunteer efforts that permeate the Python community. We're thoughtful when addressing the efforts of others, keeping in mind that often times the labor was completed simply for the good of the community.
+ * **Acknowledging time and effort**. We're respectful and thoughtful when addressing the efforts of others, keeping in mind that often times the labor was completed simply for the good of the community.
  * **Being respectful of differing viewpoints and experiences**. We're receptive to constructive comments and criticism, as the experiences and skill sets of other members contribute to the whole of our efforts.
  * **Showing empathy towards other community members**. We're attentive in our communications, whether in person or online, and we're tactful when approaching differing views.
- * **Being considerate**. Members of the community are considerate of their peers -- other Python users.
+ * **Being considerate**. Members of the community are considerate of their peers.
  * **Being respectful**. We're respectful of others, their positions, their skills, their commitments, and their efforts.
  * **Gracefully accepting constructive criticism**. When we disagree, we are courteous in raising our issues.
  * **Using welcoming and inclusive language**. We're accepting of all who wish to take part in our activities, fostering an environment where anyone can participate and everyone can make a difference.
@@ -68,7 +68,7 @@ If your suggestion can not be found already, see if it is already covered by our
 
 ## 📟 Communication
 
-To get in touch with the community join our [Discord](https://img.shields.io/discord/793235453871390720) or write use on Mastodon: [@photos@mastodon.cloud](https://mastodon.cloud/@photos).
+To get in touch with the community or write use on Mastodon: [@photos@mastodon.cloud](https://mastodon.cloud/@photos).
 
 
 
@@ -82,21 +82,3 @@ Underneath it is using these frameworks:
 * [tower](https://github.com/tower-rs/tower) - for networking
 * [axum](https://github.com/tokio-rs/axum) - as web framework
 * [abi_stable](https://github.com/rodrimati1992/abi_stable_crates) - FFI for dynamic library loading
-
-
-
-## 💻 Build & Run
-
-To build and run the core
-
-```shell
-$ cargo run
-```
-
-### 🔬 Verifications
-
-To run tests
-
-```shell
-$ cargo test
-```

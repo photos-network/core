@@ -2,7 +2,6 @@
 
 [![License](https://img.shields.io/github/license/photos-network/core?style=for-the-badge)](./LICENSE.md)
 [![GitHub contributors](https://img.shields.io/github/contributors/photos-network/core?color=success&style=for-the-badge)](https://github.com/photos-network/core/graphs/contributors)
-[![Discord](https://img.shields.io/discord/793235453871390720?style=for-the-badge)](https://discord.gg/dGFDpmWp46)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/photos-network/core/check.yaml?style=for-the-badge)
 
 
@@ -30,70 +29,42 @@ It is responsible for main tasks e.g.:
 
 
 
-## 🧩 Contribution
-
-This is a free and open project and lives from contributions of the community.
-
-See our [Contribution Guide](CONTRIBUTING.md)
-
-
-
 ## 🧪 Development
 
 The core is written in 🦀 [Rust](https://rust-lang.org/) and highly customizably by using a Plugin-system.
 
 
 
-#### 📄 Documentation
-
-With the nightly version of `cargo doc` an additional index-page will be created.
-```shell
-$ RUSTDOCFLAGS="--enable-index-page -Zunstable-options" cargo +nightly doc --all --no-deps --document-private-items --all-features
-```
-
-
-
 #### 🔬 Testing
-
-An continuous check on all files is done in the background and will trigger `cargo test` on each file change.
-
-```shell
-$ cargo watch --exec test
-```
 
 To run tests for all crates in this workspace, run:
 ```shell
 $ cargo test --workspace --all-targets
 ```
 
-### Visual Studio Code
+Run continuous checks on a specific crate during development.
 
-The fastest start into development can be archived by using [Visual Studio Code](https://code.visualstudio.com/) and [Docker](https://www.docker.com/get-started).
-
-1. Install [Docker](https://www.docker.com/get-started)
-2. Install [Visual Studio Code](https://code.visualstudio.com/)
-3. Install [Visual Studio Code Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-4. Clone and Open this repository in Visual Studio Code
-5. Click the "Reopen in Container" Dialog
-6. Launch **Photos.network** from the `RUN` window.
-
-![VS Code with devcontainers](vscode.gif)
+```shell
+$ cargo watch --exec 'test -p media'
+```
 
 
 
 ## 📜 Roadmap (MvP)
 
- - Authenticate via openID
  - Create a new media item
- - Upload one or multiple photos
+ - Upload one or multiple images
  - Download a list of owned media items
- - Download the original photo from a specific media item
- - *Metadata (size, resolution)
- - *EXIF (orientation, image taken timestamp, last modified, camera)
- - *RAW (image support for RAW-images)
- - *Resize (create low-resolutions / thumbnails)
- - *Deep learning (image recognition, Reinforcement learning)
- - *Plugin System (extract features into plugins)
+ - Download the original file for a specific media item
+ - Authenticate via openID
+
+
+
+## 🧩 Contribution
+
+This is a free and open project and lives from contributions of the community.
+
+See our [Contribution Guide](CONTRIBUTING.md)
 
 
 

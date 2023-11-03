@@ -46,6 +46,8 @@ pub trait MediaRepositoryTrait {
     async fn get_media_items_for_user(
         &self,
         user_id: Uuid,
+        years: Vec<i32>,
+        months: Vec<i32>,
     ) -> Result<Vec<MediaItem>, DataAccessError>;
 
     /// Create a new media item for the given user
@@ -76,12 +78,17 @@ impl MediaRepositoryTrait for MediaRepository {
     async fn get_media_items_for_user(
         &self,
         user_id: Uuid,
+        years: Vec<i32>,
+        months: Vec<i32>,
     ) -> Result<Vec<MediaItem>, DataAccessError> {
-        info!("get items for user {}", user_id);
+        info!(
+            "get items for user:{}, years: {:?}, month: {:?}",
+            user_id, years, months
+        );
 
         let items_result = &self
             .database
-            .get_media_items(user_id.hyphenated().to_string().as_str())
+            .get_media_items(user_id.hyphenated().to_string().as_str(), years, months)
             .await;
         return match items_result {
             Ok(items) => {
@@ -208,7 +215,7 @@ mod tests {
 
         // when
         let result = repository
-            .get_media_items_for_user(Uuid::parse_str(user_id).unwrap())
+            .get_media_items_for_user(Uuid::parse_str(user_id).unwrap(), Vec::new(), Vec::new())
             .await;
 
         // then

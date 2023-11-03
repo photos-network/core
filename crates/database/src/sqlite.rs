@@ -122,8 +122,13 @@ impl Database for SqliteDatabase {
         unimplemented!()
     }
 
-    async fn get_media_items(&self, _user_id: &str) -> Result<Vec<MediaItem>> {
-        unimplemented!()
+    async fn get_media_items(
+        &self,
+        _user_id: &str,
+        years: Vec<i32>,
+        months: Vec<i32>,
+    ) -> Result<Vec<MediaItem>> {
+        Ok(vec![])
     }
     async fn create_media_item(
         &self,

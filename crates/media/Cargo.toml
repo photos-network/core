@@ -37,6 +37,7 @@ hyper = { workspace = true, features = ["full"] }
 tower-http.workspace = true
 mime.workspace = true
 bytes.workspace = true
+serde_qs = { workspace = true, features = ["axum"] }
 
 # persistency
 uuid = { workspace = true, features = ["serde"] }

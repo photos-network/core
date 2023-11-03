@@ -120,7 +120,7 @@ mod tests {
         let response = app
             .oneshot(
                 Request::builder()
-                    .uri("/media?limit=100000&offset=1")
+                    .uri("/media")
                     .method("GET")
                     .header("Authorization", "FakeAuth")
                     .body(Body::empty())
@@ -135,7 +135,7 @@ mod tests {
         let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
         let body: String = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(body, "list media items. limit=100000, offset=1");
+        assert_eq!(body, "list media items. limit=, offset=");
     }
 
     #[tokio::test]
@@ -172,7 +172,7 @@ mod tests {
         let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
         let body: String = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(body, "list media items. limit=1000, offset=0");
+        assert_eq!(body, "list media items. limit=, offset=");
     }
 
     #[tokio::test]

@@ -100,6 +100,7 @@ impl AuthenticationManager {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Error)]
 enum AuthError {}
 

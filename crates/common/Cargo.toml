@@ -12,6 +12,7 @@ edition.workspace = true
 
 [features]
 mock = ["mockall"]
+full = ["mock"]
 
 [lib]
 name = "common"

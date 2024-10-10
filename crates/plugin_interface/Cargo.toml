@@ -13,4 +13,4 @@ edition = "2021"
 
 [dependencies]
 abi_stable = "0.11.1"
-core_extensions = { version = "1.5.3", default_features = false, features = ["std"] }
+core_extensions = { version = "1.5.3", default-features = false, features = ["std"] }

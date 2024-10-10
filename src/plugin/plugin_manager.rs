@@ -83,7 +83,7 @@ impl<'a> PluginManager<'a> {
                     }
                 };
 
-                let mut _loaded_libraries = vec![PluginId::from(plugin_name.clone())];
+                let mut _loaded_libraries = [PluginId::from(plugin_name.clone())];
 
                 // TODO: insert loaded plugin instead?
                 self.state

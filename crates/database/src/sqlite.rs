@@ -28,7 +28,6 @@ use sqlx::types::chrono::DateTime;
 use sqlx::types::chrono::Utc;
 use sqlx::Row;
 use sqlx::SqlitePool;
-use std::i64;
 use tracing::error;
 use tracing::info;
 use uuid::Uuid;
@@ -158,8 +157,8 @@ impl Database for SqliteDatabase {
 
                 let db_result = sqlx::query(query)
                     .bind(id.clone())
-                    .bind(&user_id.to_string())
-                    .bind(&name.to_string())
+                    .bind(user_id.to_string())
+                    .bind(name.to_string())
                     .bind(false)
                     .bind(Utc::now())
                     .bind(date_taken)

@@ -38,10 +38,13 @@ use anyhow::{Context, Result};
 use axum::extract::DefaultBodyLimit;
 use axum::routing::{get, head};
 use axum::{Json, Router};
-use common::auth::user::User;
 use common::database::ArcDynDatabase;
+use common::zip_cache::{generate_and_write_all_zip, ZipCacheManager};
 use common::ApplicationState;
+use common::config::database_config::DatabaseDriver;
+use database::postgres::PostgresDatabase;
 use database::sqlite::SqliteDatabase;
+use database::mysql::MySQLDatabase;
 use media::api::router::MediaApi;
 use oauth_authentication::AuthenticationManager;
 use oauth_authorization_server::client::Client;
@@ -50,12 +53,12 @@ use oauth_authorization_server::config::ServerConfig;
 use oauth_authorization_server::state::ServerState;
 use oauth_authorization_server::AuthorizationServerManager;
 use serde::{Deserialize, Serialize};
-use sqlx::types::chrono::Utc;
+use uuid::Uuid;
 use std::path::Path;
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 use tracing_subscriber::{fmt, layer::SubscriberExt};
 
 use common::config::configuration::Configuration;
@@ -73,10 +76,15 @@ pub async fn start_server() -> Result<()> {
     // enable logging
     let file_appender = tracing_appender::rolling::daily(LOGGING_PATH, "core");
     let (file_writer, _guard) = tracing_appender::non_blocking(file_appender);
+    let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| {
+            tracing_subscriber::EnvFilter::new(
+                "info,photos_network_core=debug,accounts=debug,common=debug,media=debug,hyper=warn,tower_http=debug,sqlx=warn",
+            )
+        });
     tracing::subscriber::set_global_default(
         fmt::Subscriber::builder()
-            // subscriber configuration
-            .with_max_level(tracing::Level::TRACE)
+            .with_env_filter(env_filter)
             .with_target(false)
             .finish()
             // add additional writers
@@ -99,42 +107,49 @@ pub async fn start_server() -> Result<()> {
     let configuration =
         Arc::new(Configuration::new(CONFIG_PATH).context("Could not parse configuration!")?);
     debug!("Configuration: {}", configuration);
+    let db: ArcDynDatabase = match configuration.database.clone() {
+        Some(database) => {
+            match database.driver {
+                DatabaseDriver::MySQL => Arc::new(MySQLDatabase::new(&database.url).await?),
+                DatabaseDriver::SQLite => {
+                    let _file = OpenOptions::new()
+                        .write(true)
+                        .create_new(true)
+                        .open(&database.url);
 
-    // init database
-    //let db = PostgresDatabase::new("postgres://postgres:unsecure@localhost:5432/postgres").await;
+                    Arc::new(SqliteDatabase::new(&database.url).await?)
+                },
+                DatabaseDriver::PostgresSQL => Arc::new(PostgresDatabase::new(&database.url).await?),
+            }
+        }
+        None => {
+            // use default sqlite
+            let _file = OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open("data/core.sqlite3");
+            Arc::new(SqliteDatabase::new("data/core.sqlite3").await?)
+        }
+    };
 
-    let _file = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open("data/core.sqlite3");
-
-    // TODO: which db?
-    let db: ArcDynDatabase = Arc::new(SqliteDatabase::new("data/core.sqlite3").await?);
-
-    let users = db.get_users().await?;
-    if users.is_empty() {
-        info!("No user found, create a default admin user. Please check `data/credentials.txt` for details.");
-        let default_user = "noreply@photos.network";
+    let accounts = db.list_all_accounts().await.unwrap_or_default();
+    if accounts.is_empty() {
+        warn!("No account found, creating default admin account. Please check `data/credentials.txt` for details.");
+        let default_email = "noreply@photos.network";
         let default_pass = "unsecure";
         let path = Path::new(DATA_PATH).join("credentials.txt");
-        let _ = fs::write(path, format!("{}\n{}", default_user, default_pass));
+        let _ = fs::write(path, format!("{}\n{}", default_email, default_pass));
 
-        let user = User {
-            uuid: "808c78e4-34bc-486a-902f-929e8b146d20".to_string(),
-            email: default_user.to_string(),
-            password: Some(default_pass.to_string()),
-            lastname: Some("Admin".to_string()),
-            firstname: Some("".to_string()),
-            is_locked: false,
-            created_at: Utc::now(),
-            updated_at: None,
-            last_login: None,
-        };
-        let _ = db.create_user(&user).await;
+        let account_id = Uuid::new_v4().hyphenated().to_string();
+        let password_hash = bcrypt::hash(default_pass, bcrypt::DEFAULT_COST)
+            .expect("Failed to hash default password");
+        let _ = db.create_account(account_id.clone(), default_email.to_string(), password_hash, Some("Admin".to_string())).await;
+        let _ = db.set_account_admin(&account_id, true).await;
     }
 
     // init application state
     let mut app_state = ApplicationState::new(Arc::clone(&configuration), db);
+    let zip_cache = Arc::new(ZipCacheManager::new());
 
     let cfg = ServerConfig {
         listen_addr: configuration.internal_url.to_owned(),
@@ -151,7 +166,7 @@ pub async fn start_server() -> Result<()> {
             }],
         }],
     };
-    let server = ServerState::new(cfg)?;
+    let server = ServerState::new(cfg, Arc::clone(&app_state.database))?;
 
     // TODO: check if `data/credentials.txt` still exists and stop immediately!
     let mut router = Router::new()
@@ -172,10 +187,14 @@ pub async fn start_server() -> Result<()> {
         .nest("/", AuthorizationServerManager::routes(server))
 
         // Account management
-        .nest("/", AccountsApi::routes())
+        .nest("/", AccountsApi::routes(&app_state))
         .layer(TraceLayer::new_for_http())
         // grant all CORS OPTIONS requests
         .layer(CorsLayer::very_permissive())
+        // make DB available to the User extractor via Extension
+        .layer(axum::Extension(Arc::clone(&app_state.database)))
+        // ZIP cache manager shared across media upload/delete and download handlers
+        .layer(axum::Extension(Arc::clone(&zip_cache)))
 
         // allow to receive bodies larger than the default limit of 2MB
         .layer(DefaultBodyLimit::disable())
@@ -231,6 +250,30 @@ pub async fn start_server() -> Result<()> {
         .router
         .unwrap()
         .route("/test", get(|| async { "" }));
+
+    // Pre-generate ZIPs for all existing albums in the background so the cache
+    // is warm before the first download request arrives.
+    {
+        let db_warmup = Arc::clone(&app_state.database);
+        tokio::spawn(async move {
+            match db_warmup.list_all_albums().await {
+                Ok(albums) => {
+                    info!("ZIP cache warm-up: {} album(s) to process", albums.len());
+                    for album in albums {
+                        let path = ZipCacheManager::all_zip_path(&album.album_id);
+                        if path.exists() {
+                            continue; // already cached from a previous run
+                        }
+                        if let Err(e) = generate_and_write_all_zip(&album.album_id, &db_warmup).await {
+                            warn!("ZIP cache warm-up failed for album {}: {:?}", album.album_id, e);
+                        }
+                    }
+                    info!("ZIP cache warm-up complete");
+                }
+                Err(e) => warn!("ZIP cache warm-up: could not list albums: {:?}", e),
+            }
+        });
+    }
 
     // task::spawn_blocking(move || {
     //     tracing::debug!("setup Authentication Manager...");

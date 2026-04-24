@@ -47,8 +47,7 @@ tempfile.workspace = true
 
 [dev-dependencies]
 # testing
-mockall.workspace = true
 rstest.workspace = true
 tower = { workspace = true, features = ["util"] }
 testdir.workspace = true
-common = { workspace = true, features = ["mock"] }
+common.workspace = true

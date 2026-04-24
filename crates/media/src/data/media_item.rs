@@ -15,35 +15,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::time::Instant;
+use serde::{Deserialize, Serialize};
+use sqlx::types::chrono::{DateTime, Utc};
 
 use super::exif_info::ExifInformation;
 use super::file::File;
 use super::location::Location;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MediaItem {
-    pub uuid: &'static str,
-    pub name: &'static str,
-    pub date_added: Instant,
-    pub date_taken: Option<Instant>,
+    pub uuid: String,
+    pub name: String,
+    pub date_added: DateTime<Utc>,
+    pub date_taken: Option<DateTime<Utc>>,
     pub details: Option<ExifInformation>,
     pub tags: Option<Vec<String>>,
     pub location: Option<Location>,
     pub references: Option<Vec<File>>,
-}
-
-impl MediaItem {
-    #[allow(dead_code)]
-    fn new(name: &'static str) -> Self {
-        MediaItem {
-            uuid: "",
-            name,
-            date_added: Instant::now(),
-            date_taken: None,
-            location: None,
-            details: None,
-            tags: None,
-            references: None,
-        }
-    }
 }

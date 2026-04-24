@@ -15,10 +15,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use uuid::Uuid;
+use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tag {
-    pub uuid: &'static Uuid,
-    pub tag: &'static str,
-    pub origin: &'static str,
+    pub uuid: String,
+    pub tag: String,
+    pub origin: String,
 }

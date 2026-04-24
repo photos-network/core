@@ -21,6 +21,7 @@ use anyhow::Result;
 use axum::async_trait;
 use bytes::Bytes;
 use common::config::configuration::Configuration;
+use common::database::album::Album;
 use common::database::reference::Reference;
 use common::database::ArcDynDatabase;
 use sqlx::types::chrono::{DateTime, Utc};
@@ -38,8 +39,6 @@ pub struct MediaRepository {
 
 pub type MediaRepositoryState = Arc<dyn MediaRepositoryTrait + Send + Sync>;
 
-/// MockPhotosRepositoryTrait is created by automock macro
-#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait MediaRepositoryTrait {
     // Gets a list of media items from the DB filtered by user_id
@@ -63,6 +62,21 @@ pub trait MediaRepositoryTrait {
         name: String,
         bytes: Bytes,
     ) -> Result<Uuid, DataAccessError>;
+
+    async fn get_albums_for_user(&self, user_id: Uuid) -> Result<Vec<Album>, DataAccessError>;
+
+    async fn create_album(
+        &self,
+        user_id: Uuid,
+        name: String,
+        description: Option<String>,
+    ) -> Result<String, DataAccessError>;
+
+    async fn add_media_to_album(
+        &self,
+        album_id: &str,
+        media_id: &str,
+    ) -> Result<(), DataAccessError>;
 }
 
 impl MediaRepository {
@@ -90,8 +104,8 @@ impl MediaRepositoryTrait for MediaRepository {
                     .map(|d| MediaItem {
                         // TODO: fill in missing info like references, details, tags
                         // TODO: check references on filesystem
-                        uuid: d.uuid,
-                        name: d.name,
+                        uuid: d.uuid.clone(),
+                        name: d.name.clone(),
                         date_added: d.added_at,
                         date_taken: d.taken_at,
                         details: None,
@@ -163,7 +177,7 @@ impl MediaRepositoryTrait for MediaRepository {
             filepath: path.clone().to_str().unwrap().to_string(),
             filename: name.to_string(),
             size: size.try_into().unwrap(),
-            description: "",
+            description: String::new(),
             last_modified: Utc::now(),
             is_missing: false,
         };
@@ -187,24 +201,54 @@ impl MediaRepositoryTrait for MediaRepository {
             }
         }
     }
+
+    async fn get_albums_for_user(&self, user_id: Uuid) -> Result<Vec<Album>, DataAccessError> {
+        self.database
+            .get_albums_for_user(user_id.hyphenated().to_string().as_str())
+            .await
+            .map_err(|_| DataAccessError::OtherError)
+    }
+
+    async fn create_album(
+        &self,
+        user_id: Uuid,
+        name: String,
+        description: Option<String>,
+    ) -> Result<String, DataAccessError> {
+        self.database
+            .create_album(
+                user_id.hyphenated().to_string().as_str(),
+                name.as_str(),
+                description.as_deref(),
+            )
+            .await
+            .map_err(|_| DataAccessError::OtherError)
+    }
+
+    async fn add_media_to_album(
+        &self,
+        album_id: &str,
+        media_id: &str,
+    ) -> Result<(), DataAccessError> {
+        self.database
+            .add_media_to_album(album_id, media_id)
+            .await
+            .map_err(|_| DataAccessError::OtherError)
+    }
 }
 
-#[allow(unused_imports)]
 #[cfg(test)]
 mod tests {
     use super::*;
-    use common::database::*;
+    use database::sqlite::SqliteDatabase;
+    use sqlx::SqlitePool;
 
-    #[tokio::test]
-    async fn get_media_items_should_succeed() -> Result<()> {
+    #[sqlx::test]
+    async fn get_media_items_should_succeed(pool: SqlitePool) -> Result<()> {
         // given
         let user_id = "605EE8BE-BAF2-4499-B8D4-BA8C74E8B242";
-        let mut mock_db = MockDatabase::new();
-        mock_db
-            .expect_get_media_items()
-            .return_once(|_| Ok(Vec::new()));
         let repository =
-            MediaRepository::new(Arc::new(mock_db), Configuration::empty().into()).await;
+            MediaRepository::new(Arc::new(SqliteDatabase { pool }), Configuration::empty().into()).await;
 
         // when
         let result = repository
@@ -213,7 +257,6 @@ mod tests {
 
         // then
         assert!(result.is_ok());
-        //assert_eq!(result.ok().unwrap().len(), 1);
 
         Ok(())
     }

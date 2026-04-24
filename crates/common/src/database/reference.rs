@@ -15,14 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use serde::{Deserialize, Serialize};
 use sqlx::types::chrono::{DateTime, Utc};
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Reference {
     pub uuid: String,
     pub filepath: String,
     pub filename: String,
     pub size: u64,
-    pub description: &'static str,
+    pub description: String,
     pub last_modified: DateTime<Utc>,
     pub is_missing: bool,
 }

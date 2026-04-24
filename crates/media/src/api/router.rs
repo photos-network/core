@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use super::routes::delete_album_media::delete_album_media;
 use super::routes::delete_media_id::delete_media_id;
 use super::routes::get_albums::get_albums;
 use super::routes::get_albums_id::get_albums_id;
@@ -25,6 +26,7 @@ use super::routes::patch_albums_id_share::patch_albums_id_share;
 use super::routes::patch_albums_id_unshare::patch_albums_id_unshare;
 use super::routes::patch_media_id::patch_media_id;
 use super::routes::post_albums::post_albums;
+use super::routes::post_albums_id_media::post_albums_id_media;
 use super::routes::post_media::post_media;
 use super::routes::post_media_id::post_media_id;
 use crate::repository::{MediaRepository, MediaRepositoryState};
@@ -79,6 +81,10 @@ impl MediaApi {
             .route("/albums/:entity_id", get(get_albums_id))
             // updates the given album owned by the user
             .route("/albums/:entity_id", patch(patch_albums_id))
+            // upload file, create media item, and link to album
+            .route("/albums/:album_id/media", post(post_albums_id_media))
+            // remove a media item from an album and delete the file
+            .route("/albums/:album_id/media/:media_id", delete(delete_album_media))
             // shares the given album
             .route("/albums/:entity_id/share", patch(patch_albums_id_share))
             // unshares the given album
@@ -97,22 +103,20 @@ mod tests {
         body::Body,
         http::{self, Request, StatusCode},
     };
-    use common::{config::configuration::Configuration, database::MockDatabase};
+    use common::config::configuration::Configuration;
+    use database::sqlite::SqliteDatabase;
     use serde_json::json;
+    use sqlx::SqlitePool;
     use tower::ServiceExt;
 
-    #[tokio::test]
-    async fn get_media_with_query_success() {
+    #[sqlx::test]
+    async fn get_media_with_query_success(pool: SqlitePool) {
         // given
-        let mut mock_db = MockDatabase::new();
-        mock_db
-            .expect_get_media_items()
-            .return_once(|_| Ok(Vec::new()));
         let state: ApplicationState = ApplicationState {
             config: Configuration::empty().into(),
             plugins: HashMap::new(),
             router: None,
-            database: Arc::new(mock_db),
+            database: Arc::new(SqliteDatabase { pool }),
         };
         let app = Router::new().nest("/", MediaApi::routes(&state).await);
 
@@ -138,18 +142,14 @@ mod tests {
         assert_eq!(body, "list media items. limit=100000, offset=1");
     }
 
-    #[tokio::test]
-    async fn get_media_without_query_success() {
+    #[sqlx::test]
+    async fn get_media_without_query_success(pool: SqlitePool) {
         // given
-        let mut mock_db = MockDatabase::new();
-        mock_db
-            .expect_get_media_items()
-            .return_once(|_| Ok(Vec::new()));
         let state: ApplicationState = ApplicationState {
             config: Configuration::empty().into(),
             plugins: HashMap::new(),
             router: None,
-            database: Arc::new(mock_db),
+            database: Arc::new(SqliteDatabase { pool }),
         };
         let app = Router::new().nest("/", MediaApi::routes(&state).await);
 
@@ -175,15 +175,14 @@ mod tests {
         assert_eq!(body, "list media items. limit=1000, offset=0");
     }
 
-    #[tokio::test]
-    async fn post_media_without_user_fail() {
+    #[sqlx::test]
+    async fn post_media_without_user_fail(pool: SqlitePool) {
         // given
-        let mock_db = MockDatabase::new();
         let state: ApplicationState = ApplicationState {
             config: Configuration::empty().into(),
             plugins: HashMap::new(),
             router: None,
-            database: Arc::new(mock_db),
+            database: Arc::new(SqliteDatabase { pool }),
         };
         let app = Router::new().nest("/", MediaApi::routes(&state).await);
 
@@ -198,9 +197,6 @@ mod tests {
                         "Content-Disposition",
                         "attachment; filename=\"DSC_1234.NEF\"",
                     )
-                    //.body(Body::from(bytes))
-                    //.body(Body::empty())
-                    // TODO: add multipart file to body
                     .body(Body::from(
                         serde_json::to_vec(&json!([1, 2, 3, 4])).unwrap(),
                     ))
@@ -211,46 +207,5 @@ mod tests {
 
         // then
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
-    }
-
-    // TODO: test is failing due to missing multi-part body
-    //#[tokio::test]
-    #[allow(dead_code)]
-    async fn post_media_success() {
-        // given
-        let mock_db = MockDatabase::new();
-        let state: ApplicationState = ApplicationState {
-            config: Configuration::empty().into(),
-            plugins: HashMap::new(),
-            router: None,
-            database: Arc::new(mock_db),
-        };
-        let app = Router::new().nest("/", MediaApi::routes(&state).await);
-
-        // when
-        let response = app
-            .oneshot(
-                Request::builder()
-                    .uri("/media")
-                    .method("POST")
-                    .header("Authorization", "FakeAuth")
-                    .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
-                    .header(
-                        "Content-Disposition",
-                        "attachment; filename=\"DSC_1234.NEF\"",
-                    )
-                    //.body(Body::from(bytes))
-                    //.body(Body::empty())
-                    // TODO: add multipart file to body
-                    .body(Body::from(
-                        serde_json::to_vec(&json!([1, 2, 3, 4])).unwrap(),
-                    ))
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-
-        // then
-        assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
     }
 }

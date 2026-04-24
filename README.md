@@ -27,6 +27,20 @@ It is responsible for main tasks e.g.:
 - **Persistency** (read / write data)
 - **Task Processing** (keep track of running tasks)
 
+## 🛠️ Setup
+
+To have a proper experience, add those to your nginx config.
+```conf
+location ~* /albums/.*/download {
+    proxy_buffering off;
+    proxy_read_timeout 300s;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $http_connection;
+    proxy_http_version 1.1;
+    include conf.d/include/proxy.conf;
+}
+```
+
 
 
 ## 🧪 Development

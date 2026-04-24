@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use core::start_server;
+use photos_network_core::start_server;
 use std::process;
 
 /// the `#[tokio::main]` macro initializes a runtime instance and executes the main in it.

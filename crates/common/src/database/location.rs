@@ -15,11 +15,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use uuid::Uuid;
+use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Location {
-    pub uuid: &'static Uuid,
-    pub latitude: &'static f64,
-    pub longitude: &'static f64,
-    pub altitude: &'static Option<f64>,
+    pub latitude: f64,
+    pub longitude: f64,
+    pub altitude: Option<f64>,
 }

@@ -81,6 +81,9 @@ impl fmt::Display for Configuration {
         write!(f, "{{")?;
         write!(f, "\n\tinternal: {}", self.internal_url)?;
         write!(f, "\n\texternal: {}", self.external_url)?;
+        if let Some(database) = self.database.clone() {
+            write!(f, "\n\tdatabase: {}", database.url)?;
+        }
 
         // clients
         write!(f, "\n\tclients: [ ")?;

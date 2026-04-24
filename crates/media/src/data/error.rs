@@ -16,6 +16,7 @@
  */
 
 #[allow(dead_code)]
+#[derive(Debug)]
 pub enum DataAccessError {
     NotFound,
     #[allow(dead_code)]

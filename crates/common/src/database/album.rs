@@ -15,17 +15,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::time::Instant;
+use serde::{Deserialize, Serialize};
+use sqlx::types::chrono::{DateTime, Utc};
 
-use super::{details::Details, location::Location, reference::Reference, tag::Tag};
-
-pub struct MediaItem {
-    pub uuid: &'static str,
-    pub name: &'static str,
-    pub added_at: Instant,
-    pub taken_at: Option<Instant>,
-    pub details: Option<Details>,
-    pub tags: Option<Vec<Tag>>,
-    pub location: Option<Location>,
-    pub references: Option<Vec<Reference>>,
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct Album {
+    pub album_id: String,
+    pub owner: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub cover_media_id: Option<String>,
+    pub is_archived: bool,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }

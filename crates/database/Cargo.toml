@@ -17,12 +17,15 @@ doctest = false
 
 [dependencies]
 anyhow.workspace = true
+bcrypt.workspace = true
 common.workspace = true
 async-trait.workspace = true
+rand.workspace = true
+regex = "1.10.0"
 tracing.workspace = true
 uuid.workspace = true
 tokio.workspace = true
-sqlx = { workspace = true, features = ["runtime-tokio", "tls-native-tls", "postgres", "mysql", "sqlite", "any", "macros", "migrate", "time", "chrono" ] }
+sqlx = { workspace = true, features = ["runtime-tokio", "postgres", "mysql", "sqlite", "any", "macros", "migrate", "time", "chrono" ] }
 
 [dev-dependencies]
 pretty_assertions.workspace = true

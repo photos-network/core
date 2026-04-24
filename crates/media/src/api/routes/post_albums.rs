@@ -5,21 +5,45 @@
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-//! Returns the binary of a given entity
+//! Creates a new album for the current user
 //!
+use axum::{extract::State, http::StatusCode, Json};
+use common::auth::user::User;
+use serde::{Deserialize, Serialize};
+use tracing::error;
+use uuid::Uuid;
 
-use axum::http::StatusCode;
+use crate::repository::MediaRepositoryState;
 
-pub(crate) async fn post_albums() -> std::result::Result<String, StatusCode> {
-    Err(StatusCode::NOT_IMPLEMENTED)
+#[derive(Deserialize)]
+pub struct CreateAlbumRequest {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct CreateAlbumResponse {
+    pub id: String,
+}
+
+pub(crate) async fn post_albums(
+    State(repo): State<MediaRepositoryState>,
+    user: User,
+    Json(body): Json<CreateAlbumRequest>,
+) -> Result<(StatusCode, Json<CreateAlbumResponse>), StatusCode> {
+    let user_id = Uuid::parse_str(user.uuid.as_str()).map_err(|_| StatusCode::BAD_REQUEST)?;
+
+    if body.name.trim().is_empty() {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    match repo.create_album(user_id, body.name, body.description).await {
+        Ok(id) => Ok((StatusCode::CREATED, Json(CreateAlbumResponse { id }))),
+        Err(e) => {
+            error!("Failed to create album: {:?}", e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
 }

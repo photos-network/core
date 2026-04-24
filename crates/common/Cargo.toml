@@ -10,10 +10,6 @@ readme.workspace = true
 license.workspace = true
 edition.workspace = true
 
-[features]
-mock = ["mockall"]
-full = ["mock"]
-
 [lib]
 name = "common"
 path = "src/lib.rs"
@@ -23,19 +19,23 @@ doctest = false
 anyhow.workspace = true
 async-trait.workspace = true
 axum.workspace = true
+bcrypt.workspace = true
 http.workspace = true
 photos_network_plugin = { path = "../plugin_interface" }
+regex = "1.10.0"
+chrono = { workspace = true, features = ["serde", "clock"] }
 
-sqlx.workspace = true
+sqlx = { workspace = true, features = ["macros", "chrono"] }
+jsonwebtoken.workspace = true
 
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 serde_with.workspace = true
 time.workspace = true
+tokio = { workspace = true }
 tracing.workspace = true
 uuid = { workspace = true, features = ["serde"] }
-mockall = { workspace = true, optional = true }
+zip.workspace = true
 
 [dev-dependencies]
 testdir.workspace = true
-mockall = { workspace = true }

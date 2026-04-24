@@ -15,17 +15,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::time::Instant;
+use serde::{Deserialize, Serialize};
+use sqlx::types::chrono::{DateTime, Utc};
 
 use super::{details::Details, location::Location, reference::Reference, tag::Tag};
 
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MediaItem {
-    pub uuid: &'static str,
-    pub name: &'static str,
-    pub added_at: Instant,
-    pub taken_at: Option<Instant>,
+    pub uuid: String,
+    pub name: String,
+    pub added_at: DateTime<Utc>,
+    pub taken_at: Option<DateTime<Utc>>,
+    #[sqlx(skip)]
     pub details: Option<Details>,
+    #[sqlx(skip)]
     pub tags: Option<Vec<Tag>>,
+    #[sqlx(skip)]
     pub location: Option<Location>,
+    #[sqlx(skip)]
     pub references: Option<Vec<Reference>>,
 }

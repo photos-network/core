@@ -15,12 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::time::Instant;
+use serde::{Deserialize, Serialize};
+use sqlx::types::chrono::{DateTime, Utc};
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct File {
-    pub uuid: &'static str,
-    pub filename: &'static str,
+    pub uuid: String,
+    pub filename: String,
     pub filesize: f64,
-    pub last_modified: Option<Instant>,
+    pub last_modified: Option<DateTime<Utc>>,
     pub is_missing: bool,
 }

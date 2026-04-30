@@ -15,20 +15,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use common::database::ArcDynDatabase;
+
 use crate::client::Client;
 use crate::config::ServerConfig;
 use crate::error::Error;
 use crate::realm::Realm;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ServerState {
     pub addr: String,
     pub realms: Vec<Realm>,
     pub master_realm: Realm,
+    pub db: ArcDynDatabase,
 }
 
 impl ServerState {
-    pub fn new(config: ServerConfig) -> Result<Self, Error> {
+    pub fn new(config: ServerConfig, db: ArcDynDatabase) -> Result<Self, Error> {
         let realms = config
             .realms
             .iter()
@@ -46,6 +49,7 @@ impl ServerState {
         Ok(Self {
             addr: config.listen_addr,
             realms,
+            db,
             master_realm: Realm::new(
                 "master",
                 &config.domain,

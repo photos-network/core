@@ -17,13 +17,14 @@
 
 //! This crate offers an **OAuth Authorization Server** for [Photos.network](https://photos.network) core application.
 //!
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::Router;
 use handler::{
     authorize::authorization_handler,
     discovery::openid_discover_handler,
     jwks::openid_jwks_handler,
     login::{get_realm_login_form, post_realm_login},
+    token::token_endpoint,
 };
 use state::ServerState;
 use std::sync::{Arc, RwLock};
@@ -40,6 +41,7 @@ pub mod handler {
     pub mod discovery;
     pub mod jwks;
     pub mod login;
+    pub mod token;
 }
 
 pub struct AuthorizationServerManager {}
@@ -55,6 +57,7 @@ impl AuthorizationServerManager {
                 get(openid_discover_handler),
             )
             .route("/oidc/authorize", get(authorization_handler))
+            .route("/oidc/token", post(token_endpoint))
             .route("/jwk", get(openid_jwks_handler))
             .route(
                 "/:realm/login",

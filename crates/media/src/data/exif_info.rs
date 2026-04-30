@@ -15,11 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExifInformation {
-    pub camera: &'static str,
-    pub lens: &'static str,
-    pub focal_length: &'static str,
-    pub iso: &'static str,
-    pub shutter_speed: &'static str,
-    pub aperture: &'static str,
+    pub camera: String,
+    pub lens: String,
+    pub focal_length: String,
+    pub iso: String,
+    pub shutter_speed: String,
+    pub aperture: String,
 }

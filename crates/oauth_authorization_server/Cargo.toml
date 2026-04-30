@@ -16,6 +16,9 @@ path = "src/lib.rs"
 doctest = false
 
 [dependencies]
+# Domain / DB access
+common = { path = "../common" }
+
 # OIDC interfaces
 openidconnect.workspace = true
 
@@ -24,6 +27,7 @@ axum.workspace = true
 
 # json payload
 serde.workspace = true
+serde_json.workspace = true
 
 # time related data in models
 chrono.workspace = true

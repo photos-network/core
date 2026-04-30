@@ -32,6 +32,7 @@ pub mod http;
 pub mod model {
     pub mod sensitive;
 }
+pub mod zip_cache;
 
 /// Aggregates the applications configuration, its loaded plugins and the router for all REST APIs
 #[derive(Clone)]

@@ -1,29 +1,12 @@
-version: '3.3'
-
 services:
-  core:
-    image: 'rust:1.66.1-slim'
-    volumes:
-      - ./target/debug:/usr/src/app:rw
-    environment:
-      - USER=core
+  postgres:
+    image: postgres:alpine
     ports:
-      - 7777:7777
-    depends_on:
-      - database
-    restart: 'no'
-    working_dir: /usr/src/app
-
-    command: bash -c "/usr/src/app/core"
-
-  database:
-    image: postgres:latest
-    volumes:
-      - ./data/database:/var/lib/postgres/data
+      - "5432:5432"
     environment:
-      - POSTGRES_PASSWORD=unsecure
-    ports:
-      - 5432:5432
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: unsecure
     healthcheck:
       test: psql -U postgres -q -d postgres -c "SELECT 'ready';"
       interval: 10s
